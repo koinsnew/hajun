@@ -2700,11 +2700,17 @@ function screenBook(L){
         '<button class="btn" id="slow">🐢</button>'+
         '<button class="btn go" id="next">'+(i===pg.length-1?'끝 ✓':'▶')+'</button>'+
       '</div>'+
-      '<div class="muted" style="text-align:center;margin-top:10px">단어를 누르면 그 단어만 들려줘요<br>먼저 소리내어 읽고, 그다음 눌러보세요!</div>';
+      '<div class="muted" style="text-align:center;margin-top:10px">단어를 누르면 그 단어만 들려주고 <b>메모</b>도 남길 수 있어요<br>먼저 소리내어 읽고, 그다음 눌러보세요!</div>';
     document.getElementById('back').onclick = function(){ stopAll(); screenLibrary(); };
+    var bKey = 'book_' + L.id + '_' + i;   /* 이야기책: 레벨+쪽별로 메모 저장 */
     var spans = app.querySelectorAll('.sw');
     Array.prototype.forEach.call(spans, function(sp){
-      sp.onclick = function(){ say(ws[+this.dataset.i], 0.85); };
+      if(getNote(bKey, ws[+sp.dataset.i])) sp.classList.add('hasnote');
+      sp.onclick = function(){
+        var wd = ws[+this.dataset.i];
+        say(wd, 0.85);
+        openWordNote(bKey, wd, this);
+      };
     });
     function readIt(rate){
       speakWords(ws, rate||RATE, function(k){
@@ -3743,15 +3749,18 @@ function screenPaper(b){
         (function(){
           var ln = (b.lines||[])[i];
           if(ln){
-            /* 아빠가 넣어둔 이 쪽의 문장 — 보여주고 소리도 들려준다 */
-            return '<div class="sentEn" style="font-size:22px;margin-top:6px">'+esc(ln)+'</div>'+
+            /* 아빠가 넣어둔 이 쪽의 문장 — 단어를 눌러 듣고 메모할 수 있다 */
+            return '<div class="sentEn poem" id="pmp" style="font-size:22px;margin-top:6px">'+
+                ln.split(' ').map(function(w){ return '<span class="sw">'+esc(w)+'</span>'; }).join(' ')+
+              '</div>'+
               '<div id="roma" class="romaLine" style="display:none"></div>'+
               '<div class="row" style="justify-content:center;margin-top:6px;flex-wrap:wrap">'+
                 '<button class="btn primary" id="sayL">🔊 듣기</button>'+
                 '<button class="btn" id="slowL">🐢</button>'+
                 '<button class="btn" id="romaBtn">🇰🇷 한글 발음</button>'+
               '</div>'+
-              '<div style="font-size:15px;margin-top:8px">책을 보며 <b>소리내어</b> 따라 읽어요</div>';
+              '<div style="font-size:15px;margin-top:8px">책을 보며 <b>소리내어</b> 따라 읽어요'+
+              '<br><span style="font-size:13px;color:#666">모르는 단어는 눌러서 듣고 메모할 수 있어요</span></div>';
           }
           return '<div style="font-size:17px;margin-top:4px">쪽을 펴서 <b>소리내어</b> 읽어요</div>'+
             '<div class="readtip" style="margin-top:12px">📕 화면이 아니라 <b>책</b>을 보세요!<br>'+
@@ -3780,6 +3789,18 @@ function screenPaper(b){
         if(r.style.display==='block'){ r.style.display='none'; this.textContent='🇰🇷 한글 발음'; }
         else { r.innerHTML = '🗣️ '+esc(romaLine(ln)); r.style.display='block'; this.textContent='🙈 발음 숨기기'; }
       };
+      /* 문장 속 단어를 눌러 그 단어만 듣고 메모 (책별로 저장) */
+      var pKey = 'paper_' + b.id;
+      var pwords = ln.split(' ');
+      var psp = app.querySelectorAll('#pmp .sw');
+      Array.prototype.forEach.call(psp, function(x, idx){
+        if(getNote(pKey, pwords[idx])) x.classList.add('hasnote');
+        x.onclick = function(){
+          var wd = pwords[idx];
+          say(wd, 0.85);
+          openWordNote(pKey, wd, this);
+        };
+      });
     }
     document.getElementById('prev').onclick = function(){ if(i>0){ stopAll(); i--; beep([420],.05); draw(); } };
     document.getElementById('jump').onclick = function(){
