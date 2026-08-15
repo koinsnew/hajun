@@ -226,8 +226,9 @@
   .sent{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;text-align:center;line-height:1.5}
   .sw{display:inline-block;padding:2px 4px;border-radius:8px;cursor:pointer}
   .sw.hi{background:var(--mango);color:#fff}
-  .sw.hasnote{position:relative;background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango)}
+  .sw.hasnote{position:relative}
   .sw.hasnote::after{content:'';position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--berry)}
+  .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango)}
   .readtip{background:#FFF6DF;border:2px dashed var(--mango);border-radius:16px;padding:12px;
     font-size:15px;line-height:1.5;color:#8A5A00;margin-top:14px}
   .mute{display:inline-block;background:#EDEAF8;color:var(--ink-soft);border-radius:999px;
@@ -496,7 +497,65 @@
 var ERRS = [];
 window.onerror = function(m, src, ln){ ERRS.push(String(m)+' @'+ln); return false; };
 window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '+e.reason); });
-var OFFLINE = false;   /* 서버(google.script.run)와 연결이 안 된 상태 */
+/* ══════════════════════════════════════════════════════
+   ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
+   화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
+   ══════════════════════════════════════════════════════ */
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
+
+var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
+var SERVER_LOADED = false, needPush = false;  /* 진도 보존용 */
+
+/* --- 앱스스크립트 REST 호출 --- */
+function apiGet(action, cb){
+  /* GET은 JSONP로 부른다 (GitHub 도메인 ↔ 앱스스크립트 크로스도메인 대응) */
+  var name = '__pk_cb_' + (apiGet._n = (apiGet._n||0) + 1);
+  var done = false;
+  var t = setTimeout(function(){ if(done) return; done=true; cleanup(); cb(undefined); }, 12000);
+  function cleanup(){ try{ delete window[name]; }catch(e){ window[name]=undefined; } if(sc&&sc.parentNode) sc.parentNode.removeChild(sc); clearTimeout(t); }
+  window[name] = function(data){ if(done) return; done=true; cleanup(); cb(data); };
+  var sc = document.createElement('script');
+  sc.onerror = function(){ if(done) return; done=true; cleanup(); cb(undefined); };
+  sc.src = GAS_URL + '?action=' + encodeURIComponent(action) + '&callback=' + name;
+  document.head.appendChild(sc);
+}
+function apiPost(payload, cb){
+  /* POST는 text/plain 으로 보내 프리플라이트 없이 크로스도메인 동작 */
+  fetch(GAS_URL, {
+    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body: JSON.stringify(payload)
+  }).then(function(r){ return r.json(); })
+    .then(function(j){ cb(j); })
+    .catch(function(e){ cb(undefined, e); });
+}
+/* 서버에서 받은 진도에 '실제로 한 흔적'이 있는지 (빈 진도면 기기 것을 쓴다) */
+function hasProgress(p){
+  if(!p) return false;
+  if(p.stars && Object.keys(p.stars).length) return true;
+  var arrs = ['rewards','draws','quizzes','sents','bonus','cards','prizes','tests'];
+  for(var i=0;i<arrs.length;i++){ if(p[arrs[i]] && p[arrs[i]].length) return true; }
+  if(p.spec && Object.keys(p.spec).length) return true;
+  if(p.books && Object.keys(p.books).length) return true;
+  if(p.papers && p.papers.some && p.papers.some(function(b){ return b.read||b.done; })) return true;
+  if(p.spent) return true;
+  if(p.finalWon) return true;
+  return false;
+}
+/* 진도의 '무게' — 더 진행된 쪽을 고르기 위한 점수 */
+function progScore(p){
+  if(!p) return -1;
+  var n = 0;
+  try{ n += Object.keys(p.stars||{}).length * 100; }catch(e){}
+  ['rewards','draws','quizzes','sents','bonus','cards','prizes','tests'].forEach(function(k){ if(p[k]&&p[k].length) n += p[k].length; });
+  if(p.spec) n += Object.keys(p.spec).length;
+  if(p.books) n += Object.keys(p.books).length;
+  if(p.papers && p.papers.forEach) p.papers.forEach(function(b){ if(b.read||b.done) n++; });
+  n += (p.spent||0)/10;
+  return n;
+}
+function readLocal(){
+  try{ var raw = localStorage.getItem('phonics'); return raw ? JSON.parse(raw) : null; }catch(e){ return null; }
+}
 var STARTED = false;   /* 첫 화면이 떴는가 */
 
 /* 어디서든 터져서 첫 화면이 안 뜨면, 흰 화면/무한 대기 대신 원인을 보여준다 */
@@ -1288,14 +1347,11 @@ function aiFetch(ssml, rate, marks, cb){
   var ck = ssml+'|'+AIVOICE+'|'+rate+'|'+marks;
   if(acache.has(ck)){ cb(acache.get(ck)); return; }
   if(!hasServer){ cb(null); return; }
-  google.script.run
-    .withSuccessHandler(function(r){
-      if(!r || r.error || !r.audio){ cb(null); return; }
-      if(acache.size > 400) acache.clear();
-      acache.set(ck, r); cb(r);
-    })
-    .withFailureHandler(function(){ cb(null); })
-    .ttsSynth({ssml:ssml, voice:AIVOICE, rate:rate, marks:marks});
+  apiPost({action:'tts', ssml:ssml, voice:AIVOICE, rate:rate, marks:marks}, function(r){
+    if(!r || r.error || !r.audio){ cb(null); return; }
+    if(acache.size > 400) acache.clear();
+    acache.set(ck, r); cb(r);
+  });
 }
 function useAI(){ return TTSMODE==='ai' && AI_OK && hasServer; }
 
@@ -1394,7 +1450,7 @@ function toast(txt){
    ========================================================= */
 var PROG = {stars:{}, tests:{}, rewards:[], miss:{}, books:{}, finalWon:false,
             tts:{mode:'device', voice:'en-US-Neural2-F', dev:''}, name:'옥하준', rate:0.9};
-var hasServer = (typeof google !== 'undefined' && google.script && google.script.run);
+var hasServer = !!GAS_URL;   /* API 주소가 있으면 서버 저장이 켜진다 */
 
 function localLoad(){
   try{ var r=localStorage.getItem('phonics'); if(r) PROG=JSON.parse(r); }catch(e){ ERRS.push('localStorage: '+e); }
@@ -1405,7 +1461,7 @@ function applyProg(){
   try{ TTSMODE=PROG.tts.mode; AIVOICE=PROG.tts.voice; pickVoice(); }catch(e){ ERRS.push('voice: '+e); }
 }
 /**
- * 사파리(아이패드/아이폰)는 '사이트간 추적 방지' 때문에 google.script.run 이
+ * 사파리(아이패드/아이폰)에서 API 응답이 늦거나 막혀도
  * 성공도 실패도 알리지 않고 조용히 멈추는 일이 있다. 그러면 화면이 영영 흰색이 된다.
  * → 5초 안에 답이 없으면 기기 저장분으로 그냥 시작한다.
  */
@@ -1427,27 +1483,32 @@ function loadProgress(cb){
   }, 5000);
 
   try{
-    google.script.run
-      .withSuccessHandler(function(p){
-        clearTimeout(timer);
-        if(p) PROG = p; else localLoad();
-        applyProg();
-        try{
-          google.script.run.withSuccessHandler(function(st){ AI_OK = !!(st && st.enabled); fin(); })
-                           .withFailureHandler(function(){ fin(); })
-                           .ttsStatus();
-          setTimeout(fin, 4000);    /* AI 상태 확인이 늦어도 시작은 한다 */
-        }catch(e){ fin(); }
-      })
-      .withFailureHandler(function(e){
-        clearTimeout(timer); OFFLINE = true;
-        ERRS.push('getProgress 실패: '+e);
-        localLoad(); applyProg(); fin();
-      })
-      .getProgress();
+    apiGet('load', function(p, err){
+      clearTimeout(timer);
+      if(done){ return; }   /* 이미 타임아웃으로 시작했으면 서버 저장을 켜지 않는다 */
+      if(p === undefined){
+        OFFLINE = true; ERRS.push('진도 불러오기 실패: '+err); localLoad();
+      } else {
+        SERVER_LOADED = true;
+        var local = readLocal();
+        var sHas = hasProgress(p), lHas = hasProgress(local);
+        if(sHas && lHas){ PROG = (progScore(local) > progScore(p)) ? local : p; }
+        else if(sHas){ PROG = p; }
+        else if(lHas){ PROG = local; needPush = true; }
+        else { PROG = p; }
+      }
+      applyProg();
+      if(needPush && SERVER_LOADED && !OFFLINE){
+        try{ apiPost({action:'save', prog:PROG}, function(){}); }catch(e){}
+      }
+      try{
+        apiGet('ttsStatus', function(st){ AI_OK = !!(st && st.enabled); fin(); });
+        setTimeout(fin, 4000);
+      }catch(e){ fin(); }
+    });
   }catch(e){
     clearTimeout(timer); OFFLINE = true;
-    ERRS.push('google.script.run 없음: '+e);
+    ERRS.push('API 호출 실패: '+e);
     localLoad(); applyProg(); fin();
   }
 }
@@ -1463,11 +1524,11 @@ function saveProgress(){
   PROG.rate = RATE;
   /* 서버가 되든 안 되든 기기에 먼저 저장한다 */
   try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
-  if(!hasServer || OFFLINE) return;
+  if(!hasServer || OFFLINE || !SERVER_LOADED) return;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){
     try{
-      google.script.run.withFailureHandler(function(e){ OFFLINE = true; ERRS.push('저장 실패: '+e); }).saveProgress(PROG);
+      apiPost({action:'save', prog:PROG}, function(j, e){ if(e){ OFFLINE = true; ERRS.push('저장 실패: '+e); } });
     }catch(e){ OFFLINE = true; }
   }, 400);
 }
@@ -3834,9 +3895,10 @@ function setNote(spId, w, text){
   if(!PROG.wordNotes[spId]) PROG.wordNotes[spId] = {};
   text = String(text||'').trim();
   if(text) PROG.wordNotes[spId][k] = text;
-  else delete PROG.wordNotes[spId][k];
+  else delete PROG.wordNotes[spId][k];   /* 비우면 메모 삭제 */
   saveProgress();
 }
+/* 단어 메모 팝오버 (el = 눌린 .sw 단어, 메모 저장 후 점 표시 갱신) */
 function openWordNote(spId, w, el){
   var cur = getNote(spId, w);
   var ov = openMod(
@@ -3904,6 +3966,7 @@ function screenSpecial(sp){
         '<button class="btn primary wide" id="check" style="margin-top:14px;font-size:19px;padding:16px" disabled>⏳ 읽는 중…</button>'+
       '</div>';
     bindB();
+    /* 1단계에서도 단어를 눌러 듣고 메모 (메모 있는 단어는 점 표시) */
     var spans1 = app.querySelectorAll('.sw');
     Array.prototype.forEach.call(spans1, function(x){
       if(getNote(sp.id, flat[+x.dataset.i])) x.classList.add('hasnote');
@@ -3952,6 +4015,7 @@ function screenSpecial(sp){
       '</div>';
     bindB();
     var spans = app.querySelectorAll('.sw');
+    /* 메모가 있는 단어는 점(•)으로 표시해 둔다 */
     Array.prototype.forEach.call(spans, function(x){
       var w = flat[+x.dataset.i];
       if(getNote(sp.id, w)) x.classList.add('hasnote');
@@ -3959,8 +4023,8 @@ function screenSpecial(sp){
     Array.prototype.forEach.call(spans, function(x){
       x.onclick = function(){
         var w = flat[+this.dataset.i];
-        say(w, 0.85);
-        openWordNote(sp.id, w, this);
+        say(w, 0.85);                 /* ① 그 단어만 소리 */
+        openWordNote(sp.id, w, this); /* ② 메모 보기/쓰기 팝오버 */
       };
     });
     function hl(rate){
@@ -5107,7 +5171,7 @@ function screenSettings(){
     if(!confirm('모은 별과 진도가 모두 사라집니다. 초기화할까요?')) return;
     PROG={stars:{}, tests:{}, rewards:[], draws:[], miss:{}, books:{}, spec:{}, quizzes:[], sents:[], papers:null, bonus:[], cards:[],
           spent:0, finalWon:false, finalUsed:false, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
-    if(hasServer) google.script.run.withFailureHandler(function(){}).resetProgress();
+    if(hasServer) apiPost({action:'reset'}, function(){});
     else { try{ localStorage.removeItem('phonics'); }catch(e){} }
     toast('🧹'); screenHome();
   });
@@ -5140,7 +5204,9 @@ function drawVoices(){
       return;
     }
     w.innerHTML = '<div class="muted">목소리를 불러오는 중…</div>';
-    google.script.run.withSuccessHandler(function(r){
+    apiGet('voices', function(r){
+      if(r === undefined) r = {error:'응답 없음'};
+      (function(r){
       if(!r || r.error || !r.voices){
         w.innerHTML = '<div class="muted" style="color:var(--berry)">목소리 목록을 못 받았어요: '+esc(r && r.error ? r.error : '알 수 없음')+'</div>';
         return;
@@ -5162,9 +5228,8 @@ function drawVoices(){
         AIVOICE = this.value; PROG.tts.voice = AIVOICE; saveProgress();
         acache.clear(); sayParts([SND.c,'at','cat'], RATE);
       };
-    }).withFailureHandler(function(){
-      w.innerHTML = '<div class="muted" style="color:var(--berry)">목소리 목록을 못 받았어요.</div>';
-    }).ttsVoices();
+      })(r);
+    });
   }
 }
 
@@ -5175,7 +5240,7 @@ function screenDiag(){
   var v = [];
   try{ v = window.speechSynthesis ? speechSynthesis.getVoices() : []; }catch(e){}
   var rows = [
-    ['서버 연결 (google.script.run)', hasServer ? (OFFLINE ? '❌ 응답 없음 (오프라인으로 동작 중)' : '✅ 정상') : '❌ 없음'],
+    ['서버 연결 (앱스스크립트 API)', hasServer ? (OFFLINE ? '❌ 응답 없음 (오프라인으로 동작 중)' : '✅ 정상') : '⚪ 주소 없음 (이 기기에만 저장)'],
     ['진도 저장 위치', OFFLINE || !hasServer ? '📱 이 기기에만' : '☁️ 구글 + 📱 기기'],
     ['기기 저장(localStorage)', (function(){ try{ localStorage.setItem('_t','1'); localStorage.removeItem('_t'); return '✅ 사용 가능'; }catch(e){ return '❌ 막힘 — 사파리 설정 확인'; } })()],
     ['영어 음성 개수', v.length ? '✅ '+v.length+'개' : '❌ 0개 (화면을 한 번 터치하면 잡히기도 해요)'],
