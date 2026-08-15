@@ -226,9 +226,12 @@
   .sent{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;text-align:center;line-height:1.5}
   .sw{display:inline-block;padding:2px 4px;border-radius:8px;cursor:pointer}
   .sw.hi{background:var(--mango);color:#fff}
-  .sw.hasnote{position:relative}
-  .sw.hasnote::after{content:'';position:absolute;top:-1px;right:-1px;width:7px;height:7px;border-radius:50%;background:var(--berry)}
-  .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango)}
+  .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango);
+    display:inline-flex;flex-direction:column;align-items:center;vertical-align:top}
+  .wnote{display:block;margin-top:2px;font-family:'Noto Sans KR',sans-serif;font-weight:600;
+    font-size:12px;line-height:1.25;color:var(--berry);background:#fff;
+    border:1.5px solid var(--mango);border-radius:8px;padding:1px 6px;max-width:150px;
+    white-space:normal;word-break:break-word;cursor:pointer}
   .readtip{background:#FFF6DF;border:2px dashed var(--mango);border-radius:16px;padding:12px;
     font-size:15px;line-height:1.5;color:#8A5A00;margin-top:14px}
   .mute{display:inline-block;background:#EDEAF8;color:var(--ink-soft);border-radius:999px;
@@ -2705,7 +2708,7 @@ function screenBook(L){
     var bKey = 'book_' + L.id + '_' + i;   /* 이야기책: 레벨+쪽별로 메모 저장 */
     var spans = app.querySelectorAll('.sw');
     Array.prototype.forEach.call(spans, function(sp){
-      if(getNote(bKey, ws[+sp.dataset.i])) sp.classList.add('hasnote');
+      paintNote(sp, bKey, ws[+sp.dataset.i]);
       sp.onclick = function(){
         var wd = ws[+this.dataset.i];
         say(wd, 0.85);
@@ -3794,7 +3797,7 @@ function screenPaper(b){
       var pwords = ln.split(' ');
       var psp = app.querySelectorAll('#pmp .sw');
       Array.prototype.forEach.call(psp, function(x, idx){
-        if(getNote(pKey, pwords[idx])) x.classList.add('hasnote');
+        paintNote(x, pKey, pwords[idx]);
         x.onclick = function(){
           var wd = pwords[idx];
           say(wd, 0.85);
@@ -3919,6 +3922,20 @@ function setNote(spId, w, text){
   else delete PROG.wordNotes[spId][k];   /* 비우면 메모 삭제 */
   saveProgress();
 }
+/* 단어 아래에 메모를 '항상' 표시한다. 메모가 없으면 표시를 지운다. */
+function paintNote(el, spId, w){
+  if(!el) return;
+  var note = getNote(spId, w);
+  var tag = el.querySelector('.wnote');
+  if(note){
+    el.classList.add('hasnote');
+    if(!tag){ tag = document.createElement('span'); tag.className = 'wnote'; el.appendChild(tag); }
+    tag.textContent = note;
+  } else {
+    el.classList.remove('hasnote');
+    if(tag) tag.parentNode.removeChild(tag);
+  }
+}
 /* 단어 메모 팝오버 (el = 눌린 .sw 단어, 메모 저장 후 점 표시 갱신) */
 function openWordNote(spId, w, el){
   var cur = getNote(spId, w);
@@ -3936,12 +3953,11 @@ function openWordNote(spId, w, el){
   var ta = ov.querySelector('#wnta');
   setTimeout(function(){ try{ ta.focus(); }catch(e){} }, 50);
   ov.querySelector('#wnhear').onclick = function(){ say(w, 0.85); };
-  function refreshDot(){ if(el){ if(getNote(spId, w)) el.classList.add('hasnote'); else el.classList.remove('hasnote'); } }
   ov.querySelector('#wnsave').onclick = function(){
-    setNote(spId, w, ta.value); refreshDot(); okSound(); toast('💾'); ov.remove();
+    setNote(spId, w, ta.value); paintNote(el, spId, w); okSound(); toast('💾'); ov.remove();
   };
   if(ov.querySelector('#wndel')) ov.querySelector('#wndel').onclick = function(){
-    setNote(spId, w, ''); refreshDot(); toast('🗑️'); ov.remove();
+    setNote(spId, w, ''); paintNote(el, spId, w); toast('🗑️'); ov.remove();
   };
   ov.querySelector('#wncls').onclick = function(){ ov.remove(); };
 }
@@ -3990,7 +4006,7 @@ function screenSpecial(sp){
     /* 1단계에서도 단어를 눌러 듣고 메모 (메모 있는 단어는 점 표시) */
     var spans1 = app.querySelectorAll('.sw');
     Array.prototype.forEach.call(spans1, function(x){
-      if(getNote(sp.id, flat[+x.dataset.i])) x.classList.add('hasnote');
+      paintNote(x, sp.id, flat[+x.dataset.i]);
       x.onclick = function(){
         var w = flat[+this.dataset.i];
         say(w, 0.85);
@@ -4039,7 +4055,7 @@ function screenSpecial(sp){
     /* 메모가 있는 단어는 점(•)으로 표시해 둔다 */
     Array.prototype.forEach.call(spans, function(x){
       var w = flat[+x.dataset.i];
-      if(getNote(sp.id, w)) x.classList.add('hasnote');
+      paintNote(x, sp.id, w);
     });
     Array.prototype.forEach.call(spans, function(x){
       x.onclick = function(){
