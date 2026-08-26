@@ -3,6 +3,9 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -224,6 +227,14 @@
   .tile.used{visibility:hidden}
 
   .sent{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;text-align:center;line-height:1.5}
+  .qzrow{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
+
+  .qzedit{flex:0 0 auto;width:52px;border:none;border-radius:16px;background:#EEF0FF;
+
+    font-size:22px;cursor:pointer;box-shadow:0 4px 0 #C7CCF0}
+
+  .qzedit:active{transform:translateY(2px);box-shadow:0 2px 0 #C7CCF0}
+
   .sw{display:inline-block;padding:2px 4px;border-radius:8px;cursor:pointer}
   .sw.hi{background:var(--mango);color:#fff}
   .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango);
@@ -332,6 +343,7 @@
 
   .drawWrap{position:relative;background:#FBFAFF;border:2.5px dashed #C4B8ED;border-radius:18px;
     margin:8px 0 6px;overflow:hidden;touch-action:none}
+  .drawWrap.big{border-width:3px;background:#FFFDF7;margin:12px 0 10px;box-shadow:inset 0 0 0 3px #FFF}
   .drawWrap canvas{display:block;width:100%;height:auto;touch-action:none;-webkit-user-select:none;user-select:none}
   .drawTip{font-size:13px;color:var(--ink-soft);text-align:center;margin-bottom:8px}
 
@@ -504,6 +516,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
+var APP_VERSION = '2026.08.15 13:15';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1553,6 +1566,7 @@ function normProg(){
   if(!PROG.sents) PROG.sents = [];
   if(!PROG.hiddenSpecs) PROG.hiddenSpecs = [];
   if(!PROG.wordNotes) PROG.wordNotes = {};
+  if(!PROG.mimemal) PROG.mimemal = [];
   /* 옛 진도: 통과했는데 뽑은 별 기록이 없으면 예전 고정값으로 채운다 */
   PROG.quizzes.forEach(function(q){ if(q.done && typeof q.stars!=='number') q.stars = STAR_QUIZ; });
   PROG.sents.forEach(function(x){ if(x.done && typeof x.stars!=='number') x.stars = STAR_SENT; });
@@ -1975,6 +1989,7 @@ function bindRewards(){
 }
 
 function screenHome(){
+  DAD_OK = false;
   var html =
     '<div class="topbar">'+
       '<div class="pill">⭐ '+walletStars()+'</div>'+
@@ -2031,6 +2046,11 @@ function screenHome(){
         books().filter(function(L){ return bookRead(L.id)>0; }).length+'권</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="mmbig" style="background:linear-gradient(135deg,#F472B6,#A855F7);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
+      '<div class="ico">📷</div>'+
+      '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
     '<button class="testbtn" id="pkbig" style="background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 6px 0 #065F46;margin:0 0 12px">'+
       '<div class="ico">⚽</div>'+
       '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+PK_SHOTS+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
@@ -2059,6 +2079,8 @@ function screenHome(){
   document.getElementById('libbig').onclick = screenLibrary;
   document.getElementById('spbig').onclick = screenSpecials;
   document.getElementById('pkbig').onclick = startPKGame;
+
+  document.getElementById('mmbig').onclick = screenMimemal;
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
@@ -2538,6 +2560,42 @@ function screenBag(){
 /* =========================================================
    8-A3) 👨 아빠가 별 주기 — 비밀번호가 있어야 준다
    ========================================================= */
+var DAD_OK = false;   /* 이번 세션에 아빠 확인을 통과했는지 (홈에서 리셋) */
+/* 아빠 확인이 필요한 동작을 감싼다. 이미 통과했으면 바로 실행. */
+function needDad(cb, back){
+  if(DAD_OK){ cb(); return; }
+  dadGate(function(){ DAD_OK = true; cb(); }, back);
+}
+/* 아빠 PIN 게이트 — 통과하면 cb() 실행, 취소하면 back() (재사용) */
+function dadGate(cb, back){
+  var pin='', bad=false;
+  function draw(){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="gback">←</button><h2>🔒 아빠 확인</h2><div style="width:44px"></div></div>'+
+      '<div class="card" style="text-align:center">'+
+        '<div style="font-size:44px">🔒</div>'+
+        '<div style="font-size:17px;margin-top:6px">아빠 비밀번호를 넣어주세요</div>'+
+        '<div class="muted">콘텐츠를 고치거나 지우려면 필요해요 🙂</div>'+
+        '<div class="dots4">'+ [0,1,2,3].map(function(k){
+          return '<div class="d4 '+(bad?'bad':(k<pin.length?'on':''))+'"></div>';
+        }).join('') +'</div>'+
+        '<div class="pin">'+
+          [1,2,3,4,5,6,7,8,9].map(function(n){ return '<button data-n="'+n+'">'+n+'</button>'; }).join('')+
+          '<button data-n="del">←</button><button data-n="0">0</button><button data-n="ok">✓</button>'+
+        '</div>'+
+      '</div>';
+    document.getElementById('gback').onclick = function(){ if(back) back(); else screenHome(); };
+    on('.pin button', function(){
+      var v=this.dataset.n; bad=false;
+      if(v==='del') pin=pin.slice(0,-1);
+      else if(v==='ok'){ if(pin===DAD_PIN){ okSound(); cb(); return; } noSound(); bad=true; pin=''; draw(); return; }
+      else if(pin.length<4){ pin+=v; beep([600+(+v)*20],.04); }
+      if(pin.length===4 && v!=='del'){ if(pin===DAD_PIN){ okSound(); cb(); return; } noSound(); bad=true; pin=''; draw(); return; }
+      draw();
+    });
+  }
+  draw();
+}
 function screenDad(){
   var pin = '', bad = false;
   function draw(){
@@ -2776,11 +2834,14 @@ function screenQuizList(){
       '<div class="muted" style="margin-top:6px">\uc544\uc9c1 \ub2e8\uc5b4\uc7a5\uc774 \uc5c6\uc5b4\uc694.<br>\uc544\ube60\uac00 \uc544\ub798 \ubc84\ud2bc\uc73c\ub85c \ub9cc\ub4e4\uc5b4 \uc8fc\uc138\uc694!</div></div>';
   } else {
     qs.forEach(function(q){
-      html += '<button class="qzbk '+(q.done?'done':'')+'" data-id="'+esc(q.id)+'">'+
-        '<div class="ico">'+(q.done?'\ud83c\udfc6':'\ud83d\udcd8')+'</div>'+
-        '<div class="t"><b>'+esc(q.title)+'</b><small>'+q.items.length+'\ubb38\uc81c'+(q.done?' \u00b7 \u2705 \u2b50'+(q.stars||STAR_QUIZ)+'\uac1c \ubc1b\uc74c':' \u00b7 \u2b50'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
-        '<div style="font-size:20px">\u25b6</div>'+
-      '</button>';
+      html += '<div class="qzrow">'+
+        '<button class="qzbk '+(q.done?'done':'')+'" data-id="'+esc(q.id)+'" style="flex:1">'+
+          '<div class="ico">'+(q.done?'\ud83c\udfc6':'\ud83d\udcd8')+'</div>'+
+          '<div class="t"><b>'+esc(q.title)+'</b><small>'+q.items.length+'\ubb38\uc81c'+(q.done?' \u00b7 \u2705 \u2b50'+(q.stars||STAR_QUIZ)+'\uac1c \ubc1b\uc74c':' \u00b7 \u2b50'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
+          '<div style="font-size:20px">\u25b6</div>'+
+        '</button>'+
+        '<button class="qzedit" data-ed="'+esc(q.id)+'" title="\uc544\ube60\uac00 \uace0\uce58\uae30">\u270f\ufe0f</button>'+
+      '</div>';
     });
   }
   html += '<div class="row" style="margin-top:6px">'+
@@ -2790,11 +2851,12 @@ function screenQuizList(){
       '\ud83d\udd0a \ubb38\uc81c\ub97c \ub0bc \ub54c \ub73b\ud480\uc774\ub97c <b>\uc18c\ub9ac\ub85c \ub4e4\ub824</b>\uc90d\ub2c8\ub2e4.<br>\ub2e4 \ub9de\ucd94\uba74 \ub05d! \ub9c8\uc9c0\ub9c9\uae4c\uc9c0 \ud2c0\ub9b0 \uac74 \uc21c\uc11c\ub97c \uc11e\uc5b4 \ub2e4\uc2dc \ub0c5\ub2c8\ub2e4.</div>';
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
-  document.getElementById('add').onclick = function(){ screenQuizEdit(null); };
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenQuizEdit(null); }, screenQuizList); };
+  on('.qzedit', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.ed); if(q) needDad(function(){ screenQuizEdit(q); }, screenQuizList); });
   on('.qzbk', function(){
     var q = quizById(this.dataset.id);
     if(!q) return;
-    if(!q.items.length){ noSound(); toast('\ubb38\uc81c \uc5c6\uc74c'); screenQuizEdit(q); return; }
+    if(!q.items.length){ needDad(function(){ screenQuizEdit(q); }, screenQuizList); return; }
     beep([700,900],.06); startQuiz(q);
   });
 }
@@ -3217,6 +3279,18 @@ function sents(){ return PROG.sents || []; }
 function sentById(id){ return sents().filter(function(s){ return s.id===id; })[0]; }
 function sentStars(){ return sents().reduce(function(a,s){ return a + (s.done ? (s.stars||STAR_SENT) : 0); }, 0); }
 
+/* ===== 미매말 — 그림(사진) 보고 영어 문장 맞히기 =====
+   PROG.mimemal = [{id, img(사진 dataURL 또는 ''), en(정답 영어문장), done, stars}]
+   순서대로 진행, 맞히면 통과 / 틀리면 5번 따라쓰기, 다 통과하면 별 1~20개 뽑기. */
+var MM_TIMES = 5;          /* 틀렸을 때 따라 쓰는 횟수 */
+var MM_STAR_MIN = 1;       /* 미매말 다 통과 시 뽑는 별 최소 */
+var MM_STAR_MAX = 20;      /* 미매말 다 통과 시 뽑는 별 최대 */
+function mimemal(){ return PROG.mimemal || []; }
+function mmById(id){ return mimemal().filter(function(m){ return m.id===id; })[0]; }
+function mmStars(){ return mimemal().reduce(function(a,m){ return a + (m.done ? (m.stars||0) : 0); }, 0); }
+function mmAllDone(){ var a=mimemal(); return a.length>0 && a.every(function(m){ return m.done; }); }
+
+
 /* 긴 문장을 화면 폭에 맞춰 여러 줄로 나눈다 */
 function wrapText(ctx, text, maxW){
   var words = String(text).split(/\s+/), lines = [], cur = '';
@@ -3232,7 +3306,7 @@ function wrapText(ctx, text, maxW){
 /* 문장용 그리기 판.
    ghost=true  → 희미한 글자를 깔고 얼마나 덮었는지 센다 (배우기)
    ghost=false → 연한 줄만 그어주고 자유롭게 쓴다 (시험) */
-function makeSentCanvas(cv, text, ghost){
+function makeSentCanvas(cv, text, ghost, minH){
   var wrap = cv.parentNode;
   var W = Math.max(280, wrap.clientWidth || 320);
   var DPR = window.devicePixelRatio || 1;
@@ -3248,7 +3322,7 @@ function makeSentCanvas(cv, text, ghost){
   }
   if(!lines.length) lines = [String(text)];
   var lh = Math.round(fs*1.6);
-  var H = Math.max(150, lines.length*lh + 40);
+  var H = Math.max(minH||150, lines.length*lh + 40);
 
   cv.width = W*DPR; cv.height = H*DPR; cv.style.height = H+'px';
   var ctx = cv.getContext('2d'); ctx.scale(DPR,DPR);
@@ -3354,11 +3428,14 @@ function screenSentList(){
       '<div class="muted" style="margin-top:6px">아직 문장이 없어요.<br>아빠가 아래 버튼으로 만들어 주세요!</div></div>';
   } else {
     ss.forEach(function(s){
-      html += '<button class="qzbk '+(s.done?'done':'')+'" data-id="'+esc(s.id)+'">'+
-        '<div class="ico">'+(s.done?'🏆':'📖')+'</div>'+
-        '<div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+'문장'+(s.done?' · ✅ ⭐'+(s.stars||STAR_SENT)+'개 받음':' · ⭐'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
-        '<div style="font-size:20px">▶</div>'+
-      '</button>';
+      html += '<div class="qzrow">'+
+        '<button class="qzbk '+(s.done?'done':'')+'" data-id="'+esc(s.id)+'" style="flex:1">'+
+          '<div class="ico">'+(s.done?'🏆':'📖')+'</div>'+
+          '<div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+'문장'+(s.done?' · ✅ ⭐'+(s.stars||STAR_SENT)+'개 받음':' · ⭐'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
+          '<div style="font-size:20px">▶</div>'+
+        '</button>'+
+        '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기">✏️</button>'+
+      '</div>';
     });
   }
   html += '<div class="row" style="margin-top:6px">'+
@@ -3368,11 +3445,12 @@ function screenSentList(){
       '문장이 길면 따라 그리기가 힘들어요.<br>짧은 문장부터 시작해보세요!</div>';
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
-  document.getElementById('add').onclick = function(){ screenSentEdit(null); };
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenSentEdit(null); }, screenSentList); };
+  on('.qzedit', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.ed); if(s) needDad(function(){ screenSentEdit(s); }, screenSentList); });
   on('.qzbk', function(){
     var s = sentById(this.dataset.id);
     if(!s) return;
-    if(!s.items.length){ noSound(); toast('문장 없음'); screenSentEdit(s); return; }
+    if(!s.items.length){ needDad(function(){ screenSentEdit(s); }, screenSentList); return; }
     beep([700,900],.06); startSent(s);
   });
 }
@@ -3619,6 +3697,284 @@ function startSent(s){
   }
 }
 
+/* =========================================================
+   미매말 — 그림(사진) 보고 영어 문장 맞히기
+   ========================================================= */
+function screenMimemal(){
+  var ms = mimemal();
+  var allDone = mmAllDone();
+  var html =
+    '<div class="topbar">'+
+      '<button class="iconbtn" id="back">←</button>'+
+      '<h2>📷 미매말</h2>'+
+      '<div class="pill">⭐ '+mmStars()+'</div>'+
+    '</div>'+
+    '<div class="card" style="margin-bottom:12px;text-align:center">'+
+      '<div style="font-size:16px">📷 <b>미</b>션! 그림보고 <b>매</b>칭되는 영어 <b>말</b> 쓰기</div>'+
+      '<div class="muted" style="margin-top:5px">그림을 보고 <b>영어 문장</b>을 써요.<br>맞으면 통과, 틀리면 <b>'+MM_TIMES+'번</b> 따라 써요.<br>순서대로 다 맞히면 ⭐ '+MM_STAR_MIN+'~'+MM_STAR_MAX+'개를 뽑아요!</div>'+
+    '</div>';
+  if(!ms.length){
+    html += '<div class="card" style="text-align:center"><div style="font-size:44px">📷</div>'+
+      '<div class="muted" style="margin-top:6px">아직 문제가 없어요.<br>아빠가 아래 버튼으로 사진을 찍어 만들어 주세요!</div></div>';
+  } else {
+    html += '<button class="testbtn" id="play" style="background:linear-gradient(135deg,#F472B6,#A855F7);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
+        '<div class="ico">▶</div>'+
+        '<div class="t"><b>미매말 시작!</b><small>문제 '+ms.length+'개 · 순서대로 · '+(allDone?'✅ 다 통과!':'⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX)+'</small></div>'+
+        '<div style="font-size:22px">🎯</div>'+
+      '</button>';
+    html += '<div class="sechd">문제 목록 <span style="font-size:12px">· ✏️는 아빠가 고치기</span></div>';
+    ms.forEach(function(m, idx){
+      html += '<div class="qzrow">'+
+        '<div class="qzbk" style="flex:1;cursor:default">'+
+          '<div class="ico" style="overflow:hidden">'+(m.img
+              ? '<img src="'+m.img+'" style="width:44px;height:44px;object-fit:cover;border-radius:10px">'
+              : '🖼️')+'</div>'+
+          '<div class="t"><b>'+(idx+1)+'. '+esc(m.en||'(문장 없음)')+'</b><small>'+(m.done?'✅ ⭐'+(m.stars||0)+'개':'아직')+'</small></div>'+
+        '</div>'+
+        '<button class="qzedit" data-ed="'+esc(m.id)+'" title="아빠가 고치기">✏️</button>'+
+      '</div>';
+    });
+  }
+  html += '<div class="row" style="margin-top:6px">'+
+      '<button class="btn primary" id="add" style="flex:1">📷 문제 추가 (사진 찍기)</button>'+
+    '</div>'+
+    '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
+      '사진을 찍고 정답 영어 문장을 넣으면 문제가 돼요.</div>';
+  app.innerHTML = html;
+  document.getElementById('back').onclick = screenHome;
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenMmEdit(null); }, screenMimemal); };
+  if(document.getElementById('play')) document.getElementById('play').onclick = function(){ beep([700,900],.06); startMimemal(); };
+  on('.qzedit', function(){ var m=mmById(this.dataset.ed); if(m) needDad(function(){ screenMmEdit(m); }, screenMimemal); });
+}
+
+/* 문제 만들기 / 고치기 (아빠) — 사진 찍기 + 정답 문장 */
+function screenMmEdit(m){
+  var editing = !!m;
+  var img = m ? (m.img||'') : '';
+  var en  = m ? (m.en||'') : '';
+  function draw(){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back">←</button>'+
+        '<h2>'+(editing?'✏️ 문제 고치기':'📷 문제 추가')+'</h2><div style="width:44px"></div></div>'+
+      '<div class="card frm">'+
+        '<div class="qlab">① 그림 (카메라로 찍기)</div>'+
+        '<div style="text-align:center;margin:8px 0">'+
+          (img ? '<img id="prev" src="'+img+'" style="max-width:100%;max-height:220px;border-radius:14px;border:2px solid var(--line)">'
+               : '<div id="prev" style="width:100%;height:160px;border:2px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:44px;color:#bbb">🖼️</div>')+
+        '</div>'+
+        '<input id="cam" type="file" accept="image/*" capture="environment" style="display:none">'+
+        '<div class="row">'+
+          '<button class="btn primary" id="shot" style="flex:1">📷 사진 찍기 / 고르기</button>'+
+          (img ? '<button class="btn" id="clrimg">🗑 사진 지우기</button>' : '')+
+        '</div>'+
+        '<div class="qlab" style="margin-top:14px">② 정답 영어 문장</div>'+
+        '<input id="men" placeholder="예: The cat is sleeping" value="'+esc(en)+'">'+
+        '<div class="muted" style="font-size:12px;margin-top:4px">하준이가 이 문장을 보고 맞히면 통과예요.</div>'+
+      '</div>'+
+      '<button class="btn primary wide" id="save" style="font-size:18px">💾 저장하기</button>'+
+      (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 문제 지우기</button>' : '')+
+      '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
+        '사진은 이 기기·진도에 저장돼요. 너무 큰 사진은 자동으로 줄여서 저장합니다.</div>';
+    document.getElementById('back').onclick = screenMimemal;
+    document.getElementById('shot').onclick = function(){ document.getElementById('cam').click(); };
+    document.getElementById('cam').onchange = function(){
+      var f = this.files && this.files[0];
+      if(!f) return;
+      toast('🖼️');
+      shrinkImage(f, 900, 0.72, function(dataUrl){
+        img = dataUrl; draw();
+      });
+    };
+    if(document.getElementById('clrimg')) document.getElementById('clrimg').onclick = function(){ img=''; draw(); };
+    document.getElementById('save').onclick = function(){
+      en = document.getElementById('men').value.trim();
+      if(!en){ noSound(); toast('정답 문장을 넣어주세요'); return; }
+      if(!img){ if(!confirm('사진 없이 저장할까요? (그림 없이 문장만 나와요)')) return; }
+      if(!PROG.mimemal) PROG.mimemal = [];
+      if(editing){ m.img=img; m.en=en; }
+      else PROG.mimemal.push({id:'m'+Date.now(), img:img, en:en, done:false, stars:0});
+      saveProgress(); okSound(); toast('💾'); screenMimemal();
+    };
+    if(document.getElementById('del')) document.getElementById('del').onclick = function(){
+      if(!confirm('이 문제를 지울까요?')) return;
+      PROG.mimemal = mimemal().filter(function(x){ return x.id!==m.id; });
+      saveProgress(); toast('🗑'); screenMimemal();
+    };
+  }
+  // 저장된 en을 잃지 않도록 입력값 동기화
+  draw();
+  var inp=document.getElementById('men'); if(inp) inp.oninput=function(){ en=this.value; };
+}
+
+/* 사진 축소 → dataURL (저장 용량 절약) */
+function shrinkImage(file, maxSide, quality, cb){
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var im = new Image();
+    im.onload = function(){
+      var w = im.width, h = im.height, sc = Math.min(1, maxSide/Math.max(w,h));
+      var cw = Math.round(w*sc), ch = Math.round(h*sc);
+      var cv = document.createElement('canvas'); cv.width=cw; cv.height=ch;
+      cv.getContext('2d').drawImage(im, 0, 0, cw, ch);
+      try{ cb(cv.toDataURL('image/jpeg', quality)); }
+      catch(err){ cb(e.target.result); }
+    };
+    im.onerror = function(){ cb(e.target.result); };
+    im.src = e.target.result;
+  };
+  reader.onerror = function(){ cb(''); };
+  reader.readAsDataURL(file);
+}
+
+/* 미매말 시험 진행 — 순서대로, 맞히면 통과 / 틀리면 5번 따라쓰기 */
+function startMimemal(){
+  var list = mimemal();
+  var order = list.map(function(_,i){ return i; });   /* 순서대로 (섞지 않음) */
+  var pos = 0, results = order.map(function(){ return null; });
+
+  function head(sub){
+    return '<div class="topbar">'+
+        '<button class="iconbtn" id="mback">←</button>'+
+        '<h2>'+sub+'</h2>'+
+        '<div class="pill">'+(pos+1)+'/'+order.length+'</div>'+
+      '</div>';
+  }
+  function backBind(){ document.getElementById('mback').onclick = function(){ stopAll(); screenMimemal(); }; }
+  function cur(){ return list[order[pos]]; }
+
+  /* ① 그림 보고 문장 쓰기 (아빠 채점) */
+  function ask(){
+    var shown = false, pad = null;
+    function draw(){
+      var m = cur();
+      app.innerHTML = head('📷 미매말') +
+        '<div class="card" style="text-align:center">'+
+          '<div class="traceBig">그림을 보고 <b>영어 문장</b>을 써 보세요!</div>'+
+          (m.img
+            ? '<img src="'+m.img+'" style="max-width:100%;max-height:230px;border-radius:14px;border:2px solid var(--line);margin:6px 0">'
+            : '<div style="font-size:64px;margin:10px 0">🖼️</div>')+
+          (shown ? '<div class="sentHint">'+esc(m.en)+'</div>' : '')+
+          '<div class="drawTip">✏️ 아래 <b>큰 칸</b>에 펜(손가락)으로 <b>영어 문장</b>을 써요</div>'+
+          '<div class="drawWrap big"><canvas id="cv"></canvas></div>'+
+          '<div class="drawBtns">'+
+            '<button class="btn" id="clr">↺ 지우고 다시</button>'+
+            '<button class="btn" id="peek">'+(shown?'🔊 정답 듣기':'👁 정답 보기')+'</button>'+
+          '</div>'+
+          '<div class="sechd" style="margin-top:14px">👨 아빠가 채점해주세요</div>'+
+          '<div class="judge2">'+
+            '<button class="btn no" id="bad">❌ 다시</button>'+
+            '<button class="btn go" id="ok">⭕ 통과</button>'+
+          '</div>'+
+        '</div>';
+      backBind();
+      pad = makeSentCanvas(document.getElementById('cv'), m.en, false, 320);
+      document.getElementById('clr').onclick = function(){ pad.clear(); };
+      document.getElementById('peek').onclick = function(){
+        if(!shown){ shown = true; draw(); }
+        else speakWords(m.en.split(/\s+/), RATE, function(){});
+      };
+      document.getElementById('ok').onclick = function(){ okSound(); toast('⭕'); results[pos]='ok'; next(); };
+      document.getElementById('bad').onclick = function(){ beep([300],.1); trace(); };
+    }
+    draw();
+  }
+
+  /* 틀림 → 정답을 MM_TIMES번 따라 쓰기 */
+  function trace(){
+    var n = 0, pad = null;
+    function draw(){
+      var m = cur();
+      app.innerHTML = head('✏️ 따라 쓰기') +
+        '<div class="card" style="text-align:center">'+
+          '<div class="traceBig">정답을 <b>'+MM_TIMES+'번</b> 따라 써요! '+
+            '<span style="color:var(--grape)">('+n+'/'+MM_TIMES+')</span></div>'+
+          (m.img ? '<img src="'+m.img+'" style="max-height:120px;border-radius:12px;margin:4px 0">' : '')+
+          '<div class="sentEn">'+esc(m.en)+'</div>'+
+          '<div class="row" style="justify-content:center">'+
+            '<button class="btn primary" id="say">🔊 듣기</button>'+
+            '<button class="btn" id="slow">🐢</button>'+
+          '</div>'+
+          '<div class="traceCount">'+ (function(){
+            var o=''; for(var k=1;k<=MM_TIMES;k++){ var cls=k<=n?'done':(k===n+1?'now':''); o+='<div class="tc '+cls+'">'+(k<=n?'✓':k)+'</div>'; } return o;
+          })() +'</div>'+
+          '<div class="drawTip" id="tip">'+(n>=MM_TIMES?'🎉 다 썼어요! 다음 문제로 가요.':'희미한 글자 위를 손가락으로 덮어 써요')+'</div>'+
+          '<div class="drawWrap"><canvas id="cv"></canvas></div>'+
+          (n>=MM_TIMES
+            ? '<button class="btn go wide" id="go" style="font-size:19px;padding:16px">다음 문제로 ▶</button>'
+            : '<div class="drawBtns"><button class="btn" id="clr">↺ 지우고 다시</button><button class="btn go" id="chk">✓ 다 썼어요</button></div>')+
+        '</div>';
+      backBind();
+      document.getElementById('say').onclick = function(){ speakWords(m.en.split(/\s+/), RATE, function(){}); };
+      document.getElementById('slow').onclick = function(){ speakWords(m.en.split(/\s+/), 0.6, function(){}); };
+      pad = makeSentCanvas(document.getElementById('cv'), m.en, true, 240);
+      if(n >= MM_TIMES){
+        document.getElementById('go').onclick = function(){ stopAll(); results[pos]='bad'; next(); };
+        return;
+      }
+      document.getElementById('clr').onclick = function(){ pad.clear(); };
+      document.getElementById('chk').onclick = function(){
+        var r = pad.ratio();
+        if(r >= SENT_COVER){
+          n++;
+          if(n>=MM_TIMES){ starSound(); confetti(14); } else beep([620+n*25],.05);
+          setTimeout(draw, 180);
+        } else {
+          noSound();
+          var tip=document.getElementById('tip'); if(tip){ tip.textContent='조금 더 따라 써보세요! ('+Math.round(r*100)+'%)'; tip.style.color='var(--berry)'; }
+        }
+      };
+      speakWords(m.en.split(/\s+/), RATE, function(){});
+    }
+    draw();
+  }
+
+  function next(){
+    stopAll();
+    pos++;
+    if(pos < order.length){ ask(); return; }
+    finish();
+  }
+
+  /* 끝 — 모두 통과했으면 별 1~20 뽑기 */
+  function finish(){
+    var allOk = results.every(function(r){ return r==='ok'; });
+    starSound(); confetti(50);
+    var justGot = null;
+    render();
+    function render(){
+      var okCount = results.filter(function(r){ return r==='ok'; }).length;
+      app.innerHTML =
+        '<div class="result">'+
+          '<div class="big">'+(allOk?'🏆':'🎯')+'</div>'+
+          '<h2>미매말 끝!</h2>'+
+          '<p>'+order.length+'문제 중 <b>'+okCount+'개</b> 한 번에 통과!<br>'+
+            (allOk?'모두 순서대로 맞혔어요! 대단해요!':'틀린 건 5번씩 따라 썼어요. 잘했어요!')+'</p>'+
+          (allOk
+            ? (justGot!==null
+                ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+new Array(justGot+1).join('⭐')+'<br><b>별 '+justGot+'개</b>를 받았어요!</div>'
+                : '<div class="card" style="margin-bottom:12px;background:#FFF8E6">⭐ 별 <b>'+MM_STAR_MIN+'~'+MM_STAR_MAX+'개</b>를 뽑을 수 있어요!</div>'+
+                  '<button class="btn primary wide" id="draw" style="font-size:20px;padding:17px;margin-bottom:10px">⭐ 별 뽑기!</button>')
+            : '<div class="card" style="margin-bottom:12px">모든 문제를 <b>한 번에</b> 맞히면 별을 뽑을 수 있어요. 다시 도전해봐요!</div>')+
+          '<button class="btn primary wide" id="again" style="margin-bottom:10px">🔁 한 번 더</button>'+
+          '<button class="btn go wide" id="lst">📷 목록으로</button>'+
+        '</div>';
+      if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
+        modalStarDraw(function(got){
+          /* 통과 표시 + 별 저장 (문제별로 나눠 저장) */
+          var per = Math.floor(got/list.length), rem = got - per*list.length;
+          list.forEach(function(m,i){ m.done = true; m.stars = per + (i<rem?1:0); });
+          saveProgress();
+          justGot = got; render(); checkFinal();
+        }, MM_STAR_MIN, MM_STAR_MAX);
+      };
+      document.getElementById('again').onclick = function(){ beep([700,900],.06); startMimemal(); };
+      document.getElementById('lst').onclick = screenMimemal;
+    }
+  }
+
+  ask();
+}
+
 function screenSpecials(){
   var html =
     '<div class="topbar">'+
@@ -3677,23 +4033,27 @@ function screenSpecials(){
     ev.stopPropagation();
     var id = this.dataset.delsp;
     var sp = SPECIALS.filter(function(x){ return x.id===id; })[0];
-    if(!confirm('“'+(sp?sp.t:'이 시')+'”를 목록에서 숨길까요?\n(나중에 다시 보이게 할 수 있어요)')) return;
-    if(!PROG.hiddenSpecs) PROG.hiddenSpecs = [];
-    if(PROG.hiddenSpecs.indexOf(id)<0) PROG.hiddenSpecs.push(id);
-    saveProgress(); toast('🗑'); screenSpecials();
+    needDad(function(){
+      if(!confirm('“'+(sp?sp.t:'이 시')+'”를 목록에서 숨길까요?\n(나중에 다시 보이게 할 수 있어요)')) return;
+      if(!PROG.hiddenSpecs) PROG.hiddenSpecs = [];
+      if(PROG.hiddenSpecs.indexOf(id)<0) PROG.hiddenSpecs.push(id);
+      saveProgress(); toast('🗑'); screenSpecials();
+    }, screenSpecials);
   });
   on('[data-delpb]', function(ev){
     ev.stopPropagation();
     var id = this.dataset.delpb;
     var b = papers().filter(function(x){ return x.id===id; })[0];
-    if(!confirm('“'+(b?b.t:'이 책')+'”를 정말 삭제할까요?\n읽은 기록도 함께 지워집니다.')) return;
-    PROG.papers = papers().filter(function(x){ return x.id!==id; });
-    saveProgress(); toast('🗑'); screenSpecials();
+    needDad(function(){
+      if(!confirm('“'+(b?b.t:'이 책')+'”를 정말 삭제할까요?\n읽은 기록도 함께 지워집니다.')) return;
+      PROG.papers = papers().filter(function(x){ return x.id!==id; });
+      saveProgress(); toast('🗑'); screenSpecials();
+    }, screenSpecials);
   });
   if(document.getElementById('unhidesp')) document.getElementById('unhidesp').onclick = function(){
     PROG.hiddenSpecs = []; saveProgress(); toast('↩️'); screenSpecials();
   };
-  document.getElementById('addp').onclick = screenAddPaper;
+  document.getElementById('addp').onclick = function(){ needDad(screenAddPaper, screenSpecials); };
 }
 function specHidden(id){ return (PROG.hiddenSpecs||[]).indexOf(id) >= 0; }
 
@@ -3812,7 +4172,7 @@ function screenPaper(b){
       if(n>=1 && n<=b.pages){ i=n-1; draw(); }
     };
     document.getElementById('no').onclick = function(){ beep([300],.1); toast('💪'); };
-    document.getElementById('edlines').onclick = function(){ stopAll(); editLines(); };
+    document.getElementById('edlines').onclick = function(){ stopAll(); needDad(editLines, function(){ screenPaper(b); }); };
     document.getElementById('ok').onclick = function(){
       okSound(); toast('⭕'); stopAll();
       if(i+1 > b.read){ b.read = i+1; saveProgress(); }
@@ -5154,9 +5514,13 @@ function screenSettings(){
     '</div>'+
     '<div class="sheet">'+
       '<h3>🩺 문제 해결</h3>'+
-      '<div class="muted">앱이 안 열리거나 소리가 안 나면 여기부터 보세요.'+
+      '<div class="muted">앱이 안 열리거나 소리가 안 나면 여기부터 보세요.<br>'+
+        '현재 화면 버전: <b>'+APP_VERSION+'</b>'+
         (OFFLINE ? '<br><b style="color:var(--berry)">⚠️ 지금 서버 연결이 안 되고 있어요!</b>' : '')+'</div>'+
-      '<div class="row" style="justify-content:flex-start;margin-top:10px"><button class="btn" id="diag">🩺 진단 화면 열기</button></div>'+
+      '<div class="row" style="justify-content:flex-start;margin-top:10px;flex-wrap:wrap">'+
+        '<button class="btn primary" id="freshen">🔄 최신으로 새로고침</button>'+
+        '<button class="btn" id="diag">🩺 진단 화면 열기</button></div>'+
+      '<div class="muted" style="font-size:12px;margin-top:6px">새 기능이 안 보이면 위 버튼을 누르세요. (캐시를 비우고 새 화면을 받아옵니다)</div>'+
     '</div>'+
     '<div class="sheet">'+
       '<h3>👨‍👩‍👦 부모님께</h3>'+
@@ -5191,6 +5555,13 @@ function screenSettings(){
     '</div>';
   document.getElementById('back').addEventListener('click', screenHome);
   document.getElementById('diag').onclick = screenDiag;
+  if(document.getElementById('freshen')) document.getElementById('freshen').onclick = function(){
+    /* 캐시를 비우고 최신 화면을 받아온다 */
+    toast('🔄');
+    try{ if(window.caches && caches.keys) caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }); }catch(e){}
+    var u = location.href.split('#')[0].split('?')[0];
+    location.replace(u + '?fresh=' + Date.now());   /* 캐시 무시하고 새로 로드 */
+  };
   if(document.getElementById('dorev')) document.getElementById('dorev').onclick = startReview;
   if(document.getElementById('clrmiss')) document.getElementById('clrmiss').onclick = function(){
     if(!confirm('못 읽은 단어 목록을 비울까요?')) return;
@@ -5284,6 +5655,7 @@ function screenDiag(){
     ['고른 목소리', voice ? voice.name : '(없음)'],
     ['AI 음성', hasServer ? (AI_OK ? '✅ 켜짐' : '⚪ 꺼짐 (API 키 없음)') : '⚪ 확인 불가'],
     ['소리 엔진', TTSMODE==='ai' ? 'AI 음성' : '기기 음성'],
+    ['화면 버전', APP_VERSION],
     ['화면 크기', window.innerWidth+' × '+window.innerHeight],
     ['모은 별 / 지갑', totalStars()+' / '+walletStars()],
     ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 스페셜 '+specStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
