@@ -535,15 +535,18 @@ function apiGet(action, cb){
   sc.src = GAS_URL + '?action=' + encodeURIComponent(action) + '&callback=' + name;
   document.head.appendChild(sc);
 }
-function apiPost(payload, cb){
+function apiPost(payload, cb, keepalive){
   /* POST는 text/plain 으로 보내 프리플라이트 없이 크로스도메인 동작 */
-  fetch(GAS_URL, {
-    method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-    body: JSON.stringify(payload)
-  }).then(function(r){ return r.json(); })
-    .then(function(j){ cb(j); })
-    .catch(function(e){ cb(undefined, e); });
+  var opt = { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) };
+  if(keepalive) opt.keepalive = true;   /* 화면을 닫아도 전송 완료되게 */
+  fetch(GAS_URL, opt).then(function(r){ return r.json(); })
+    .then(function(j){ cb && cb(j); })
+    .catch(function(e){ cb && cb(undefined, e); });
 }
+/* ── 동기화 상태 ──
+   LOAD_BASE_SCORE: 부팅 때 채택한 진도의 '무게'. 이것보다 재앙적으로 줄면 서버에 안 쓴다.
+   syncPending: 서버에 아직 못 올린 변경이 있음. syncRetry: 재시도 타이머. allowWipe: 의도한 초기화. */
+var LOAD_BASE_SCORE = 0, syncPending = false, syncRetry = null, syncFailN = 0, allowWipe = false;
 /* 서버에서 받은 진도에 '실제로 한 흔적'이 있는지 (빈 진도면 기기 것을 쓴다) */
 function hasProgress(p){
   if(!p) return false;
@@ -1508,12 +1511,19 @@ function loadProgress(cb){
         SERVER_LOADED = true;
         var local = readLocal();
         var sHas = hasProgress(p), lHas = hasProgress(local);
-        if(sHas && lHas){ PROG = (progScore(local) > progScore(p)) ? local : p; }
+        if(sHas && lHas){
+          /* 둘 다 있으면 '더 최근에 저장한 쪽'을 쓴다 (기기 간 최신본 우선). 시각이 없으면 진도량으로. */
+          var st = +(p && p._ts) || 0, lt = +(local && local._ts) || 0;
+          if(st !== lt) PROG = (lt > st) ? local : p;
+          else PROG = (progScore(local) > progScore(p)) ? local : p;
+          if(PROG === local) needPush = true;   /* 기기 것이 최신 → 서버로 올림 */
+        }
         else if(sHas){ PROG = p; }
         else if(lHas){ PROG = local; needPush = true; }
         else { PROG = p; }
       }
       applyProg();
+      LOAD_BASE_SCORE = progScore(PROG);   /* 이 값보다 재앙적으로 줄면 서버 저장을 막는다 */
       if(needPush && SERVER_LOADED && !OFFLINE){
         try{ apiPost({action:'save', prog:PROG}, function(){}); }catch(e){}
       }
@@ -1538,15 +1548,46 @@ function bootFail(e){
 var saveTimer=null;
 function saveProgress(){
   PROG.rate = RATE;
+  PROG._ts = Date.now();          /* 최신본 판별용 시각 (기기 간 동기화) */
   /* 서버가 되든 안 되든 기기에 먼저 저장한다 */
   try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
-  if(!hasServer || OFFLINE || !SERVER_LOADED) return;
+  /* 서버에서 진도를 정상적으로 불러오기 전에는 서버에 쓰지 않는다 (초기화 방지) */
+  if(!hasServer || !SERVER_LOADED) return;
+  /* ★ 재앙적 초기화 가드: 부팅 때 진도가 있었는데 지금 텅 비었다면,
+     버그로 날아간 것일 수 있으니 서버에 쓰지 않는다. (의도한 초기화는 allowWipe로 통과) */
+  if(!allowWipe && LOAD_BASE_SCORE >= 100 && progScore(PROG) < 1){
+    ERRS.push('안전장치: 진도가 갑자기 비어 서버 저장을 막았어요');
+    try{ var w=document.getElementById('bootmsg'); }catch(e){}
+    return;
+  }
+  syncPending = true;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(function(){
-    try{
-      apiPost({action:'save', prog:PROG}, function(j, e){ if(e){ OFFLINE = true; ERRS.push('저장 실패: '+e); } });
-    }catch(e){ OFFLINE = true; }
-  }, 400);
+  saveTimer = setTimeout(flushSave, 250);   /* 거의 즉시 (연타는 묶어서) */
+}
+/* 서버로 지금 바로 올린다. 실패하면 OFFLINE로 죽이지 않고 재시도한다. */
+function flushSave(keepalive){
+  if(!hasServer || !SERVER_LOADED || !syncPending) return;
+  var snapshot = PROG;
+  try{
+    apiPost({action:'save', prog:snapshot}, function(j, e){
+      if(e || !j || j.ok===false){
+        /* 실패 → 잠깐 뒤 재시도 (지수 백오프, 최대 30초). 세션을 영구 오프라인으로 만들지 않는다. */
+        syncFailN++;
+        OFFLINE = true;
+        var wait = Math.min(30000, 1000 * Math.pow(2, Math.min(5, syncFailN)));
+        clearTimeout(syncRetry);
+        syncRetry = setTimeout(flushSave, wait);
+      } else {
+        /* 성공 */
+        syncPending = false; syncFailN = 0; OFFLINE = false;
+        clearTimeout(syncRetry); syncRetry = null;
+      }
+    }, keepalive);
+  }catch(e){
+    syncFailN++;
+    clearTimeout(syncRetry);
+    syncRetry = setTimeout(flushSave, 2000);
+  }
 }
 function normProg(){
   if(!PROG || typeof PROG!=='object') PROG={};
@@ -4059,36 +4100,67 @@ function specHidden(id){ return (PROG.hiddenSpecs||[]).indexOf(id) >= 0; }
 
 /* 책 등록 — 아버님이 제목과 쪽수만 넣으시면 됩니다 */
 function screenAddPaper(){
-  app.innerHTML =
-    '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>➕ 읽을 책 추가</h2><div style="width:44px"></div></div>'+
-    '<div class="card frm">'+
-      '<div class="muted" style="margin-bottom:10px">책 표지에 있는 대로 적어주세요.</div>'+
-      '<input id="pt" placeholder="책 제목 (예: Maisy, Charley and the Wobbly Tooth)">'+
-      '<input id="pb" placeholder="지은이 / 출판사 (예: Lucy Cousins · Walker Books)">'+
-      '<input id="pk" placeholder="한글 제목 (없어도 돼요)">'+
-      '<input id="pp" type="number" min="1" max="500" placeholder="쪽수 (예: 26)">'+
-      '<input id="pe" placeholder="그림 이모지 (예: 📕)" value="📕" maxlength="4">'+
-      '<div class="qlab" style="margin-top:10px">책 문장 직접 넣기 (안 넣어도 돼요)</div>'+
-      '<textarea id="px" rows="6" style="width:100%;border:2px solid #E5E1F5;border-radius:12px;padding:10px;font-size:15px;font-family:inherit" placeholder="한 줄에 한 쪽씩, 아빠가 직접 타이핑해요."></textarea>'+
-      '<div class="muted" style="font-size:12px;margin-top:4px">넣은 쪽은 읽기 화면에 문장이 보이고 🔊 소리도 나와요.<br>줄 수가 쪽수보다 적어도 괜찮아요 (있는 쪽만 보여줘요).</div>'+
-      '<button class="btn primary wide" id="save" style="margin-top:10px">책 등록하기</button>'+
-    '</div>';
-  document.getElementById('back').onclick = screenSpecials;
-  document.getElementById('save').onclick = function(){
-    var t = document.getElementById('pt').value.trim();
-    var pg = parseInt(document.getElementById('pp').value, 10);
-    if(!t || !pg || pg<1){ noSound(); alert('책 제목과 쪽수는 꼭 넣어주세요.'); return; }
-    PROG.papers.push({
-      id: 'p'+Date.now(),
-      e: document.getElementById('pe').value.trim() || '📕',
-      t: t,
-      by: document.getElementById('pb').value.trim() || '',
-      ko: document.getElementById('pk').value.trim() || '',
-      pages: Math.min(pg, 500), read: 0, done: false,
-      lines: document.getElementById('px').value.split('\n').map(function(x){ return x.trim(); }).filter(Boolean).slice(0, 500)
-    });
-    saveProgress(); okSound(); toast('📕'); screenSpecials();
-  };
+  var meta = {t:'', by:'', ko:'', e:'📕'};
+  var lines = ['', '', ''];   /* 쪽별 문장 — 칸 개수가 곧 쪽수가 된다 */
+  function draw(){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>➕ 읽을 책 추가</h2><div style="width:44px"></div></div>'+
+      '<div class="card frm">'+
+        '<div class="muted" style="margin-bottom:10px">책 표지에 있는 대로 적어주세요.</div>'+
+        '<input id="pt" placeholder="책 제목 (예: Maisy, Charley and the Wobbly Tooth)" value="'+esc(meta.t)+'">'+
+        '<input id="pb" placeholder="지은이 / 출판사 (예: Lucy Cousins · Walker Books)" value="'+esc(meta.by)+'">'+
+        '<input id="pk" placeholder="한글 제목 (없어도 돼요)" value="'+esc(meta.ko)+'">'+
+        '<input id="pe" placeholder="그림 이모지 (예: 📕)" value="'+esc(meta.e)+'" maxlength="4">'+
+      '</div>'+
+      '<div class="sechd">📄 쪽별 문장 <span style="font-size:12px">· 칸 개수가 곧 <b>쪽수</b>가 돼요 (현재 <b id="pgcnt">'+lines.length+'</b>쪽)</span></div>'+
+      '<div id="pgrows"></div>'+
+      '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
+      '<button class="btn primary wide" id="save" style="font-size:18px">📕 책 등록하기</button>'+
+      '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
+        '쪽마다 그 쪽의 영어 문장을 넣으세요. <b>넣은 칸 수가 쪽수</b>예요.<br>'+
+        '비워둔 쪽은 문장 없이 쪽수만 세어져요 (책을 보며 읽기).</div>';
+    document.getElementById('pgrows').innerHTML = lines.map(function(ln,i){
+      return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
+        '<div class="row" style="align-items:center;gap:8px">'+
+          '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:42px">'+(i+1)+'쪽</div>'+
+          '<input class="pgin" data-pg="'+i+'" style="flex:1;margin:0" placeholder="이 쪽의 영어 문장 (비워도 돼요)" value="'+esc(ln)+'">'+
+          (lines.length>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
+        '</div>'+
+      '</div>';
+    }).join('');
+    function collect(){
+      meta.t = document.getElementById('pt').value;
+      meta.by = document.getElementById('pb').value;
+      meta.ko = document.getElementById('pk').value;
+      meta.e = document.getElementById('pe').value;
+      Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; });
+    }
+    document.getElementById('back').onclick = screenSpecials;
+    document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); draw(); };
+    on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg, 1); draw(); });
+    document.getElementById('save').onclick = function(){
+      collect();
+      var t = (meta.t||'').trim();
+      if(!t){ noSound(); alert('책 제목을 꼭 넣어주세요.'); return; }
+      var arr = lines.map(function(x){ return String(x||'').trim(); });
+      /* 끝쪽부터 빈 칸은 잘라내되, 최소 1쪽은 남긴다 (쪽수 = 칸 개수) */
+      var last = arr.length-1;
+      while(last>0 && !arr[last]) last--;
+      arr = arr.slice(0, last+1);
+      var pages = arr.length;
+      PROG.papers.push({
+        id: 'p'+Date.now(),
+        e: (meta.e||'').trim() || '📕',
+        t: t,
+        by: (meta.by||'').trim() || '',
+        ko: (meta.ko||'').trim() || '',
+        pages: pages, read: 0, done: false,
+        lines: arr
+      });
+      saveProgress(); okSound(); toast('📕'); screenSpecials();
+    };
+  }
+  draw();
 }
 
 /* 종이책 읽기 — 한 쪽씩, 아빠가 ⭕ 해야 넘어간다. 진도는 저장된다. */
@@ -4183,36 +4255,45 @@ function screenPaper(b){
   function editLines(){
     var lines = (b.lines||[]).slice();
     while(lines.length < b.pages) lines.push('');
-    lines = lines.slice(0, b.pages);
-    var rowsHtml = '';
-    for(var pg=0; pg<b.pages; pg++){
-      rowsHtml += '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
-        '<div class="qlab" style="margin-bottom:4px">'+(pg+1)+'쪽</div>'+
-        '<input class="pgin" data-pg="'+pg+'" placeholder="'+(pg+1)+'쪽 문장 (비워도 돼요)" value="'+esc(lines[pg])+'">'+
-      '</div>';
+    if(!lines.length) lines = [''];
+    function render(){
+      app.innerHTML =
+        '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>✏️ 책 문장 넣기</h2><div style="width:44px"></div></div>'+
+        '<div class="card" style="margin-bottom:10px">'+
+          '<div class="muted"><b>'+esc(b.t)+'</b> · 칸 개수가 곧 <b>쪽수</b> (현재 <b id="pgcnt">'+lines.length+'</b>쪽)<br>'+
+            '쪽마다 문장을 넣거나 고치세요. 넣은 쪽은 읽기 화면에 문장과 🔊 소리가 나와요.<br>'+
+            '<b>비워두면</b> 그 쪽은 문장 없이 쪽수만 세어져요.</div>'+
+        '</div>'+
+        '<div id="pgrows"></div>'+
+        '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
+        '<button class="btn primary wide" id="save">💾 저장하기</button>';
+      document.getElementById('pgrows').innerHTML = lines.map(function(ln,i){
+        return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
+          '<div class="row" style="align-items:center;gap:8px">'+
+            '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:42px">'+(i+1)+'쪽</div>'+
+            '<input class="pgin" data-pg="'+i+'" style="flex:1;margin:0" placeholder="이 쪽의 영어 문장 (비워도 돼요)" value="'+esc(ln)+'">'+
+            (lines.length>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
+          '</div>'+
+        '</div>';
+      }).join('');
+      function collect(){ Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; }); }
+      document.getElementById('back').onclick = function(){ draw(); };
+      document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); render(); };
+      on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg,1); render(); });
+      document.getElementById('save').onclick = function(){
+        collect();
+        var arr = lines.map(function(x){ return String(x||'').trim(); });
+        /* 끝쪽부터 빈 칸은 잘라내되 최소 1쪽 남긴다. 쪽수 = 칸 개수 */
+        var last = arr.length-1;
+        while(last>0 && !arr[last]) last--;
+        arr = arr.slice(0, last+1);
+        b.lines = arr;
+        b.pages = arr.length;            /* 쪽수 자동 갱신 */
+        if(b.read > b.pages) b.read = b.pages;
+        saveProgress(); okSound(); toast('💾'); draw();
+      };
     }
-    app.innerHTML =
-      '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>✏️ 책 문장 넣기</h2><div style="width:44px"></div></div>'+
-      '<div class="card" style="margin-bottom:10px">'+
-        '<div class="muted"><b>'+esc(b.t)+'</b> ('+b.pages+'쪽)<br>'+
-          '쪽마다 문장을 넣거나 고치세요. 넣은 쪽은 읽기 화면에 문장과 🔊 소리가 나와요.<br>'+
-          '<b>비워두면</b> 그 쪽은 문장 없이 쪽수만 세어져요.</div>'+
-      '</div>'+
-      '<div id="pgrows">'+rowsHtml+'</div>'+
-      '<button class="btn primary wide" id="save" style="margin-top:6px">💾 저장하기</button>'+
-      '<div class="muted" style="text-align:center;margin-top:8px">쪽수를 늘리려면 목록에서 책을 새로 만들 때 쪽수를 크게 넣어주세요.</div>';
-    document.getElementById('back').onclick = function(){ draw(); };
-    document.getElementById('save').onclick = function(){
-      var arr = [];
-      Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){
-        arr[+el.dataset.pg] = el.value.trim();
-      });
-      /* 끝쪽부터 빈 칸은 잘라내되, 중간 빈 쪽은 그대로 둔다(쪽 번호 유지) */
-      var last = -1;
-      for(var k=0;k<arr.length;k++){ if(arr[k]) last = k; }
-      b.lines = arr.slice(0, last+1);
-      saveProgress(); okSound(); toast('💾'); draw();
-    };
+    render();
   }
 
   function finish(){
@@ -5577,10 +5658,11 @@ function screenSettings(){
   drawVoices();
   document.getElementById('reset').addEventListener('click', function(){
     if(!confirm('모은 별과 진도가 모두 사라집니다. 초기화할까요?')) return;
+    allowWipe = true; LOAD_BASE_SCORE = 0;   /* 의도한 초기화 → 안전장치 통과 */
     PROG={stars:{}, tests:{}, rewards:[], draws:[], miss:{}, books:{}, spec:{}, quizzes:[], sents:[], papers:null, bonus:[], cards:[],
           spent:0, finalWon:false, finalUsed:false, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
+    try{ localStorage.removeItem('phonics'); }catch(e){}
     if(hasServer) apiPost({action:'reset'}, function(){});
-    else { try{ localStorage.removeItem('phonics'); }catch(e){} }
     toast('🧹'); screenHome();
   });
 }
@@ -5697,6 +5779,15 @@ function screenDiag(){
    12) 시작
    ========================================================= */
 try{
+  /* 화면을 숨기거나 닫을 때, 아직 못 올린 변경을 즉시 서버로 보낸다 */
+  function flushNow(){ if(syncPending) { clearTimeout(saveTimer); flushSave(true); } }
+  try{
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') flushNow(); });
+    window.addEventListener('pagehide', flushNow);
+    window.addEventListener('beforeunload', flushNow);
+    /* 다시 화면이 보이면 못 올린 변경을 재시도 */
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible' && syncPending) flushSave(); });
+  }catch(e){}
   loadProgress(screenIntro);
 }catch(e){
   ERRS.push('부팅: '+e);
