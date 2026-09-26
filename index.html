@@ -228,13 +228,9 @@
 
   .sent{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;text-align:center;line-height:1.5}
   .qzrow{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
-
   .qzedit{flex:0 0 auto;width:52px;border:none;border-radius:16px;background:#EEF0FF;
-
     font-size:22px;cursor:pointer;box-shadow:0 4px 0 #C7CCF0}
-
   .qzedit:active{transform:translateY(2px);box-shadow:0 2px 0 #C7CCF0}
-
   .sw{display:inline-block;padding:2px 4px;border-radius:8px;cursor:pointer}
   .sw.hi{background:var(--mango);color:#fff}
   .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango);
@@ -2120,7 +2116,6 @@ function screenHome(){
   document.getElementById('libbig').onclick = screenLibrary;
   document.getElementById('spbig').onclick = screenSpecials;
   document.getElementById('pkbig').onclick = startPKGame;
-
   document.getElementById('mmbig').onclick = screenMimemal;
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
@@ -3105,9 +3100,11 @@ function startQuiz(q){
             : '<div class="drawBtns">'+
                 '<button class="btn" id="clr">\u21ba \uc9c0\uc6b0\uace0 \ub2e4\uc2dc</button>'+
                 '<button class="btn go" id="chk">\u2713 \ub2e4 \uadf8\ub838\uc5b4\uc694</button>'+
-              '</div>')+
+              '</div>'+
+              '<button class="btn wide" id="skipTrace" style="margin-top:8px;background:#EEF0FF;box-shadow:0 4px 0 #C7CCF0">\u23ed \ub530\ub77c \uadf8\ub9ac\uae30 \uac74\ub108\ub6f0\uae30</button>')+
         '</div>';
       document.getElementById('qback').onclick = function(){ stopAll(); screenQuizList(); };
+      if(document.getElementById('skipTrace')) document.getElementById('skipTrace').onclick = function(){ stopAll(); after(); };
       var playW = function(r){ speakWords([it.w], r||RATE, function(){}); };
       document.getElementById('sayW').onclick = function(){ playW(); };
       document.getElementById('slowW').onclick = function(){ playW(0.6); };
