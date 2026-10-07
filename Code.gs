@@ -187,6 +187,7 @@ function ttsSynth(req) {
  *   OCR_DAILY_MAX  하루 최대 호출 횟수 (남이 주소를 알아도 요금 폭탄 방지)
  */
 var OCR_MODEL = 'gemini-2.5-flash';
+var OCR_FALLBACK_MODEL = 'gemini-2.0-flash';   // 기본 모델이 붐빌 때 대신 쓰는 모델
 var OCR_DAILY_MAX = 60;
 var OCR_KEY_PROP = 'GEMINI_API_KEY';
 var OCR_PIN_PROP = 'OCR_PIN';          // 비워두면 index.html 의 DAD_PIN(기본 7084)과 비교
@@ -245,25 +246,32 @@ function ocrScan(req) {
   });
   parts.push({ text: OCR_PROMPTS[kind] });
 
+  var payload = JSON.stringify({
+    contents: [{ role: 'user', parts: parts }],
+    generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 8000 }
+  });
+  // 구글 쪽이 일시적으로 붐비면(503/429/500) 잠깐 쉬고 다시, 그래도 안 되면 예비 모델로 시도한다
+  var plan = [OCR_MODEL, OCR_MODEL, OCR_FALLBACK_MODEL, OCR_FALLBACK_MODEL];
+  var lastErr = '';
   try {
-    var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + OCR_MODEL + ':generateContent', {
-      method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-      headers: { 'x-goog-api-key': _ocrKey() },
-      payload: JSON.stringify({
-        contents: [{ role: 'user', parts: parts }],
-        generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 8000 }
-      })
-    });
-    var code = r.getResponseCode(), txt = r.getContentText();
-    if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
-    var j = JSON.parse(txt);
-    var cand = (j.candidates || [])[0];
-    var text = cand && cand.content && cand.content.parts
-      ? cand.content.parts.map(function (p) { return p.text || ''; }).join('') : '';
-    if (!text) return { error: 'EMPTY ' + (j.promptFeedback ? JSON.stringify(j.promptFeedback).slice(0, 150) : (cand && cand.finishReason) || '') };
-    var m = text.match(/\{[\s\S]*\}/);
-    if (!m) return { error: 'PARSE', raw: text.slice(0, 200) };
-    var data = JSON.parse(m[0]);
-    return { ok: true, data: data };
+    for (var t = 0; t < plan.length; t++) {
+      if (t > 0) Utilities.sleep(t === 1 ? 2000 : 1500);
+      var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + plan[t] + ':generateContent', {
+        method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+        headers: { 'x-goog-api-key': _ocrKey() }, payload: payload
+      });
+      var code = r.getResponseCode(), txt = r.getContentText();
+      if (code === 503 || code === 429 || code === 500 || code === 504) { lastErr = 'HTTP ' + code; continue; }
+      if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
+      var j = JSON.parse(txt);
+      var cand = (j.candidates || [])[0];
+      var text = cand && cand.content && cand.content.parts
+        ? cand.content.parts.map(function (p) { return p.text || ''; }).join('') : '';
+      if (!text) { lastErr = 'EMPTY ' + (cand && cand.finishReason || ''); continue; }
+      var m = text.match(/\{[\s\S]*\}/);
+      if (!m) { lastErr = 'PARSE'; continue; }
+      return { ok: true, data: JSON.parse(m[0]), model: plan[t] };
+    }
+    return { error: 'BUSY ' + lastErr };
   } catch (e) { return { error: String(e) }; }
 }

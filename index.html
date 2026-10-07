@@ -512,7 +512,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.07 22:05';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.07 22:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2912,7 +2912,7 @@ function screenQuizEdit(q){
         '<div class="qlab">\ub2e8\uc5b4\uc7a5 \uc774\ub984</div>'+
         '<input id="qt" placeholder="\uc608: 3\ud559\ub144 1\ub2e8\uc6d0 \ub2e8\uc5b4" value="'+esc(title)+'">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력 (뜻풀이·단어·한글 뜻)</button>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력</button>'+
       '<div class="sechd">\ubb38\uc81c \ubaa9\ub85d <span style="font-size:12px">\u00b7 \ub73b\ud480\uc774(\uc601\uc5b4 \ubb38\uc7a5) + \uc815\ub2f5 \ub2e8\uc5b4 + \ud55c\uae00 \ub73b</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">\u2795 \ubb38\uc81c \ud55c \uc904 \ucd94\uac00</button>'+
@@ -3523,7 +3523,7 @@ function screenSentEdit(s){
         '<div class="qlab">이름</div>'+
         '<input id="st" placeholder="예: 3학년 1단원 문장" value="'+esc(title)+'">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력 (영어 문장 + 한글 뜻)</button>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력</button>'+
       '<div class="sechd">문장 목록 <span style="font-size:12px">· 영어 문장 + 한글 뜻</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">➕ 문장 한 줄 추가</button>'+
@@ -3948,6 +3948,7 @@ function scanImages(kind, onResult){
         if(!j){ return fail('서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.'); }
         if(j.error === 'NO_KEY') return fail('아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setGeminiKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.');
         if(j.error === 'BAD_PIN') return fail('서버 비밀번호(OCR_PIN)가 맞지 않아요.');
+        if(/^BUSY|HTTP 5\d\d|HTTP 429/.test(String(j.error||''))) return fail('구글 AI가 지금 붐벼서 읽지 못했어요.\n잠시(1~2분) 뒤에 다시 눌러 주세요.');
         if(j.error === 'DAILY_LIMIT') return fail('오늘 사진 읽기 횟수를 모두 썼어요. 내일 다시 하거나 Code.gs의 OCR_DAILY_MAX를 올려 주세요.');
         if(j.error === 'UNKNOWN_ACTION') return fail('서버에 사진 읽기 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.');
         if(j.error || !j.ok || !j.data) return fail('읽지 못했어요: '+String(j.error||'알 수 없는 오류').slice(0,160));
@@ -4204,7 +4205,7 @@ function screenAddPaper(){
         '<input id="pk" placeholder="한글 제목 (없어도 돼요)" value="'+esc(meta.ko)+'">'+
         '<input id="pe" placeholder="그림 이모지 (예: 📕)" value="'+esc(meta.e)+'" maxlength="4">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 책 사진으로 자동 입력 (쪽마다 내용)</button>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 책 사진으로 자동 입력</button>'+
       '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">쪽 순서대로 사진을 고르세요 (한 번에 최대 '+SCAN_MAX_IMAGES+'장). 표지 사진을 맨 앞에 넣으면 제목도 읽어요.</div>'+
       '<div class="sechd">📄 쪽별 문장 <span style="font-size:12px">· 칸 개수가 곧 <b>쪽수</b>가 돼요 (현재 <b id="pgcnt">'+lines.length+'</b>쪽)</span></div>'+
       '<div id="pgrows"></div>'+
