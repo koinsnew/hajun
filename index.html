@@ -512,7 +512,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.08.15 13:15';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.07 21:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2912,6 +2912,7 @@ function screenQuizEdit(q){
         '<div class="qlab">\ub2e8\uc5b4\uc7a5 \uc774\ub984</div>'+
         '<input id="qt" placeholder="\uc608: 3\ud559\ub144 1\ub2e8\uc6d0 \ub2e8\uc5b4" value="'+esc(title)+'">'+
       '</div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력 (뜻풀이·단어·한글 뜻)</button>'+
       '<div class="sechd">\ubb38\uc81c \ubaa9\ub85d <span style="font-size:12px">\u00b7 \ub73b\ud480\uc774(\uc601\uc5b4 \ubb38\uc7a5) + \uc815\ub2f5 \ub2e8\uc5b4 + \ud55c\uae00 \ub73b</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">\u2795 \ubb38\uc81c \ud55c \uc904 \ucd94\uac00</button>'+
@@ -2935,6 +2936,7 @@ function screenQuizEdit(q){
       '</div>';
     }).join('');
     function sync(){
+      var qtEl = document.getElementById('qt'); if(qtEl) title = qtEl.value;
       Array.prototype.forEach.call(box.querySelectorAll('.qrow'), function(el){
         var i = +el.dataset.i;
         rows[i] = {
@@ -2944,6 +2946,19 @@ function screenQuizEdit(q){
         };
       });
     }
+    document.getElementById('scan').onclick = function(){
+      sync();
+      scanImages('quiz', function(d){
+        var got = (d.items||[]).map(function(x){ return {def:String(x.def||'').trim(), w:String(x.w||'').trim(), k:String(x.k||'').trim()}; })
+                               .filter(function(x){ return x.def || x.w; });
+        if(!got.length){ noSound(); alert('사진에서 단어 문제를 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        /* 비어 있는 줄은 걷어내고, 읽은 문제를 뒤에 붙인다 (이미 쓴 내용은 그대로) */
+        rows = rows.filter(function(r){ return (r.def||'').trim() || (r.w||'').trim() || (r.k||'').trim(); }).concat(got);
+        if(!String(title||'').trim() && d.title) title = String(d.title).trim();
+        okSound(); draw();
+        setTimeout(function(){ alert('✅ '+got.length+'개를 읽어서 채웠어요.\n틀리게 읽은 곳은 직접 고친 뒤 「저장하기」를 눌러 주세요.'); }, 60);
+      });
+    };
     on('.del', function(){ sync(); rows.splice(+this.dataset.del,1); if(!rows.length) rows.push({def:'',w:'',k:''}); draw(); });
     document.getElementById('addrow').onclick = function(){ sync(); rows.push({def:'',w:'',k:''}); draw();
       setTimeout(function(){ var d=box.querySelectorAll('.qi-def'); if(d.length) d[d.length-1].focus(); }, 30); };
@@ -3508,6 +3523,7 @@ function screenSentEdit(s){
         '<div class="qlab">이름</div>'+
         '<input id="st" placeholder="예: 3학년 1단원 문장" value="'+esc(title)+'">'+
       '</div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력 (영어 문장 + 한글 뜻)</button>'+
       '<div class="sechd">문장 목록 <span style="font-size:12px">· 영어 문장 + 한글 뜻</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">➕ 문장 한 줄 추가</button>'+
@@ -3532,6 +3548,18 @@ function screenSentEdit(s){
     }
     document.getElementById('back').onclick = function(){ screenSentList(); };
     document.getElementById('addrow').onclick = function(){ collect(); rows.push({en:'',ko:''}); draw(); };
+    document.getElementById('scan').onclick = function(){
+      collect();
+      scanImages('sent', function(d){
+        var got = (d.items||[]).map(function(x){ return {en:String(x.en||'').trim(), ko:String(x.ko||'').trim()}; })
+                               .filter(function(x){ return x.en; });
+        if(!got.length){ noSound(); alert('사진에서 영어 문장을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        rows = rows.filter(function(r){ return String(r.en||'').trim() || String(r.ko||'').trim(); }).concat(got);
+        if(!String(title||'').trim() && d.title) title = String(d.title).trim();
+        okSound(); draw();
+        setTimeout(function(){ alert('✅ 문장 '+got.length+'개를 읽고 한글 뜻까지 채웠어요.\n해석이 어색하면 고친 뒤 「저장하기」를 눌러 주세요.'); }, 60);
+      });
+    };
     on('[data-del]', function(){ collect(); rows.splice(+this.dataset.del,1); draw(); });
     document.getElementById('save').onclick = function(){
       collect();
@@ -3864,6 +3892,73 @@ function shrinkImage(file, maxSide, quality, cb){
   reader.readAsDataURL(file);
 }
 
+/* ══════════════════════════════════════════════════════
+   📷 사진으로 자동 입력 (단어장 · 읽을 책 · 문장)
+   사진 → (축소) → 앱스스크립트 ocr → AI가 읽은 결과를 입력칸에 채워준다.
+   조절 상수: SCAN_MAX_IMAGES(한 번에 최대 장수) · SCAN_SIDE(긴 변 픽셀) · SCAN_QUALITY(JPEG 품질) · SCAN_TIMEOUT(초)
+   ══════════════════════════════════════════════════════ */
+var SCAN_MAX_IMAGES = 10, SCAN_SIDE = 1500, SCAN_QUALITY = 0.75, SCAN_TIMEOUT = 150;
+function scanImages(kind, onResult){
+  var inp = document.createElement('input');
+  inp.type='file'; inp.accept='image/*'; inp.multiple=true; inp.style.display='none';
+  document.body.appendChild(inp);
+  inp.onchange = function(){
+    var files = Array.prototype.slice.call(inp.files||[]);
+    if(inp.parentNode) inp.parentNode.removeChild(inp);
+    if(!files.length) return;
+    if(files.length > SCAN_MAX_IMAGES){
+      alert('사진은 한 번에 '+SCAN_MAX_IMAGES+'장까지예요. 앞의 '+SCAN_MAX_IMAGES+'장만 읽을게요.');
+      files = files.slice(0, SCAN_MAX_IMAGES);
+    }
+    var cancelled = false, timer = null;
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML = '<div style="background:#fff;border-radius:22px;padding:26px 22px;max-width:340px;width:100%;text-align:center">'+
+      '<div style="font-size:46px">🔍</div>'+
+      '<div id="scanMsg" style="font-size:18px;font-weight:800;margin:8px 0 4px">사진을 준비하고 있어요…</div>'+
+      '<div style="font-size:13px;color:#666;line-height:1.5">'+files.length+'장 · 글자를 읽는 데 10~40초 걸려요.<br>화면을 닫지 말고 기다려 주세요.</div>'+
+      '<button class="btn" id="scanCancel" style="margin-top:16px">✖ 취소</button></div>';
+    document.body.appendChild(ov);
+    function close(){ cancelled = true; clearTimeout(timer); if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    document.getElementById('scanCancel').onclick = close;
+    function setMsg(t){ var m=document.getElementById('scanMsg'); if(m) m.textContent=t; }
+    function fail(msg){ if(cancelled) return; close(); noSound(); alert(msg); }
+
+    var out = [];
+    (function next(i){
+      if(cancelled) return;
+      if(i >= files.length) return send();
+      setMsg('사진 준비 '+(i+1)+'/'+files.length);
+      shrinkImage(files[i], SCAN_SIDE, SCAN_QUALITY, function(url){
+        var m = /^data:image\/jpeg;base64,(.+)$/.exec(url||'');
+        if(m) out.push(m[1]);
+        else {
+          /* 줄이기 실패(예: 브라우저가 못 여는 형식)면 건너뛴다 */
+        }
+        next(i+1);
+      });
+    })(0);
+
+    function send(){
+      if(!out.length) return fail('사진을 열 수 없어요. 다른 사진(JPG/PNG)으로 해보세요.');
+      setMsg('AI가 글자를 읽는 중…');
+      timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 사진 장수를 줄여서 다시 해보세요.'); }, SCAN_TIMEOUT*1000);
+      apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out}, function(j, err){
+        if(cancelled) return;
+        if(!j){ return fail('서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.'); }
+        if(j.error === 'NO_KEY') return fail('아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setAnthropicKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.');
+        if(j.error === 'BAD_PIN') return fail('서버 비밀번호(OCR_PIN)가 맞지 않아요.');
+        if(j.error === 'DAILY_LIMIT') return fail('오늘 사진 읽기 횟수를 모두 썼어요. 내일 다시 하거나 Code.gs의 OCR_DAILY_MAX를 올려 주세요.');
+        if(j.error === 'UNKNOWN_ACTION') return fail('서버에 사진 읽기 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.');
+        if(j.error || !j.ok || !j.data) return fail('읽지 못했어요: '+String(j.error||'알 수 없는 오류').slice(0,160));
+        close();
+        onResult(j.data);
+      });
+    }
+  };
+  inp.click();
+}
+
 /* 미매말 시험 진행 — 순서대로, 맞히면 통과 / 틀리면 5번 따라쓰기 */
 function startMimemal(){
   var list = mimemal();
@@ -4109,6 +4204,8 @@ function screenAddPaper(){
         '<input id="pk" placeholder="한글 제목 (없어도 돼요)" value="'+esc(meta.ko)+'">'+
         '<input id="pe" placeholder="그림 이모지 (예: 📕)" value="'+esc(meta.e)+'" maxlength="4">'+
       '</div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 책 사진으로 자동 입력 (쪽마다 내용)</button>'+
+      '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">쪽 순서대로 사진을 고르세요 (한 번에 최대 '+SCAN_MAX_IMAGES+'장). 표지 사진을 맨 앞에 넣으면 제목도 읽어요.</div>'+
       '<div class="sechd">📄 쪽별 문장 <span style="font-size:12px">· 칸 개수가 곧 <b>쪽수</b>가 돼요 (현재 <b id="pgcnt">'+lines.length+'</b>쪽)</span></div>'+
       '<div id="pgrows"></div>'+
       '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
@@ -4134,6 +4231,22 @@ function screenAddPaper(){
     }
     document.getElementById('back').onclick = screenSpecials;
     document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); draw(); };
+    document.getElementById('scan').onclick = function(){
+      collect();
+      scanImages('paper', function(d){
+        var got = (d.pages||[]).map(function(x){ return String(x==null?'':x).replace(/\s+/g,' ').trim(); });
+        if(!got.length && !d.title){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        if(!String(meta.t||'').trim() && d.title) meta.t = String(d.title).trim();
+        if(!String(meta.by||'').trim() && d.by) meta.by = String(d.by).trim();
+        if(got.length){
+          var hasText = lines.some(function(x){ return String(x||'').trim(); });
+          if(hasText && !confirm('이미 쓴 쪽 내용이 있어요.\n[확인] 뒤에 이어 붙이기  /  [취소] 읽은 내용으로 바꾸기')) hasText = false;
+          lines = hasText ? lines.filter(function(x,ix){ return String(x||'').trim() || ix < 0; }).concat(got) : got;
+        }
+        okSound(); draw();
+        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 채웠어요.\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.'); }, 60);
+      });
+    };
     on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg, 1); draw(); });
     document.getElementById('save').onclick = function(){
       collect();
