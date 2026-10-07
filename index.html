@@ -512,7 +512,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.07 21:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.07 22:05';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -3946,7 +3946,7 @@ function scanImages(kind, onResult){
       apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out}, function(j, err){
         if(cancelled) return;
         if(!j){ return fail('서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.'); }
-        if(j.error === 'NO_KEY') return fail('아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setAnthropicKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.');
+        if(j.error === 'NO_KEY') return fail('아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setGeminiKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.');
         if(j.error === 'BAD_PIN') return fail('서버 비밀번호(OCR_PIN)가 맞지 않아요.');
         if(j.error === 'DAILY_LIMIT') return fail('오늘 사진 읽기 횟수를 모두 썼어요. 내일 다시 하거나 Code.gs의 OCR_DAILY_MAX를 올려 주세요.');
         if(j.error === 'UNKNOWN_ACTION') return fail('서버에 사진 읽기 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.');

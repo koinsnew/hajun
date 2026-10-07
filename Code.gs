@@ -174,30 +174,30 @@ function ttsSynth(req) {
 }
 
 
-/* ===== 사진 읽기 (AI 비전) — 단어장·읽을 책·문장 만들기 자동 입력 =====
+/* ===== 사진 읽기 (Google Gemini 비전) — 단어장·읽을 책·문장 만들기 자동 입력 =====
  *
  * ▶ 최초 1회 설정
- *   1) Anthropic API 키(console.anthropic.com)를 만든다.
- *   2) 아래 setAnthropicKey 의 'YOUR_KEY' 를 키로 바꾸고, 이 함수만 한 번 실행한다.
+ *   1) Google AI Studio(aistudio.google.com)에서 Gemini API 키를 만든다.
+ *   2) 아래 setGeminiKey 의 'YOUR_KEY' 를 키로 바꾸고, 이 함수만 한 번 실행한다.
  *      (키는 스크립트 속성에 저장되며 GitHub 화면 파일에는 들어가지 않는다)
  *   3) 코드를 저장한 뒤 배포 관리 > 편집 > 새 버전으로 다시 배포한다.
  *
  * ▶ 조절 상수
- *   OCR_MODEL      사용할 모델 (더 싸게 하려면 가벼운 모델로 바꿔도 됨)
+ *   OCR_MODEL      사용할 Gemini 모델 (예: 'gemini-2.5-flash', 더 정확하게는 'gemini-2.5-pro')
  *   OCR_DAILY_MAX  하루 최대 호출 횟수 (남이 주소를 알아도 요금 폭탄 방지)
  */
-var OCR_MODEL = 'claude-sonnet-5-5';
+var OCR_MODEL = 'gemini-2.5-flash';
 var OCR_DAILY_MAX = 60;
-var OCR_KEY_PROP = 'ANTHROPIC_API_KEY';
+var OCR_KEY_PROP = 'GEMINI_API_KEY';
 var OCR_PIN_PROP = 'OCR_PIN';          // 비워두면 index.html 의 DAD_PIN(기본 7084)과 비교
 
-function setAnthropicKey() {
+function setGeminiKey() {
   var KEY = 'YOUR_KEY';   // ← 여기에 API 키를 붙여넣고 이 함수를 한 번 실행하세요
   PropertiesService.getScriptProperties().setProperty(OCR_KEY_PROP, KEY.trim());
   Logger.log('저장 완료. 이제 앱에서 사진 첨부로 자동 입력을 쓸 수 있어요.');
   return 'OK';
 }
-function clearAnthropicKey() {
+function clearGeminiKey() {
   PropertiesService.getScriptProperties().deleteProperty(OCR_KEY_PROP);
   return 'OK';
 }
@@ -238,23 +238,29 @@ function ocrScan(req) {
   if (n >= OCR_DAILY_MAX) return { error: 'DAILY_LIMIT' };
   sp.setProperty(dayKey, String(n + 1));
 
-  var content = [];
+  var parts = [];
   imgs.forEach(function (b64, i) {
-    content.push({ type: 'text', text: '[이미지 ' + (i + 1) + ']' });
-    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: String(b64) } });
+    parts.push({ text: '[이미지 ' + (i + 1) + ']' });
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: String(b64) } });
   });
-  content.push({ type: 'text', text: OCR_PROMPTS[kind] });
+  parts.push({ text: OCR_PROMPTS[kind] });
 
   try {
-    var r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + OCR_MODEL + ':generateContent', {
       method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-      headers: { 'x-api-key': _ocrKey(), 'anthropic-version': '2023-06-01' },
-      payload: JSON.stringify({ model: OCR_MODEL, max_tokens: 4000, messages: [{ role: 'user', content: content }] })
+      headers: { 'x-goog-api-key': _ocrKey() },
+      payload: JSON.stringify({
+        contents: [{ role: 'user', parts: parts }],
+        generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 8000 }
+      })
     });
     var code = r.getResponseCode(), txt = r.getContentText();
     if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
     var j = JSON.parse(txt);
-    var text = (j.content || []).map(function (c) { return c.text || ''; }).join('');
+    var cand = (j.candidates || [])[0];
+    var text = cand && cand.content && cand.content.parts
+      ? cand.content.parts.map(function (p) { return p.text || ''; }).join('') : '';
+    if (!text) return { error: 'EMPTY ' + (j.promptFeedback ? JSON.stringify(j.promptFeedback).slice(0, 150) : (cand && cand.finishReason) || '') };
     var m = text.match(/\{[\s\S]*\}/);
     if (!m) return { error: 'PARSE', raw: text.slice(0, 200) };
     var data = JSON.parse(m[0]);
