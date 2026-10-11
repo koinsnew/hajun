@@ -350,6 +350,8 @@
     border-radius:14px;padding:1px 4px 1px 9px;max-width:100%}
   .wph{font-family:'Noto Sans KR',sans-serif;font-size:24px;font-weight:800;line-height:1.25;color:var(--grape);cursor:pointer;word-break:keep-all}
   .wph.busy{opacity:.55;font-size:18px}
+  .wpron{flex-wrap:wrap;justify-content:center}
+  .wpm{flex:0 0 100%;text-align:center;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;color:var(--ink,#333);line-height:1.3;padding:0 4px 3px;word-break:keep-all}
   .wpb{border:0;background:#EEF0FF;border-radius:50%;width:24px;height:24px;font-size:12px;line-height:24px;padding:0;cursor:pointer;flex:0 0 auto}
   /* ⚽ 페널티킥 게임 */
   .pkscore{text-align:center;font-family:'Fredoka',sans-serif;font-weight:800;font-size:19px;
@@ -516,7 +518,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.11 11:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.11 15:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -4457,7 +4459,24 @@ function setNote(spId, w, text){
    조절 상수: WPRON_KEEP(저장해 두는 단어 발음 최대 개수) */
 var WPRON_KEEP = 800;
 var wpBusy = {};   /* 1 = 받아오는 중, 2 = 받는 중에 지움 */
-function wpGet(w){ var k=noteKey(w); return (k && PROG.wpron && PROG.wpron[k]) ? PROG.wpron[k] : ''; }
+/* 저장 형태: PROG.wpron[단어] = {p:'한글 발음', m:'한글 뜻'} (예전 글자 형태도 읽어준다) */
+function wpGet(w){
+  var k = noteKey(w); var o = (k && PROG.wpron) ? PROG.wpron[k] : null;
+  if(!o) return null;
+  if(typeof o === 'string') return {p:o, m:''};
+  return o.p ? o : null;
+}
+/* 단어가 들어 있는 문장 — 문맥에 맞는 뜻을 고르는 데 쓴다 */
+function wpCtx(el, w){
+  try{
+    var par = el && el.parentNode; if(!par) return w;
+    var ws = [];
+    Array.prototype.forEach.call(par.querySelectorAll('.sw'), function(e){ if(e.parentNode===par) ws.push(e._w || ''); });
+    var t = ws.join(' ').replace(/\s+/g,' ').trim();
+    return t.length>=String(w).length ? t.slice(0,300) : String(w);
+  }catch(e){ return w; }
+}
+var wpTried = {};
 function repaintWords(){
   Array.prototype.forEach.call(app.querySelectorAll('.sw'), function(el){
     if(el._sp !== undefined) paintNote(el, el._sp, el._w);
@@ -4469,20 +4488,20 @@ function wpRemove(w){
   if(wpBusy[k]) wpBusy[k] = 2;
   saveProgress(); repaintWords();
 }
-function wpShow(w){
+function wpShow(w, el){
   var k = noteKey(w); if(!k) return;
   var clean = String(w).replace(/[^A-Za-z']/g,'');
   if(!clean) return;
   if(!hasServer){ alert('서버 연결이 안 돼서 한글 발음을 불러올 수 없어요.'); return; }
   wpBusy[k] = 1; repaintWords();
-  apiPost({action:'hangul', pin:DAD_PIN, lines:[clean]}, function(j){
+  apiPost({action:'word', pin:DAD_PIN, word:clean, ctx:wpCtx(el, w)}, function(j){
     var cancelled = (wpBusy[k] === 2);
     delete wpBusy[k];
     if(cancelled){ repaintWords(); return; }
-    var v = j && j.ok && j.lines && String(j.lines[0]||'').trim();
+    var v = j && j.ok && String(j.p||'').trim();
     if(v){
       if(!PROG.wpron) PROG.wpron = {};
-      PROG.wpron[k] = v;
+      PROG.wpron[k] = {p:v, m:String(j.m||'').trim()};
       var ks = Object.keys(PROG.wpron);   /* 너무 많아지면 오래된 것부터 정리 */
       if(ks.length > WPRON_KEEP) ks.slice(0, ks.length-WPRON_KEEP).forEach(function(x){ delete PROG.wpron[x]; });
       saveProgress();
@@ -4497,7 +4516,19 @@ function openWordNote(spId, w, el){
   var k = noteKey(w); if(!k) return;
   if(el){ el._sp = spId; el._w = w; }
   if(wpGet(w) || wpBusy[k] === 1){ wpRemove(w); return; }
-  wpShow(w);
+  wpShow(w, el);
+}
+/* 예전에 뜻 없이 저장된 발음은 한 번만 뜻을 채운다 (조용히) */
+function wpFillMeaning(w, el){
+  var k = noteKey(w), o = wpGet(w);
+  if(!o || o.m || wpTried[k] || !hasServer) return;
+  wpTried[k] = 1;
+  apiPost({action:'word', pin:DAD_PIN, word:String(w).replace(/[^A-Za-z']/g,''), ctx:wpCtx(el, w)}, function(j){
+    var cur = PROG.wpron && PROG.wpron[k];
+    if(!cur || !(j && j.ok && j.m)) return;
+    if(typeof cur === 'string') cur = PROG.wpron[k] = {p:cur, m:''};
+    cur.m = String(j.m).trim(); saveProgress(); repaintWords();
+  });
 }
 
 /* 단어 아래에 한글 발음(큰 글씨)과 메모를 '항상' 표시한다. 없으면 표시를 지운다. */
@@ -4513,9 +4544,11 @@ function paintNote(el, spId, w){
       pt = document.createElement('span'); pt.className = 'wpron';
       el.insertBefore(pt, el.querySelector('.wnote') || null);
     }
-    pt.innerHTML = '<span class="wph'+(loading?' busy':'')+'">'+(loading ? '불러오는 중…' : esc(pr))+'</span>'+
+    pt.innerHTML = '<span class="wph'+(loading?' busy':'')+'">'+(loading ? '불러오는 중…' : esc(pr.p))+'</span>'+
       (loading ? '' : '<button class="wpb" data-m="1" title="메모">✏️</button>')+
-      '<button class="wpb" data-x="1" title="지우기">✕</button>';
+      '<button class="wpb" data-x="1" title="지우기">✕</button>'+
+      ((!loading && pr.m) ? '<span class="wpm">'+esc(pr.m)+'</span>' : '');
+    if(!loading && !pr.m) setTimeout(function(){ wpFillMeaning(w, el); }, 0);
     pt.onclick = function(ev){ ev.stopPropagation(); };
     var ph = pt.querySelector('.wph');
     if(ph && !loading) ph.onclick = function(ev){ ev.stopPropagation(); say(w, 0.85); };

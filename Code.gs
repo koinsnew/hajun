@@ -48,6 +48,7 @@ function doPost(e) {
   else if (action === 'tts')   out = ttsSynth(body);
   else if (action === 'ocr')   out = ocrScan(body);
   else if (action === 'hangul') out = hangulPron(body);
+  else if (action === 'word')   out = wordInfo(body);
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, null);
 }
@@ -188,7 +189,7 @@ function ttsSynth(req) {
  *   OCR_DAILY_MAX  하루 최대 호출 횟수 (남이 주소를 알아도 요금 폭탄 방지)
  */
 var OCR_MODEL = 'gemini-2.5-flash';
-var OCR_FALLBACK_MODEL = 'gemini-2.0-flash';   // 기본 모델이 붐빌 때 대신 쓰는 모델
+var OCR_FALLBACK_MODEL = 'gemini-3.5-flash-lite';   // 기본 모델이 붐빌 때 대신 쓰는 모델
 var OCR_DAILY_MAX = 60;
 var OCR_KEY_PROP = 'GEMINI_API_KEY';
 var OCR_PIN_PROP = 'OCR_PIN';          // 비워두면 index.html 의 DAD_PIN(기본 7084)과 비교
@@ -270,12 +271,12 @@ function _geminiJSON(parts, maxTokens) {
         headers: { 'x-goog-api-key': _ocrKey() }, payload: payload
       });
       var code = r.getResponseCode(), txt = r.getContentText();
-      if (code === 503 || code === 429 || code === 500 || code === 504) { lastErr = 'HTTP ' + code; continue; }
+      if (code === 503 || code === 429 || code === 500 || code === 504 || code === 404) { lastErr = 'HTTP ' + code + ' ' + plan[t]; continue; }   // 404 = 그 모델이 사라짐 → 다음 모델로
       if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
       var j = JSON.parse(txt);
       var cand = (j.candidates || [])[0];
       var text = cand && cand.content && cand.content.parts
-        ? cand.content.parts.map(function (p) { return p.text || ''; }).join('') : '';
+        ? cand.content.parts.map(function (p) { return p.thought ? '' : (p.text || ''); }).join('') : '';
       if (!text) { lastErr = 'EMPTY ' + (cand && cand.finishReason || ''); continue; }
       var m = text.match(/\{[\s\S]*\}/);
       if (!m) { lastErr = 'PARSE'; continue; }
@@ -335,4 +336,51 @@ function hangulPron(req) {
     if (v) { try { cache.put(ck(lines[i]), v, 21600); } catch (e) {} }
   });
   return { ok: true, lines: out, model: g.model };
+}
+
+/* ===== 단어 한 개 — 한글 발음 + 한글 뜻 (Gemini) =====
+ * 앱에서 모르는 단어를 눌렀을 때 쓴다. 뜻은 그 단어가 들어 있는 문장(ctx)에 맞는 뜻으로 고른다.
+ * 같은 단어+문장은 6시간 동안 서버 캐시에서 바로 돌려준다. (하루 상한은 HANGUL_DAILY_MAX 와 함께 센다)
+ */
+var WORD_PROMPT =
+  '너는 한국 초등학생(3학년)에게 영어를 가르치는 선생님이다.\n' +
+  '아래 영어 단어(word)가 문장(context) 안에서 쓰인 뜻에 맞춰 두 가지를 JSON으로만 답하라.\n' +
+  '- p: 미국 원어민이 실제로 읽는 소리를 한글로. 규칙: 완성된 한글 글자(가나다…)만 쓴다. 낱자(ㅅ, ㅏ 같은 자음·모음 단독 글자)와 영어·기호는 절대 쓰지 않는다. ' +
+  '철자가 아닌 실제 소리(묵음 쓰지 않기: knife→나이프, write→롸잇). 끝소리는 받침 또는 스·트·크 등으로 자연스럽게 적는다(cat→캣, sat→쌧, bat→뱃, book→북, went→웬트, tooth→투쓰). ' +
+  '미국식(water→워러, little→리를). 사람 이름도 실제 소리대로(Maisy→메이지).\n' +
+  '- m: 이 문장에서의 뜻을 초등학생이 아는 쉬운 한국어 1~3단어로 (예: cat→고양이, sat→앉았다(sit의 과거), on→~위에). 동사 변화형이면 원형도 괄호로. 이름이면 "사람 이름".\n' +
+  '형식: {"p":"한글 발음","m":"한글 뜻"}\n';
+
+function wordInfo(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var word = String(req.word || '').replace(/[^A-Za-z']/g, '').slice(0, 40);
+  if (!word) return { error: 'EMPTY' };
+  var ctx = String(req.ctx || '').replace(/\s+/g, ' ').trim().slice(0, 300);
+
+  var cache = CacheService.getScriptCache();
+  var ck = 'wd_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, word + '|' + ctx));
+  var hit = cache.get(ck);
+  if (hit) { try { return JSON.parse(hit); } catch (e) {} }
+
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'HG_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= HANGUL_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+
+  var g = _geminiJSON([{ text: WORD_PROMPT + 'word: ' + word + '\ncontext: ' + (ctx || word) }], 1000);
+  if (!g.ok) return { error: g.error };
+  var p = String((g.data && g.data.p) || '').trim(), m = String((g.data && g.data.m) || '').trim();
+  if (!p) return { error: 'EMPTY_RESULT' };
+  // 낱자(ㅅ 등)나 영어가 섞여 있으면 한 번 더 시도한다
+  if (/[ㄱ-ㅣA-Za-z]/.test(p)) {
+    var g2 = _geminiJSON([{ text: WORD_PROMPT + 'word: ' + word + '\ncontext: ' + (ctx || word) + '\n(주의: 완성된 한글 글자만 써서 다시 답하라)' }], 1000);
+    if (g2.ok && g2.data && g2.data.p && !/[ㄱ-ㅣA-Za-z]/.test(String(g2.data.p))) { p = String(g2.data.p).trim(); if (g2.data.m) m = String(g2.data.m).trim(); g.model = g2.model; }
+    else return { error: 'BAD_PRON' };
+  }
+  var out = { ok: true, p: p, m: m, model: g.model };
+  try { cache.put(ck, JSON.stringify(out), 21600); } catch (e) {}
+  return out;
 }
