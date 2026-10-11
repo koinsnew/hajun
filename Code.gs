@@ -47,6 +47,7 @@ function doPost(e) {
   else if (action === 'reset') out = { ok: resetProgress() };
   else if (action === 'tts')   out = ttsSynth(body);
   else if (action === 'ocr')   out = ocrScan(body);
+  else if (action === 'hangul') out = hangulPron(body);
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, null);
 }
@@ -246,11 +247,19 @@ function ocrScan(req) {
   });
   parts.push({ text: OCR_PROMPTS[kind] });
 
+  var g = _geminiJSON(parts, 8000);
+  if (!g.ok) return { error: g.error };
+  return { ok: true, data: g.data, model: g.model };
+}
+
+
+/* 구글 Gemini 호출 (공통) — JSON 응답을 받는다.
+   구글 쪽이 일시적으로 붐비면(503/429/500/504) 잠깐 쉬고 다시, 그래도 안 되면 예비 모델로 시도한다. */
+function _geminiJSON(parts, maxTokens) {
   var payload = JSON.stringify({
     contents: [{ role: 'user', parts: parts }],
-    generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: 8000 }
+    generationConfig: { temperature: 0.1, responseMimeType: 'application/json', maxOutputTokens: maxTokens || 8000 }
   });
-  // 구글 쪽이 일시적으로 붐비면(503/429/500) 잠깐 쉬고 다시, 그래도 안 되면 예비 모델로 시도한다
   var plan = [OCR_MODEL, OCR_MODEL, OCR_FALLBACK_MODEL, OCR_FALLBACK_MODEL];
   var lastErr = '';
   try {
@@ -274,4 +283,56 @@ function ocrScan(req) {
     }
     return { error: 'BUSY ' + lastErr };
   } catch (e) { return { error: String(e) }; }
+}
+
+/* ===== 한글 발음 (Gemini) — 영어 문장을 실제 미국식 소리대로 한글로 =====
+ * 조절 상수: HANGUL_DAILY_MAX (하루 호출 상한, 사진 읽기와 따로 센다)
+ * 같은 문장은 6시간 동안 서버 캐시에서 바로 돌려준다. (앱 쪽은 진도에 저장해서 다시 안 부른다)
+ */
+var HANGUL_DAILY_MAX = 300;
+var HANGUL_PROMPT =
+  '너는 한국 초등학생(3학년)에게 영어 읽기를 도와주는 선생님이다.\n' +
+  '아래 JSON 배열의 영어 문장들을 미국 원어민이 실제로 자연스럽게 읽는 소리 그대로 한글로 적어라.\n' +
+  '규칙:\n' +
+  '- 영어 단어마다 띄어 써서 영어 단어 순서와 1:1로 맞춘다 (영어 단어 수 = 한글 덩어리 수).\n' +
+  '- 철자가 아니라 실제 소리: 묵음은 쓰지 않는다(knife→나이프, write→롸잇, know→노우). 약하게 읽는 a/the/to/of는 실제처럼(어, 더, 투, 어브).\n' +
+  '- 이중모음은 살린다(go→고우, so→쏘우, make→메익, like→라익, day→데이).\n' +
+  '- 미국식: water→워러, little→리를, better→베러 (t가 굴러가는 소리). r은 ㄹ(필요하면 롸·뤠), f는 ㅍ, v는 ㅂ, th는 ㅆ 또는 ㄷ 중 실제에 가까운 것, z는 ㅈ.\n' +
+  '- 끝소리는 받침으로 짧게(cat→캣, book→북, went→웬트), 끝 s/z는 스/즈.\n' +
+  '- 사람 이름·고유명사도 실제 소리대로(Maisy→메이지).\n' +
+  '- 문장부호는 그대로 두고, 설명은 붙이지 않는다.\n' +
+  '- 입력 문장 수와 출력 개수를 정확히 같게, 같은 순서로.\n' +
+  'JSON으로만 답: {"lines":["한글 발음1","한글 발음2"]}\n문장들:\n';
+
+function hangulPron(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var lines = (req.lines || []).map(function (x) { return String(x || '').trim(); }).slice(0, 60);
+  if (!lines.length) return { ok: true, lines: [] };
+
+  var cache = CacheService.getScriptCache();
+  function ck(t) { return 'hg_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, t)); }
+  var out = lines.map(function (t) { return t ? (cache.get(ck(t)) || null) : ''; });
+  var need = [];
+  lines.forEach(function (t, i) { if (out[i] === null) need.push(i); });
+  if (!need.length) return { ok: true, lines: out };
+
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'HG_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= HANGUL_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+
+  var ask = need.map(function (i) { return lines[i]; });
+  var g = _geminiJSON([{ text: HANGUL_PROMPT + JSON.stringify(ask) }], 4000);
+  if (!g.ok) return { error: g.error };
+  var got = (g.data && g.data.lines) || [];
+  if (got.length !== ask.length) return { error: 'COUNT_MISMATCH' };
+  need.forEach(function (i, k) {
+    var v = String(got[k] || '').trim();
+    out[i] = v;
+    if (v) { try { cache.put(ck(lines[i]), v, 21600); } catch (e) {} }
+  });
+  return { ok: true, lines: out, model: g.model };
 }

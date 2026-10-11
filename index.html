@@ -512,7 +512,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.07 22:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.11 10:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1938,6 +1938,59 @@ function romaWord(w){
 }
 function romaLine(line){
   return String(line).split(/\s+/).map(romaWord).filter(Boolean).join(' ');
+}
+
+/* ── AI 한글 발음 (구글 Gemini, 앱스스크립트 'hangul') ──
+   실제 미국식 소리대로 적은 한글 발음을 받아 진도(PROG.pron)에 저장해 두고 다시 쓴다.
+   → 어느 기기에서든 같은 발음이 나오고, 한 번 받은 문장은 다시 부르지 않는다.
+   AI를 못 부르면 위의 규칙 표기(romaLine)를 대신 보여준다.
+   조절 상수: PRON_BATCH(한 번에 보내는 문장 수) · PRON_KEEP(저장해 두는 최대 문장 수) */
+var PRON_BATCH = 40, PRON_KEEP = 1500;
+function pronKey(t){ return String(t||'').replace(/\s+/g,' ').trim(); }
+function pronGet(t){ var k=pronKey(t); return (PROG.pron && PROG.pron[k]) || ''; }
+var pronBusy = {};
+function pronFetch(lines, cb){
+  var need = [], seen = {};
+  (lines||[]).forEach(function(t){ var k=pronKey(t); if(k && !pronGet(k) && !seen[k] && !pronBusy[k]){ seen[k]=1; need.push(k); } });
+  if(!need.length){
+    /* 다른 요청(미리 받기)이 이미 받는 중이면 끝날 때까지 기다린다 (최대 약 60초) */
+    var busyK = (lines||[]).map(pronKey).filter(function(k){ return k && pronBusy[k]; });
+    if(busyK.length && (cb && (cb._w = (cb._w||0)+1) < 150)){ setTimeout(function(){ pronFetch(lines, cb); }, 400); return; }
+    cb && cb(true); return;
+  }
+  if(!hasServer){ cb && cb(false, null); return; }
+  need.forEach(function(k){ pronBusy[k]=1; });
+  var chunks = [];
+  for(var i=0;i<need.length;i+=PRON_BATCH) chunks.push(need.slice(i,i+PRON_BATCH));
+  var okAll = true, lastErr = null, stored = false;
+  (function next(ci){
+    if(ci >= chunks.length){
+      need.forEach(function(k){ delete pronBusy[k]; });
+      if(stored) saveProgress();
+      cb && cb(okAll, lastErr);
+      return;
+    }
+    var ch = chunks[ci];
+    apiPost({action:'hangul', pin:DAD_PIN, lines:ch}, function(j){
+      if(j && j.ok && j.lines && j.lines.length===ch.length){
+        if(!PROG.pron) PROG.pron = {};
+        ch.forEach(function(k,ix){ var v=String(j.lines[ix]||'').trim(); if(v){ PROG.pron[k]=v; stored = true; } });
+        /* 너무 많아지면 오래된 것부터 정리 */
+        var ks = Object.keys(PROG.pron);
+        if(ks.length > PRON_KEEP) ks.slice(0, ks.length-PRON_KEEP).forEach(function(k){ delete PROG.pron[k]; });
+      } else { okAll = false; lastErr = j; }
+      next(ci+1);
+    });
+  })(0);
+}
+/* 책 한 권의 모든 쪽 발음을 미리 받아 둔다 (조용히, 세션당 1번) */
+var pronTried = {};
+function pronPrefetch(b){
+  if(!b || !b.lines || !b.lines.length) return;
+  var key = b.id + '|' + b.lines.join('|').length;
+  if(pronTried[key]) return;
+  pronTried[key] = 1;
+  pronFetch(b.lines, function(){});
 }
 
 var app = document.getElementById('app');
@@ -3895,9 +3948,21 @@ function shrinkImage(file, maxSide, quality, cb){
 /* ══════════════════════════════════════════════════════
    📷 사진으로 자동 입력 (단어장 · 읽을 책 · 문장)
    사진 → (축소) → 앱스스크립트 ocr → AI가 읽은 결과를 입력칸에 채워준다.
-   조절 상수: SCAN_MAX_IMAGES(한 번에 최대 장수) · SCAN_SIDE(긴 변 픽셀) · SCAN_QUALITY(JPEG 품질) · SCAN_TIMEOUT(초)
+   조절 상수: SCAN_MAX_IMAGES(AI 한 번에 보내는 장수) · SCAN_TOTAL_MAX(한 번에 고르는 최대 장수) · SCAN_SIDE(긴 변 픽셀) · SCAN_QUALITY(JPEG 품질) · SCAN_TIMEOUT(초)
    ══════════════════════════════════════════════════════ */
-var SCAN_MAX_IMAGES = 10, SCAN_SIDE = 1500, SCAN_QUALITY = 0.75, SCAN_TIMEOUT = 150;
+var SCAN_MAX_IMAGES = 10;   /* AI에게 한 번에 보내는 장수 — 더 많이 고르면 10장씩 자동으로 나눠 읽는다 */
+var SCAN_TOTAL_MAX = 60;    /* 한 번에 고를 수 있는 최대 장수 (더 있으면 나눠서 다시 「사진 추가」) */
+var SCAN_SIDE = 1500, SCAN_QUALITY = 0.75, SCAN_TIMEOUT = 150;
+function scanErrMsg(j){
+  if(!j) return '서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.';
+  var e = String(j.error||'');
+  if(e === 'NO_KEY') return '아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setGeminiKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.';
+  if(e === 'BAD_PIN') return '서버 비밀번호(OCR_PIN)가 맞지 않아요.';
+  if(/^BUSY|HTTP 5\d\d|HTTP 429/.test(e)) return '구글 AI가 지금 붐벼서 읽지 못했어요.\n잠시(1~2분) 뒤에 다시 눌러 주세요.';
+  if(e === 'DAILY_LIMIT') return '오늘 사진 읽기 횟수를 모두 썼어요. 내일 다시 하거나 Code.gs의 OCR_DAILY_MAX를 올려 주세요.';
+  if(e === 'UNKNOWN_ACTION') return '서버에 이 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.';
+  return '읽지 못했어요: '+(e||'알 수 없는 오류').slice(0,160);
+}
 function scanImages(kind, onResult){
   var inp = document.createElement('input');
   inp.type='file'; inp.accept='image/*'; inp.multiple=true; inp.style.display='none';
@@ -3906,58 +3971,130 @@ function scanImages(kind, onResult){
     var files = Array.prototype.slice.call(inp.files||[]);
     if(inp.parentNode) inp.parentNode.removeChild(inp);
     if(!files.length) return;
-    if(files.length > SCAN_MAX_IMAGES){
-      alert('사진은 한 번에 '+SCAN_MAX_IMAGES+'장까지예요. 앞의 '+SCAN_MAX_IMAGES+'장만 읽을게요.');
-      files = files.slice(0, SCAN_MAX_IMAGES);
+    if(files.length > SCAN_TOTAL_MAX){
+      alert('사진은 한 번에 '+SCAN_TOTAL_MAX+'장까지 고를 수 있어요. 앞의 '+SCAN_TOTAL_MAX+'장만 읽고,\n나머지는 다 끝난 뒤 「사진 추가」로 이어서 넣어 주세요.');
+      files = files.slice(0, SCAN_TOTAL_MAX);
     }
+    /* 10장씩 묶음으로 나눈다 */
+    var batches = [];
+    for(var b0=0; b0<files.length; b0+=SCAN_MAX_IMAGES) batches.push(files.slice(b0, b0+SCAN_MAX_IMAGES));
+    var acc = {title:'', by:'', items:[], pages:[]}, doneN = 0;
+
     var cancelled = false, timer = null;
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:20px';
     ov.innerHTML = '<div style="background:#fff;border-radius:22px;padding:26px 22px;max-width:340px;width:100%;text-align:center">'+
       '<div style="font-size:46px">🔍</div>'+
       '<div id="scanMsg" style="font-size:18px;font-weight:800;margin:8px 0 4px">사진을 준비하고 있어요…</div>'+
-      '<div style="font-size:13px;color:#666;line-height:1.5">'+files.length+'장 · 글자를 읽는 데 10~40초 걸려요.<br>화면을 닫지 말고 기다려 주세요.</div>'+
+      '<div style="font-size:13px;color:#666;line-height:1.5">'+files.length+'장'+(batches.length>1?' · '+SCAN_MAX_IMAGES+'장씩 '+batches.length+'번에 나눠 읽어요':'')+
+        '<br>한 묶음에 10~40초 걸려요. 화면을 닫지 말고 기다려 주세요.</div>'+
       '<button class="btn" id="scanCancel" style="margin-top:16px">✖ 취소</button></div>';
     document.body.appendChild(ov);
     function close(){ cancelled = true; clearTimeout(timer); if(ov.parentNode) ov.parentNode.removeChild(ov); }
-    document.getElementById('scanCancel').onclick = close;
+    document.getElementById('scanCancel').onclick = function(){
+      var had = doneN > 0;
+      close();
+      if(had && confirm('여기까지 읽은 '+doneN+'묶음은 입력칸에 넣을까요?')) onResult(acc);
+    };
     function setMsg(t){ var m=document.getElementById('scanMsg'); if(m) m.textContent=t; }
-    function fail(msg){ if(cancelled) return; close(); noSound(); alert(msg); }
-
-    var out = [];
-    (function next(i){
+    function tag(bi){ return batches.length>1 ? ' ('+(bi+1)+'/'+batches.length+'묶음)' : ''; }
+    function fail(msg, bi){
       if(cancelled) return;
-      if(i >= files.length) return send();
-      setMsg('사진 준비 '+(i+1)+'/'+files.length);
-      shrinkImage(files[i], SCAN_SIDE, SCAN_QUALITY, function(url){
-        var m = /^data:image\/jpeg;base64,(.+)$/.exec(url||'');
-        if(m) out.push(m[1]);
-        else {
-          /* 줄이기 실패(예: 브라우저가 못 여는 형식)면 건너뛴다 */
-        }
-        next(i+1);
-      });
-    })(0);
-
-    function send(){
-      if(!out.length) return fail('사진을 열 수 없어요. 다른 사진(JPG/PNG)으로 해보세요.');
-      setMsg('AI가 글자를 읽는 중…');
-      timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 사진 장수를 줄여서 다시 해보세요.'); }, SCAN_TIMEOUT*1000);
-      apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out}, function(j, err){
-        if(cancelled) return;
-        if(!j){ return fail('서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.'); }
-        if(j.error === 'NO_KEY') return fail('아직 AI 키가 설정되지 않았어요.\n앱스스크립트에서 setGeminiKey 함수에 키를 넣고 한 번 실행한 뒤, 새 버전으로 배포해 주세요.');
-        if(j.error === 'BAD_PIN') return fail('서버 비밀번호(OCR_PIN)가 맞지 않아요.');
-        if(/^BUSY|HTTP 5\d\d|HTTP 429/.test(String(j.error||''))) return fail('구글 AI가 지금 붐벼서 읽지 못했어요.\n잠시(1~2분) 뒤에 다시 눌러 주세요.');
-        if(j.error === 'DAILY_LIMIT') return fail('오늘 사진 읽기 횟수를 모두 썼어요. 내일 다시 하거나 Code.gs의 OCR_DAILY_MAX를 올려 주세요.');
-        if(j.error === 'UNKNOWN_ACTION') return fail('서버에 사진 읽기 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.');
-        if(j.error || !j.ok || !j.data) return fail('읽지 못했어요: '+String(j.error||'알 수 없는 오류').slice(0,160));
-        close();
-        onResult(j.data);
-      });
+      close(); noSound();
+      if(doneN > 0){
+        /* 앞 묶음은 살리고, 실패한 사진 번호를 알려준다 */
+        onResult(acc);
+        var from = bi*SCAN_MAX_IMAGES+1, to = files.length;
+        setTimeout(function(){ alert(msg+'\n\n앞의 '+(from-1)+'장은 입력됐어요. '+from+'~'+to+'번째 사진만 「사진 추가」로 다시 넣어 주세요.'); }, 80);
+      } else alert(msg);
     }
+
+    function runBatch(bi){
+      if(cancelled) return;
+      if(bi >= batches.length){ close(); onResult(acc); return; }
+      var fs = batches[bi], out = [];
+      (function next(i){
+        if(cancelled) return;
+        if(i >= fs.length) return send();
+        setMsg('사진 준비 '+(bi*SCAN_MAX_IMAGES+i+1)+'/'+files.length);
+        shrinkImage(fs[i], SCAN_SIDE, SCAN_QUALITY, function(url){
+          var m = /^data:image\/jpeg;base64,(.+)$/.exec(url||'');
+          if(m) out.push(m[1]);   /* 못 여는 형식이면 건너뛴다 */
+          next(i+1);
+        });
+      })(0);
+      function send(){
+        if(!out.length){
+          if(batches.length===1) return fail('사진을 열 수 없어요. 다른 사진(JPG/PNG)으로 해보세요.', bi);
+          return runBatch(bi+1);
+        }
+        setMsg('AI가 글자를 읽는 중…'+tag(bi));
+        clearTimeout(timer);
+        timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 사진 장수를 줄여서 다시 해보세요.', bi); }, SCAN_TIMEOUT*1000);
+        apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out}, function(j){
+          if(cancelled) return;
+          clearTimeout(timer);
+          if(!j || j.error || !j.ok || !j.data) return fail(scanErrMsg(j), bi);
+          var d = j.data;
+          if(!acc.title && d.title) acc.title = d.title;
+          if(!acc.by && d.by) acc.by = d.by;
+          if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
+          if(d.pages && d.pages.length) acc.pages = acc.pages.concat(d.pages);
+          doneN++;
+          runBatch(bi+1);
+        });
+      }
+    }
+    runBatch(0);
   };
   inp.click();
+}
+
+/* ── 쪽 목록 (읽을 책 추가 · 책 문장 넣기 공용) — ▲▼ 순서 바꾸기 / 🗑 지우기 ── */
+function pageRowsHtml(lines){
+  var n = lines.length;
+  return lines.map(function(ln,i){
+    return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
+      '<div class="row" style="align-items:center;gap:6px">'+
+        '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:38px">'+(i+1)+'쪽</div>'+
+        '<textarea class="pgin" data-pg="'+i+'" rows="'+Math.max(1,Math.min(5,Math.ceil(String(ln||'').length/26)))+'" style="flex:1;margin:0;min-width:0;padding:10px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:15px;resize:vertical;line-height:1.4" placeholder="이 쪽의 영어 문장 (비워도 돼요)">'+esc(ln)+'</textarea>'+
+        '<div style="display:flex;flex-direction:column;gap:3px;flex:0 0 auto">'+
+          '<button class="pgmv" data-up="'+i+'" title="위로" '+(i===0?'disabled ':'')+'style="width:34px;height:24px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===0?'opacity:.3':'')+'">▲</button>'+
+          '<button class="pgmv" data-dn="'+i+'" title="아래로" '+(i===n-1?'disabled ':'')+'style="width:34px;height:24px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===n-1?'opacity:.3':'')+'">▼</button>'+
+        '</div>'+
+        (n>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+/* collect(): 입력값을 lines에 반영, rerender(): 다시 그리기 */
+function bindPageRows(lines, collect, rerender){
+  on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); var t=lines[i-1]; lines[i-1]=lines[i]; lines[i]=t; rerender(); });
+  on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=lines.length-1) return; collect(); var t=lines[i+1]; lines[i+1]=lines[i]; lines[i]=t; rerender(); });
+  on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg, 1); if(!lines.length) lines.push(''); rerender(); });
+}
+/* 사진으로 읽은 쪽들을 lines 뒤에 이어 붙인다. 배열을 제자리에서 바꾼다 */
+function linesHaveText(lines){ return lines.some(function(x){ return String(x||'').trim(); }); }
+function scanBtnHtml(lines){
+  return '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">'+
+    (linesHaveText(lines) ? '📷 사진 더 추가해서 이어 입력' : '📷 책 사진으로 자동 입력')+'</button>'+
+    '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">'+
+      '쪽 순서대로 사진을 고르세요. 10장이 넘으면 10장씩 나눠 자동으로 읽어요.<br>'+
+      (linesHaveText(lines) ? '새로 읽은 쪽은 <b>지금 있는 쪽 뒤에</b> 붙어요. 순서는 ▲▼로 바꿀 수 있어요.' : '표지 사진을 맨 앞에 넣으면 제목도 읽어요. 순서는 ▲▼로 바꿀 수 있어요.')+
+    '</div>';
+}
+/* 새로 붙은 첫 쪽으로 화면을 내려준다 */
+function scrollToPage(i){
+  setTimeout(function(){ var el=document.querySelector('.pgin[data-pg="'+i+'"]'); if(el && el.scrollIntoView) el.scrollIntoView({block:'center'}); }, 80);
+}
+function mergeScannedPages(lines, got){
+  /* 이미 쓴 쪽은 그대로 두고 그 뒤에 이어 붙인다 (끝의 빈 칸만 걷어낸다) */
+  var base = lines.slice();
+  while(base.length && !String(base[base.length-1]||'').trim()) base.pop();
+  var res = base.concat(got);
+  lines.length = 0;
+  Array.prototype.push.apply(lines, res.length ? res : ['']);
+  return base.length;   /* 새로 들어간 첫 쪽 앞의 쪽 수 */
 }
 
 /* 미매말 시험 진행 — 순서대로, 맞히면 통과 / 틀리면 5번 따라쓰기 */
@@ -4205,8 +4342,7 @@ function screenAddPaper(){
         '<input id="pk" placeholder="한글 제목 (없어도 돼요)" value="'+esc(meta.ko)+'">'+
         '<input id="pe" placeholder="그림 이모지 (예: 📕)" value="'+esc(meta.e)+'" maxlength="4">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 책 사진으로 자동 입력</button>'+
-      '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">쪽 순서대로 사진을 고르세요 (한 번에 최대 '+SCAN_MAX_IMAGES+'장). 표지 사진을 맨 앞에 넣으면 제목도 읽어요.</div>'+
+      scanBtnHtml(lines)+
       '<div class="sechd">📄 쪽별 문장 <span style="font-size:12px">· 칸 개수가 곧 <b>쪽수</b>가 돼요 (현재 <b id="pgcnt">'+lines.length+'</b>쪽)</span></div>'+
       '<div id="pgrows"></div>'+
       '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
@@ -4214,15 +4350,7 @@ function screenAddPaper(){
       '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
         '쪽마다 그 쪽의 영어 문장을 넣으세요. <b>넣은 칸 수가 쪽수</b>예요.<br>'+
         '비워둔 쪽은 문장 없이 쪽수만 세어져요 (책을 보며 읽기).</div>';
-    document.getElementById('pgrows').innerHTML = lines.map(function(ln,i){
-      return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
-        '<div class="row" style="align-items:center;gap:8px">'+
-          '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:42px">'+(i+1)+'쪽</div>'+
-          '<input class="pgin" data-pg="'+i+'" style="flex:1;margin:0" placeholder="이 쪽의 영어 문장 (비워도 돼요)" value="'+esc(ln)+'">'+
-          (lines.length>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
-        '</div>'+
-      '</div>';
-    }).join('');
+    document.getElementById('pgrows').innerHTML = pageRowsHtml(lines);
     function collect(){
       meta.t = document.getElementById('pt').value;
       meta.by = document.getElementById('pb').value;
@@ -4239,27 +4367,24 @@ function screenAddPaper(){
         if(!got.length && !d.title){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
         if(!String(meta.t||'').trim() && d.title) meta.t = String(d.title).trim();
         if(!String(meta.by||'').trim() && d.by) meta.by = String(d.by).trim();
-        if(got.length){
-          var hasText = lines.some(function(x){ return String(x||'').trim(); });
-          if(hasText && !confirm('이미 쓴 쪽 내용이 있어요.\n[확인] 뒤에 이어 붙이기  /  [취소] 읽은 내용으로 바꾸기')) hasText = false;
-          lines = hasText ? lines.filter(function(x,ix){ return String(x||'').trim() || ix < 0; }).concat(got) : got;
-        }
-        okSound(); draw();
-        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 채웠어요.\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.'); }, 60);
+        var at = got.length ? mergeScannedPages(lines, got) : 0;
+        okSound(); draw(); if(got.length) scrollToPage(at);
+        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.\n더 남은 사진은 「사진 더 추가해서 이어 입력」으로 넣으세요.'); }, 200);
       });
     };
-    on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg, 1); draw(); });
+    bindPageRows(lines, collect, draw);
     document.getElementById('save').onclick = function(){
       collect();
       var t = (meta.t||'').trim();
       if(!t){ noSound(); alert('책 제목을 꼭 넣어주세요.'); return; }
-      var arr = lines.map(function(x){ return String(x||'').trim(); });
+      var arr = lines.map(function(x){ return String(x||'').replace(/\s+/g,' ').trim(); });
       /* 끝쪽부터 빈 칸은 잘라내되, 최소 1쪽은 남긴다 (쪽수 = 칸 개수) */
       var last = arr.length-1;
       while(last>0 && !arr[last]) last--;
       arr = arr.slice(0, last+1);
       var pages = arr.length;
-      PROG.papers.push({
+      var nb;
+      PROG.papers.push(nb = {
         id: 'p'+Date.now(),
         e: (meta.e||'').trim() || '📕',
         t: t,
@@ -4268,7 +4393,7 @@ function screenAddPaper(){
         pages: pages, read: 0, done: false,
         lines: arr
       });
-      saveProgress(); okSound(); toast('📕'); screenSpecials();
+      saveProgress(); okSound(); toast('📕'); pronPrefetch(nb); screenSpecials();
     };
   }
   draw();
@@ -4278,6 +4403,7 @@ function screenAddPaper(){
 function screenPaper(b){
   /* 완독한 책은 처음부터 다시 읽게, 아니면 이어서 */
   var i = b.done ? 0 : Math.min(b.read, b.pages-1);
+  pronPrefetch(b);   /* 한글 발음을 미리 받아 둔다 (없을 때만) */
   function draw(){
     app.innerHTML =
       '<div class="topbar">'+
@@ -4332,8 +4458,21 @@ function screenPaper(b){
       /* 한글 발음 토글: 누르면 보이고 다시 누르면 숨긴다 */
       document.getElementById('romaBtn').onclick = function(){
         var r = document.getElementById('roma');
-        if(r.style.display==='block'){ r.style.display='none'; this.textContent='🇰🇷 한글 발음'; }
-        else { r.innerHTML = '🗣️ '+esc(romaLine(ln)); r.style.display='block'; this.textContent='🙈 발음 숨기기'; }
+        if(r.style.display==='block'){ r.style.display='none'; this.textContent='🇰🇷 한글 발음'; return; }
+        r.style.display='block'; this.textContent='🙈 발음 숨기기';
+        var pv = pronGet(ln);
+        if(pv){ r.innerHTML = '🗣️ '+esc(pv); return; }
+        /* 아직 AI 발음이 없으면: 대략 표기를 먼저 보여주고, 받아오면 바꾼다 */
+        r.innerHTML = '🗣️ '+esc(romaLine(ln))+'<div style="font-size:12px;color:#999;font-weight:600;margin-top:4px">🔄 정확한 발음 불러오는 중…</div>';
+        var myLn = ln;
+        pronFetch((b.lines||[]).slice(), function(ok, err){
+          var rr = document.getElementById('roma');
+          if(!rr || myLn !== ln || rr.style.display!=='block') return;
+          var v = pronGet(myLn);
+          if(v) rr.innerHTML = '🗣️ '+esc(v);
+          else rr.innerHTML = '🗣️ '+esc(romaLine(myLn))+'<div style="font-size:12px;color:#999;font-weight:600;margin-top:4px">'+
+            (err && err.error==='NO_KEY' ? '(대략적인 발음 · AI 키 설정 전)' : err && /BUSY|HTTP 5|HTTP 429/.test(String(err.error||'')) ? '(대략적인 발음 · 구글 AI가 붐벼요, 잠시 뒤 다시 눌러 보세요)' : '(대략적인 발음 · AI 연결 안 됨)')+'</div>';
+        });
       };
       /* 문장 속 단어를 눌러 그 단어만 듣고 메모 (책별로 저장) */
       var pKey = 'paper_' + b.id;
@@ -4375,25 +4514,28 @@ function screenPaper(b){
             '쪽마다 문장을 넣거나 고치세요. 넣은 쪽은 읽기 화면에 문장과 🔊 소리가 나와요.<br>'+
             '<b>비워두면</b> 그 쪽은 문장 없이 쪽수만 세어져요.</div>'+
         '</div>'+
+        scanBtnHtml(lines)+
         '<div id="pgrows"></div>'+
         '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
         '<button class="btn primary wide" id="save">💾 저장하기</button>';
-      document.getElementById('pgrows').innerHTML = lines.map(function(ln,i){
-        return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
-          '<div class="row" style="align-items:center;gap:8px">'+
-            '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:42px">'+(i+1)+'쪽</div>'+
-            '<input class="pgin" data-pg="'+i+'" style="flex:1;margin:0" placeholder="이 쪽의 영어 문장 (비워도 돼요)" value="'+esc(ln)+'">'+
-            (lines.length>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
-          '</div>'+
-        '</div>';
-      }).join('');
+      document.getElementById('pgrows').innerHTML = pageRowsHtml(lines);
       function collect(){ Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; }); }
       document.getElementById('back').onclick = function(){ draw(); };
       document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); render(); };
-      on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg,1); render(); });
+      bindPageRows(lines, collect, render);
+      document.getElementById('scan').onclick = function(){
+        collect();
+        scanImages('paper', function(d){
+          var got = (d.pages||[]).map(function(x){ return String(x==null?'':x).replace(/\s+/g,' ').trim(); });
+          if(!got.length){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+          var at = mergeScannedPages(lines, got);
+          okSound(); render(); scrollToPage(at);
+          setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n확인하고 고친 뒤 「저장하기」를 눌러 주세요.'); }, 200);
+        });
+      };
       document.getElementById('save').onclick = function(){
         collect();
-        var arr = lines.map(function(x){ return String(x||'').trim(); });
+        var arr = lines.map(function(x){ return String(x||'').replace(/\s+/g,' ').trim(); });
         /* 끝쪽부터 빈 칸은 잘라내되 최소 1쪽 남긴다. 쪽수 = 칸 개수 */
         var last = arr.length-1;
         while(last>0 && !arr[last]) last--;
@@ -4401,7 +4543,7 @@ function screenPaper(b){
         b.lines = arr;
         b.pages = arr.length;            /* 쪽수 자동 갱신 */
         if(b.read > b.pages) b.read = b.pages;
-        saveProgress(); okSound(); toast('💾'); draw();
+        saveProgress(); okSound(); toast('💾'); pronPrefetch(b); draw();
       };
     }
     render();
