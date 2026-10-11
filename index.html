@@ -345,14 +345,23 @@
 
   .sentEn{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;line-height:1.35;
     color:var(--grape);text-align:center;margin:6px 0 2px;word-break:break-word}
-  .sw.haspron{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top}
-  .wpron{display:flex;align-items:center;gap:5px;margin-top:3px;background:#fff;border:2px solid var(--grape);
-    border-radius:14px;padding:1px 4px 1px 9px;max-width:100%}
-  .wph{font-family:'Noto Sans KR',sans-serif;font-size:24px;font-weight:800;line-height:1.25;color:var(--grape);cursor:pointer;word-break:keep-all}
-  .wph.busy{opacity:.55;font-size:18px}
-  .wpron{flex-wrap:wrap;justify-content:center}
-  .wpm{flex:0 0 100%;text-align:center;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;color:var(--ink,#333);line-height:1.3;padding:0 4px 3px;word-break:keep-all}
+  /* 모르는 단어 카드: 영어 단어 + 소리(한글 발음) + 뜻 을 한 덩어리로 묶는다 */
+  .sw.haspron{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;position:relative;
+    background:#F4F0FF;border:3px solid var(--grape);border-radius:18px;padding:3px 12px 6px;
+    margin:6px 8px 16px;box-shadow:0 4px 0 #D6CCFF;line-height:1.2}
+  .sw.haspron.hi{background:var(--mango)}
+  .wpron{display:flex;flex-direction:column;align-items:stretch;gap:3px;margin-top:4px;padding-top:5px;
+    border-top:2px dashed #C9BCFF;min-width:100%}
+  .wrow{display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+  .wtag{font-family:'Noto Sans KR',sans-serif;font-size:11px;font-weight:800;color:#fff;background:var(--grape);
+    border-radius:999px;padding:2px 7px;flex:0 0 auto;line-height:1.3}
+  .wtag.m{background:#16A34A}
+  .wph{font-family:'Noto Sans KR',sans-serif;font-size:24px;font-weight:800;line-height:1.2;color:var(--grape);cursor:pointer;word-break:keep-all}
+  .wph.busy{opacity:.55;font-size:16px}
+  .wpm{font-family:'Noto Sans KR',sans-serif;font-size:18px;font-weight:800;color:#166534;line-height:1.25;white-space:normal;word-break:keep-all;max-width:180px;text-align:left}
   .wpb{border:0;background:#EEF0FF;border-radius:50%;width:24px;height:24px;font-size:12px;line-height:24px;padding:0;cursor:pointer;flex:0 0 auto}
+  .wpx{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:50%;background:#fff;
+    border:2px solid var(--grape);color:var(--grape);font-size:13px;font-weight:900;line-height:22px;padding:0;cursor:pointer;z-index:2}
   /* ⚽ 페널티킥 게임 */
   .pkscore{text-align:center;font-family:'Fredoka',sans-serif;font-weight:800;font-size:19px;
     color:var(--grape);margin:4px 0 4px}
@@ -518,7 +527,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.11 15:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.11 17:55';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -4544,10 +4553,13 @@ function paintNote(el, spId, w){
       pt = document.createElement('span'); pt.className = 'wpron';
       el.insertBefore(pt, el.querySelector('.wnote') || null);
     }
-    pt.innerHTML = '<span class="wph'+(loading?' busy':'')+'">'+(loading ? '불러오는 중…' : esc(pr.p))+'</span>'+
-      (loading ? '' : '<button class="wpb" data-m="1" title="메모">✏️</button>')+
-      '<button class="wpb" data-x="1" title="지우기">✕</button>'+
-      ((!loading && pr.m) ? '<span class="wpm">'+esc(pr.m)+'</span>' : '');
+    pt.innerHTML =
+      '<button class="wpx" data-x="1" title="지우기">✕</button>'+
+      (loading
+        ? '<span class="wrow"><span class="wph busy">불러오는 중…</span></span>'
+        : '<span class="wrow"><span class="wtag">소리</span><span class="wph">'+esc(pr.p)+'</span></span>'+
+          '<span class="wrow"><span class="wtag m">뜻</span><span class="wpm">'+(pr.m ? esc(pr.m) : '…')+'</span>'+
+            '<button class="wpb" data-m="1" title="메모">✏️</button></span>');
     if(!loading && !pr.m) setTimeout(function(){ wpFillMeaning(w, el); }, 0);
     pt.onclick = function(ev){ ev.stopPropagation(); };
     var ph = pt.querySelector('.wph');
