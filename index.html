@@ -345,8 +345,12 @@
 
   .sentEn{font-family:'Fredoka',sans-serif;font-weight:700;font-size:26px;line-height:1.35;
     color:var(--grape);text-align:center;margin:6px 0 2px;word-break:break-word}
-  .romaLine{font-size:19px;font-weight:800;color:var(--mango);text-align:center;
-    background:#FFF6DF;border-radius:12px;padding:8px 10px;margin:4px 0 2px;word-break:keep-all;line-height:1.5}
+  .sw.haspron{display:inline-flex;flex-direction:column;align-items:center;vertical-align:top}
+  .wpron{display:flex;align-items:center;gap:5px;margin-top:3px;background:#fff;border:2px solid var(--grape);
+    border-radius:14px;padding:1px 4px 1px 9px;max-width:100%}
+  .wph{font-family:'Noto Sans KR',sans-serif;font-size:24px;font-weight:800;line-height:1.25;color:var(--grape);cursor:pointer;word-break:keep-all}
+  .wph.busy{opacity:.55;font-size:18px}
+  .wpb{border:0;background:#EEF0FF;border-radius:50%;width:24px;height:24px;font-size:12px;line-height:24px;padding:0;cursor:pointer;flex:0 0 auto}
   /* ⚽ 페널티킥 게임 */
   .pkscore{text-align:center;font-family:'Fredoka',sans-serif;font-weight:800;font-size:19px;
     color:var(--grape);margin:4px 0 4px}
@@ -512,7 +516,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.11 10:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.11 11:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1603,6 +1607,8 @@ function normProg(){
   if(!PROG.sents) PROG.sents = [];
   if(!PROG.hiddenSpecs) PROG.hiddenSpecs = [];
   if(!PROG.wordNotes) PROG.wordNotes = {};
+  if(!PROG.wpron) PROG.wpron = {};
+  if(PROG.pron) delete PROG.pron;   /* 예전 문장 한글 발음 기능은 없앴다 */
   if(!PROG.mimemal) PROG.mimemal = [];
   /* 옛 진도: 통과했는데 뽑은 별 기록이 없으면 예전 고정값으로 채운다 */
   PROG.quizzes.forEach(function(q){ if(q.done && typeof q.stars!=='number') q.stars = STAR_QUIZ; });
@@ -1844,155 +1850,6 @@ function confetti(n){
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
 function pickN(a,n){ return shuffle(a).slice(0,n); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-/* ── 영어 문장 → 한글 '읽는 소리' 근사 표기 ──
-   정확한 발음기호가 아니라, 아이가 소리를 떠올리도록 돕는 힌트다.
-   흔한 단어는 사전으로 정확히, 나머지는 파닉스 규칙으로 대충 옮긴다. */
-var ROMA_DICT = {
-  a:'어',the:'더',to:'투',of:'어브',and:'앤',is:'이즈',it:'잇',he:'히',she:'쉬',we:'위',
-  you:'유',i:'아이',my:'마이',me:'미',in:'인',on:'온',at:'앳',go:'고',goes:'고즈',
-  has:'해즈',have:'해브',like:'라이크',likes:'라익스',run:'런',runs:'런즈',play:'플레이',
-  school:'스쿨',apple:'애플',apples:'애플즈',cat:'캣',dog:'독',see:'씨',day:'데이',
-  every:'에브리',with:'위드',friend:'프렌드',this:'디스',that:'댓',was:'워즈',are:'아',
-  for:'포',her:'허',his:'히즈',they:'데이',do:'두',does:'더즈',not:'낫',no:'노',yes:'예스',
-  wobbly:'워블리',tooth:'투쓰',end:'엔드',fast:'패스트',big:'빅',red:'레드',sun:'썬',
-  up:'업',down:'다운',mom:'맘',dad:'대드',good:'굿',boy:'보이',girl:'걸',one:'원',two:'투',
-  /* 자주 나오는 단어 더 넣기 (책 문장 정확도용) */
-  nice:'나이스',cake:'케이크',bike:'바이크',home:'홈',cute:'큐트',five:'파이브',name:'네임',
-  time:'타임',make:'메이크',ride:'라이드',fish:'피쉬',ship:'쉽',duck:'덕',wish:'위쉬',
-  bath:'배쓰',math:'매쓰',green:'그린',happy:'해피',jump:'점프',three:'쓰리',four:'포',
-  hat:'햇',map:'맵',bed:'베드',pig:'피그',box:'박스',bug:'버그',cup:'컵',hot:'핫',
-  book:'북',look:'룩',read:'리드',book:'북',little:'리틀',said:'세드',come:'컴',
-  went:'웬트',want:'원트',here:'히어',there:'데어',where:'웨어',who:'후',what:'왓',
-  when:'웬',how:'하우',why:'와이',all:'올',can:'캔',will:'윌',get:'겟',got:'갓',
-  put:'풋',let:'렛',yes:'예스',love:'러브',live:'리브',give:'기브',three:'쓰리',
-  water:'워터',mother:'마더',father:'파더',sister:'시스터',brother:'브라더',
-  three:'쓰리',baby:'베이비',funny:'퍼니',bunny:'버니',sunny:'써니',jump:'점프',
-  hello:'헬로',thank:'쌩크',please:'플리즈',sorry:'쏘리',okay:'오케이',night:'나잇',
-  light:'라잇',right:'라잇',white:'화이트',blue:'블루',black:'블랙',pink:'핑크',
-  green:'그린',yellow:'옐로우',orange:'오렌지',purple:'퍼플',brown:'브라운'
-};
-function romaWord(w){
-  var raw = String(w).toLowerCase().replace(/[^a-z']/g,'');
-  if(!raw) return '';
-  if(ROMA_DICT[raw]) return ROMA_DICT[raw];
-  var s = raw.replace(/'/g,'');
-
-  /* 초성/중성/종성 인덱스로 한글 음절을 조립한다 */
-  var CHO = {g:0,kk:1,n:2,d:3,tt:4,r:5,m:6,b:7,pp:8,s:9,ss:10,'':11,j:12,jj:13,ch:14,k:15,t:16,p:17,h:18};
-  var JUNG = {a:0,ae:1,ya:2,yae:3,eo:4,e:5,yeo:6,ye:7,o:8,wa:9,wae:10,oe:11,yo:12,u:13,wo:14,we:15,wi:16,yu:17,eu:18,ui:19,i:20};
-  var JONG = {'':0,g:1,n:4,d:7,l:8,m:16,b:17,ng:21,s:19,t:7,p:26,k:1};
-  function syl(cho, jung, jong){
-    var ci=CHO[cho]||0, ji=JUNG[jung], ki=JONG[jong||'']||0;
-    if(ji===undefined) return '';
-    return String.fromCharCode(0xAC00 + (ci*21 + ji)*28 + ki);
-  }
-  /* 영어 철자를 (초성자음, 모음, 받침자음) 단위로 대충 끊는다 */
-  var CMAP = {b:'b',c:'k',d:'d',f:'p',g:'g',h:'h',j:'j',k:'k',l:'r',m:'m',n:'n',
-              p:'p',q:'k',r:'r',s:'s',t:'t',v:'b',w:'',x:'ks',z:'j'};
-  var CJONG = {b:'b',c:'k',d:'t',f:'p',g:'g',k:'k',l:'l',m:'m',n:'n',p:'p',
-               r:'',s:'s',t:'t',x:'k',z:'s'};
-  var DI_C = {sh:'s',ch:'ch',th:'s',ph:'p',wh:'',ck:'k',qu:'k'};
-  var DI_V = {oo:'u',ee:'i',ea:'i',ai:'e',ay:'e',oa:'o',ow:'o',ou:'a',oy:'oe',oi:'oe',
-              ar:'a',or:'o',er:'eo',ir:'eo',ur:'eo',igh:'a',au:'o',aw:'o'};
-  var VLONG = {a:'e',e:'i',i:'a',o:'o',u:'yu'};   /* 매직 e */
-  var V = {a:'ae',e:'e',i:'i',o:'o',u:'eo'};
-  function isV(c){ return 'aeiou'.indexOf(c)>=0; }
-
-  var out='', k=0;
-  while(k<s.length){
-    var cho='', jung='', jong='';
-    /* 초성: 이중자음 → 단자음 */
-    var d2=s.substr(k,2);
-    if(DI_C[d2]!==undefined && !isV(s[k])){ cho=DI_C[d2]; k+=2; }
-    else if(!isV(s[k]) && s[k]!=='y' && CMAP[s[k]]!==undefined){ cho=CMAP[s[k]]; k++; }
-    else if(s[k]==='y'){ cho=''; }
-    /* 매직 e: (지금 위치)모음 + 자음 + e(끝) → 긴모음(다음절) + 자음, e 묵음 */
-    if(isV(s[k]) && k+3===s.length && !isV(s[k+1]) && s[k+2]==='e' && !DI_C[s.substr(k+1,2)]){
-      var LONGKO = {a:'에이',e:'이',i:'아이',o:'오',u:'유'};
-      var CKO = {b:'브',c:'크',d:'드',f:'프',g:'그',k:'크',l:'ㄹ',m:'므',n:'느',p:'프',
-                 r:'르',s:'스',t:'트',v:'브',z:'즈'};
-      out += (cho?(({b:'브',k:'크',d:'드',p:'프',s:'스',t:'트',g:'그',m:'므',n:'느',r:'르',h:'흐',j:'즈',ch:'취'})[cho]||''):'')
-             + (LONGKO[s[k]]||V[s[k]]) + (CKO[s[k+1]]||'');
-      k+=3; continue;
-    }
-    /* 중성 */
-    var v3=s.substr(k,3), v2=s.substr(k,2);
-    if(DI_V[v3]){ jung=DI_V[v3]; k+=3; }
-    else if(DI_V[v2]){ jung=DI_V[v2]; k+=2; }
-    else if(isV(s[k])){ jung=V[s[k]]; k++; }
-    else if(s[k]==='y'){ jung='i'; k++; }
-    else { jung='eu'; }   /* 자음만 있으면 '으' 붙여 발음 */
-    /* 받침: sh/ch/th 이중자음이 끝이면 받침으로 */
-    var e2=s.substr(k,2);
-    if(k<s.length && DI_C[e2]!==undefined && (k+2>=s.length)){
-      jong = (DI_C[e2]==='ch'?'t':(DI_C[e2]||'s')); k+=2;
-    } else if(k<s.length && !isV(s[k]) && s[k]!=='y' && CJONG[s[k]]!==undefined){
-      var isEnd = (k+1>=s.length);
-      var nextV = (k+1<s.length && (isV(s[k+1])||s[k+1]==='y'));
-      if((isEnd || !nextV) && CJONG[s[k]]){ jong=CJONG[s[k]]; k++; }
-    }
-    out += syl(cho, jung, jong) || '';
-  }
-  return out || raw;
-}
-function romaLine(line){
-  return String(line).split(/\s+/).map(romaWord).filter(Boolean).join(' ');
-}
-
-/* ── AI 한글 발음 (구글 Gemini, 앱스스크립트 'hangul') ──
-   실제 미국식 소리대로 적은 한글 발음을 받아 진도(PROG.pron)에 저장해 두고 다시 쓴다.
-   → 어느 기기에서든 같은 발음이 나오고, 한 번 받은 문장은 다시 부르지 않는다.
-   AI를 못 부르면 위의 규칙 표기(romaLine)를 대신 보여준다.
-   조절 상수: PRON_BATCH(한 번에 보내는 문장 수) · PRON_KEEP(저장해 두는 최대 문장 수) */
-var PRON_BATCH = 40, PRON_KEEP = 1500;
-function pronKey(t){ return String(t||'').replace(/\s+/g,' ').trim(); }
-function pronGet(t){ var k=pronKey(t); return (PROG.pron && PROG.pron[k]) || ''; }
-var pronBusy = {};
-function pronFetch(lines, cb){
-  var need = [], seen = {};
-  (lines||[]).forEach(function(t){ var k=pronKey(t); if(k && !pronGet(k) && !seen[k] && !pronBusy[k]){ seen[k]=1; need.push(k); } });
-  if(!need.length){
-    /* 다른 요청(미리 받기)이 이미 받는 중이면 끝날 때까지 기다린다 (최대 약 60초) */
-    var busyK = (lines||[]).map(pronKey).filter(function(k){ return k && pronBusy[k]; });
-    if(busyK.length && (cb && (cb._w = (cb._w||0)+1) < 150)){ setTimeout(function(){ pronFetch(lines, cb); }, 400); return; }
-    cb && cb(true); return;
-  }
-  if(!hasServer){ cb && cb(false, null); return; }
-  need.forEach(function(k){ pronBusy[k]=1; });
-  var chunks = [];
-  for(var i=0;i<need.length;i+=PRON_BATCH) chunks.push(need.slice(i,i+PRON_BATCH));
-  var okAll = true, lastErr = null, stored = false;
-  (function next(ci){
-    if(ci >= chunks.length){
-      need.forEach(function(k){ delete pronBusy[k]; });
-      if(stored) saveProgress();
-      cb && cb(okAll, lastErr);
-      return;
-    }
-    var ch = chunks[ci];
-    apiPost({action:'hangul', pin:DAD_PIN, lines:ch}, function(j){
-      if(j && j.ok && j.lines && j.lines.length===ch.length){
-        if(!PROG.pron) PROG.pron = {};
-        ch.forEach(function(k,ix){ var v=String(j.lines[ix]||'').trim(); if(v){ PROG.pron[k]=v; stored = true; } });
-        /* 너무 많아지면 오래된 것부터 정리 */
-        var ks = Object.keys(PROG.pron);
-        if(ks.length > PRON_KEEP) ks.slice(0, ks.length-PRON_KEEP).forEach(function(k){ delete PROG.pron[k]; });
-      } else { okAll = false; lastErr = j; }
-      next(ci+1);
-    });
-  })(0);
-}
-/* 책 한 권의 모든 쪽 발음을 미리 받아 둔다 (조용히, 세션당 1번) */
-var pronTried = {};
-function pronPrefetch(b){
-  if(!b || !b.lines || !b.lines.length) return;
-  var key = b.id + '|' + b.lines.join('|').length;
-  if(pronTried[key]) return;
-  pronTried[key] = 1;
-  pronFetch(b.lines, function(){});
-}
-
 var app = document.getElementById('app');
 function on(sel, fn){ Array.prototype.forEach.call(app.querySelectorAll(sel), function(el){ el.addEventListener('click', fn); }); }
 function starTxt(n){ return '★★★'.slice(0,n) + '☆☆☆'.slice(0,3-n); }
@@ -2850,7 +2707,7 @@ function screenBook(L){
         '<button class="btn" id="slow">🐢</button>'+
         '<button class="btn go" id="next">'+(i===pg.length-1?'끝 ✓':'▶')+'</button>'+
       '</div>'+
-      '<div class="muted" style="text-align:center;margin-top:10px">단어를 누르면 그 단어만 들려주고 <b>메모</b>도 남길 수 있어요<br>먼저 소리내어 읽고, 그다음 눌러보세요!</div>';
+      '<div class="muted" style="text-align:center;margin-top:10px">단어를 누르면 소리와 <b>한글 발음</b>이 나와요 (다시 누르거나 ✕를 누르면 사라져요)<br>먼저 소리내어 읽고, 그다음 눌러보세요!</div>';
     document.getElementById('back').onclick = function(){ stopAll(); screenLibrary(); };
     var bKey = 'book_' + L.id + '_' + i;   /* 이야기책: 레벨+쪽별로 메모 저장 */
     var spans = app.querySelectorAll('.sw');
@@ -4383,8 +4240,7 @@ function screenAddPaper(){
       while(last>0 && !arr[last]) last--;
       arr = arr.slice(0, last+1);
       var pages = arr.length;
-      var nb;
-      PROG.papers.push(nb = {
+      PROG.papers.push({
         id: 'p'+Date.now(),
         e: (meta.e||'').trim() || '📕',
         t: t,
@@ -4393,7 +4249,7 @@ function screenAddPaper(){
         pages: pages, read: 0, done: false,
         lines: arr
       });
-      saveProgress(); okSound(); toast('📕'); pronPrefetch(nb); screenSpecials();
+      saveProgress(); okSound(); toast('📕'); screenSpecials();
     };
   }
   draw();
@@ -4403,7 +4259,6 @@ function screenAddPaper(){
 function screenPaper(b){
   /* 완독한 책은 처음부터 다시 읽게, 아니면 이어서 */
   var i = b.done ? 0 : Math.min(b.read, b.pages-1);
-  pronPrefetch(b);   /* 한글 발음을 미리 받아 둔다 (없을 때만) */
   function draw(){
     app.innerHTML =
       '<div class="topbar">'+
@@ -4425,14 +4280,12 @@ function screenPaper(b){
             return '<div class="sentEn poem" id="pmp" style="font-size:22px;margin-top:6px">'+
                 ln.split(' ').map(function(w){ return '<span class="sw">'+esc(w)+'</span>'; }).join(' ')+
               '</div>'+
-              '<div id="roma" class="romaLine" style="display:none"></div>'+
               '<div class="row" style="justify-content:center;margin-top:6px;flex-wrap:wrap">'+
                 '<button class="btn primary" id="sayL">🔊 듣기</button>'+
                 '<button class="btn" id="slowL">🐢</button>'+
-                '<button class="btn" id="romaBtn">🇰🇷 한글 발음</button>'+
               '</div>'+
               '<div style="font-size:15px;margin-top:8px">책을 보며 <b>소리내어</b> 따라 읽어요'+
-              '<br><span style="font-size:13px;color:#666">모르는 단어는 눌러서 듣고 메모할 수 있어요</span></div>';
+              '<br><span style="font-size:13px;color:#666">모르는 단어를 누르면 소리와 한글 발음이 나와요</span></div>';
           }
           return '<div style="font-size:17px;margin-top:4px">쪽을 펴서 <b>소리내어</b> 읽어요</div>'+
             '<div class="readtip" style="margin-top:12px">📕 화면이 아니라 <b>책</b>을 보세요!<br>'+
@@ -4455,25 +4308,6 @@ function screenPaper(b){
       var sayLine = function(rate){ speakWords(ln.split(/\s+/), rate||RATE, function(){}); };
       document.getElementById('sayL').onclick = function(){ sayLine(); };
       document.getElementById('slowL').onclick = function(){ sayLine(0.6); };
-      /* 한글 발음 토글: 누르면 보이고 다시 누르면 숨긴다 */
-      document.getElementById('romaBtn').onclick = function(){
-        var r = document.getElementById('roma');
-        if(r.style.display==='block'){ r.style.display='none'; this.textContent='🇰🇷 한글 발음'; return; }
-        r.style.display='block'; this.textContent='🙈 발음 숨기기';
-        var pv = pronGet(ln);
-        if(pv){ r.innerHTML = '🗣️ '+esc(pv); return; }
-        /* 아직 AI 발음이 없으면: 대략 표기를 먼저 보여주고, 받아오면 바꾼다 */
-        r.innerHTML = '🗣️ '+esc(romaLine(ln))+'<div style="font-size:12px;color:#999;font-weight:600;margin-top:4px">🔄 정확한 발음 불러오는 중…</div>';
-        var myLn = ln;
-        pronFetch((b.lines||[]).slice(), function(ok, err){
-          var rr = document.getElementById('roma');
-          if(!rr || myLn !== ln || rr.style.display!=='block') return;
-          var v = pronGet(myLn);
-          if(v) rr.innerHTML = '🗣️ '+esc(v);
-          else rr.innerHTML = '🗣️ '+esc(romaLine(myLn))+'<div style="font-size:12px;color:#999;font-weight:600;margin-top:4px">'+
-            (err && err.error==='NO_KEY' ? '(대략적인 발음 · AI 키 설정 전)' : err && /BUSY|HTTP 5|HTTP 429/.test(String(err.error||'')) ? '(대략적인 발음 · 구글 AI가 붐벼요, 잠시 뒤 다시 눌러 보세요)' : '(대략적인 발음 · AI 연결 안 됨)')+'</div>';
-        });
-      };
       /* 문장 속 단어를 눌러 그 단어만 듣고 메모 (책별로 저장) */
       var pKey = 'paper_' + b.id;
       var pwords = ln.split(' ');
@@ -4543,7 +4377,7 @@ function screenPaper(b){
         b.lines = arr;
         b.pages = arr.length;            /* 쪽수 자동 갱신 */
         if(b.read > b.pages) b.read = b.pages;
-        saveProgress(); okSound(); toast('💾'); pronPrefetch(b); draw();
+        saveProgress(); okSound(); toast('💾'); draw();
       };
     }
     render();
@@ -4616,22 +4450,96 @@ function setNote(spId, w, text){
   else delete PROG.wordNotes[spId][k];   /* 비우면 메모 삭제 */
   saveProgress();
 }
-/* 단어 아래에 메모를 '항상' 표시한다. 메모가 없으면 표시를 지운다. */
+/* ── 모르는 단어 한글 발음 (구글 Gemini, 앱스스크립트 'hangul') ──
+   단어를 누르면 소리와 함께 실제 미국식 한글 발음을 불러와 단어 아래에 큰 글씨로 계속 보여준다.
+   다시 누르거나 ✕를 누르기 전에는 계속 보인다. 단어별로 진도(PROG.wpron)에 저장돼 모든 기기·모든 책에서 같다.
+   (✏️ 를 누르면 메모도 남길 수 있다)
+   조절 상수: WPRON_KEEP(저장해 두는 단어 발음 최대 개수) */
+var WPRON_KEEP = 800;
+var wpBusy = {};   /* 1 = 받아오는 중, 2 = 받는 중에 지움 */
+function wpGet(w){ var k=noteKey(w); return (k && PROG.wpron && PROG.wpron[k]) ? PROG.wpron[k] : ''; }
+function repaintWords(){
+  Array.prototype.forEach.call(app.querySelectorAll('.sw'), function(el){
+    if(el._sp !== undefined) paintNote(el, el._sp, el._w);
+  });
+}
+function wpRemove(w){
+  var k = noteKey(w);
+  if(PROG.wpron) delete PROG.wpron[k];
+  if(wpBusy[k]) wpBusy[k] = 2;
+  saveProgress(); repaintWords();
+}
+function wpShow(w){
+  var k = noteKey(w); if(!k) return;
+  var clean = String(w).replace(/[^A-Za-z']/g,'');
+  if(!clean) return;
+  if(!hasServer){ alert('서버 연결이 안 돼서 한글 발음을 불러올 수 없어요.'); return; }
+  wpBusy[k] = 1; repaintWords();
+  apiPost({action:'hangul', pin:DAD_PIN, lines:[clean]}, function(j){
+    var cancelled = (wpBusy[k] === 2);
+    delete wpBusy[k];
+    if(cancelled){ repaintWords(); return; }
+    var v = j && j.ok && j.lines && String(j.lines[0]||'').trim();
+    if(v){
+      if(!PROG.wpron) PROG.wpron = {};
+      PROG.wpron[k] = v;
+      var ks = Object.keys(PROG.wpron);   /* 너무 많아지면 오래된 것부터 정리 */
+      if(ks.length > WPRON_KEEP) ks.slice(0, ks.length-WPRON_KEEP).forEach(function(x){ delete PROG.wpron[x]; });
+      saveProgress();
+    } else {
+      noSound(); alert(scanErrMsg(j).replace('사진 읽기','한글 발음'));
+    }
+    repaintWords();
+  });
+}
+/* 단어를 눌렀을 때: 발음이 안 떠 있으면 한글 발음을 불러와 보여주고, 떠 있으면 지운다 */
+function openWordNote(spId, w, el){
+  var k = noteKey(w); if(!k) return;
+  if(el){ el._sp = spId; el._w = w; }
+  if(wpGet(w) || wpBusy[k] === 1){ wpRemove(w); return; }
+  wpShow(w);
+}
+
+/* 단어 아래에 한글 발음(큰 글씨)과 메모를 '항상' 표시한다. 없으면 표시를 지운다. */
 function paintNote(el, spId, w){
   if(!el) return;
+  el._sp = spId; el._w = w;
+  var k = noteKey(w);
+  var pr = wpGet(w), loading = (wpBusy[k] === 1);
+  var pt = el.querySelector('.wpron');
+  if(pr || loading){
+    el.classList.add('haspron');
+    if(!pt){
+      pt = document.createElement('span'); pt.className = 'wpron';
+      el.insertBefore(pt, el.querySelector('.wnote') || null);
+    }
+    pt.innerHTML = '<span class="wph'+(loading?' busy':'')+'">'+(loading ? '불러오는 중…' : esc(pr))+'</span>'+
+      (loading ? '' : '<button class="wpb" data-m="1" title="메모">✏️</button>')+
+      '<button class="wpb" data-x="1" title="지우기">✕</button>';
+    pt.onclick = function(ev){ ev.stopPropagation(); };
+    var ph = pt.querySelector('.wph');
+    if(ph && !loading) ph.onclick = function(ev){ ev.stopPropagation(); say(w, 0.85); };
+    var bx = pt.querySelector('[data-x]'); if(bx) bx.onclick = function(ev){ ev.stopPropagation(); wpRemove(w); };
+    var bm = pt.querySelector('[data-m]'); if(bm) bm.onclick = function(ev){ ev.stopPropagation(); openWordMemo(spId, w, el); };
+  } else {
+    el.classList.remove('haspron');
+    if(pt) pt.parentNode.removeChild(pt);
+  }
   var note = getNote(spId, w);
   var tag = el.querySelector('.wnote');
+
   if(note){
     el.classList.add('hasnote');
     if(!tag){ tag = document.createElement('span'); tag.className = 'wnote'; el.appendChild(tag); }
     tag.textContent = note;
+    tag.onclick = function(ev){ ev.stopPropagation(); openWordMemo(spId, w, el); };
   } else {
     el.classList.remove('hasnote');
     if(tag) tag.parentNode.removeChild(tag);
   }
 }
 /* 단어 메모 팝오버 (el = 눌린 .sw 단어, 메모 저장 후 점 표시 갱신) */
-function openWordNote(spId, w, el){
+function openWordMemo(spId, w, el){
   var cur = getNote(spId, w);
   var ov = openMod(
     '<div style="text-align:center">'+
@@ -4692,7 +4600,7 @@ function screenSpecial(sp){
           })()+
         '</div>'+
         '<div class="readtip">🗣️ 하준아, 이 '+st.l.length+'줄을 <b>소리내어</b> 읽어보자!'+
-          '<br><span style="font-size:13px">모르는 단어는 눌러서 듣고 메모할 수 있어요</span>'+
+          '<br><span style="font-size:13px">모르는 단어를 누르면 소리와 한글 발음이 나와요</span>'+
           (retry ? '<br><span style="font-size:13px">다시 한 번 천천히!</span>' : '')+'</div>'+
         '<button class="btn primary wide" id="check" style="margin-top:14px;font-size:19px;padding:16px" disabled>⏳ 읽는 중…</button>'+
       '</div>';
