@@ -530,7 +530,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.11 18:05';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.10.20 21:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2861,6 +2861,8 @@ function screenQuizList(){
 function screenQuizEdit(q){
   var editing = !!q;
   var title = q ? q.title : '';
+  var dkMap = {};
+  if(q) q.items.forEach(function(it){ if(it.dk) dkMap[it.def] = it.dk; });   /* \ubb38\uc7a5 \ud574\uc11d\uc740 \ubb38\uc7a5\uc774 \uadf8\ub300\ub85c\uba74 \uc720\uc9c0 */
   var rows = q ? q.items.map(function(it){ return {def:it.def, w:it.w, k:it.k}; })
                : [ {def:'',w:'',k:''}, {def:'',w:'',k:''}, {def:'',w:'',k:''} ];
   function draw(){
@@ -2925,7 +2927,7 @@ function screenQuizEdit(q){
     document.getElementById('save').onclick = function(){
       sync();
       var t = document.getElementById('qt').value.trim();
-      var items = rows.map(function(r){ return {def:(r.def||'').trim(), w:(r.w||'').trim(), k:(r.k||'').trim()}; })
+      var items = rows.map(function(r){ var d0=(r.def||'').trim(), o={def:d0, w:(r.w||'').trim(), k:(r.k||'').trim()}; if(dkMap[d0]) o.dk=dkMap[d0]; return o; })
                       .filter(function(r){ return r.def && r.w; });
       if(!t){ noSound(); alert('\ub2e8\uc5b4\uc7a5 \uc774\ub984\uc744 \ub123\uc5b4\uc8fc\uc138\uc694.'); return; }
       if(!items.length){ noSound(); alert('\ub73b\ud480\uc774\uc640 \uc601\uc5b4 \ub2e8\uc5b4\ub294 \uaf2d \ub123\uc5b4\uc8fc\uc138\uc694. (\ud55c\uae00 \ub73b\uc740 \uc120\ud0dd)'); return; }
@@ -2967,18 +2969,37 @@ function startQuiz(q){
   function bindBack(){ document.getElementById('qback').onclick = function(){ stopAll(); screenQuizList(); }; }
 
   /* 1단계: 뜻풀이 보여주고 소리로 들려줌 → 하준이가 타이핑 */
+  /* \ub73b\ud480\uc774 \ubb38\uc7a5\uc758 \ud55c\uae00 \ud574\uc11d \u2014 \ud55c \ubc88 \ubc1b\uc73c\uba74 \ubb38\uc81c(it.dk)\uc5d0 \uc800\uc7a5\ud574 \ub2e4\uc2dc \uc548 \ubd80\ub978\ub2e4 */
+  function sentKo(it, cb){
+    if(it.dk){ cb(it.dk); return; }
+    if(!hasServer){ cb(''); return; }
+    apiPost({action:'trans', pin:DAD_PIN, text:it.def}, function(j){
+      var v = j && j.ok && String(j.ko||'').trim();
+      if(v){ it.dk = v; saveProgress(); cb(v); } else cb('', j);
+    });
+  }
+
   function runOne(){
     var it = q.items[order[pos]];
     app.innerHTML = head('\ub4e3\uace0 \ubcf4\uace0 \ud0c0\uc774\ud551!') +
       '<div class="card">'+
         '<div class="qlab" style="text-align:center">\uc774 \ub73b\ud480\uc774\uc758 \ub2e8\uc5b4\ub294?</div>'+
-        '<div class="defbox"><div class="dl">'+esc(it.def)+'</div>'+
-          '<button class="btn primary" id="say" style="margin-top:10px">\ud83d\udd0a \ub4e4\uc5b4\ubcf4\uae30</button>'+
-          '<button class="btn" id="slow" style="margin-top:10px">\ud83d\udc22</button>'+
+        '<div class="defbox">'+
+          '<div class="dl" id="dlbox"></div>'+
+          '<div id="dko" style="display:none"></div>'+
+          '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">'+
+            '<button class="btn" id="seeS" style="background:#FFF3D6;box-shadow:0 4px 0 #F1D08A">\ud83d\udc40 \ubb38\uc7a5 \ubcf4\uae30</button>'+
+            '<button class="btn primary" id="say">\ud83d\udd0a \ub4e4\uc5b4\ubcf4\uae30</button>'+
+            '<button class="btn" id="slow">\ud83d\udc22</button>'+
+          '</div>'+
         '</div>'+
         '<div class="qlab">\u270f\ufe0f \uc601\uc5b4 \ub2e8\uc5b4\ub97c \uc790\ud310\uc73c\ub85c \uce58\uc138\uc694</div>'+
         '<input class="qin eng" id="ansW" placeholder="\uc5ec\uae30\uc5d0 \uc601\uc5b4 \ub2e8\uc5b4" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-        '<div class="qlab">\u270f\ufe0f \ud55c\uae00 \ub73b\ub3c4 \uce58\uc138\uc694 '+(it.k?'':'<span style="opacity:.6">(\uc774 \ubb38\uc81c\ub294 \ud55c\uae00 \ub73b\uc774 \uc5c6\uc5b4\uc694)</span>')+'</div>'+
+        '<div class="qlab" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'+
+          '<span>\u270f\ufe0f \ud55c\uae00 \ub73b\ub3c4 \uce58\uc138\uc694 '+(it.k?'':'<span style="opacity:.6">(\uc774 \ubb38\uc81c\ub294 \ud55c\uae00 \ub73b\uc774 \uc5c6\uc5b4\uc694)</span>')+'</span>'+
+          (it.k ? '<button class="btn" id="seeK" style="padding:6px 12px;font-size:14px;background:#E8F7EE;box-shadow:0 3px 0 #B7E4C7">\ud83d\udc40 \ud55c\uae00 \ub73b \ubcf4\uae30</button>' : '')+
+        '</div>'+
+        '<div id="kshow" style="display:none;text-align:center;font-size:22px;font-weight:800;color:#166534;background:#E8F7EE;border:2px solid #86D9A6;border-radius:14px;padding:8px;margin-bottom:10px"></div>'+
         '<input class="qin" id="ansK" placeholder="\uc5ec\uae30\uc5d0 \ud55c\uae00 \ub73b"'+(it.k?'':' disabled')+'>'+
         '<button class="btn go wide" id="done" style="font-size:18px;margin-top:6px">\u2705 \ub2e4 \uc37c\uc5b4\uc694! \ud655\uc778\ud558\uae30</button>'+
       '</div>';
@@ -2986,6 +3007,40 @@ function startQuiz(q){
     var play = function(r){ speakWords(it.def.split(/\s+/), r||RATE, function(){}); };
     document.getElementById('say').onclick = function(){ play(); };
     document.getElementById('slow').onclick = function(){ play(0.6); };
+
+    /* \uc601\uc5b4 \ub73b\ud480\uc774 \ubb38\uc7a5\uc740 \ucc98\uc74c\uc5d4 \uc228\uae40(\uc18c\ub9ac\ub9cc). [\ubb38\uc7a5 \ubcf4\uae30]\ub97c \ub204\ub974\uba74 \ubb38\uc7a5 + \ud55c\uae00 \ud574\uc11d, \ub2e4\uc2dc \ub204\ub974\uba74 \uc228\uae40 */
+    var shown = false, myPos = pos;
+    var dl = document.getElementById('dlbox'), dko = document.getElementById('dko'), seeS = document.getElementById('seeS');
+    function paintDef(){
+      if(!shown){
+        dl.innerHTML = '<span style="opacity:.65">\ud83d\ude48 \ubb38\uc7a5\uc774 \uc228\uaca8\uc838 \uc788\uc5b4\uc694</span><br><span style="font-size:14px;opacity:.65">\uc18c\ub9ac\ub97c \ub4e3\uace0 \ub2e8\uc5b4\ub97c \ub9de\ud600 \ubcf4\uc138\uc694</span>';
+        dko.style.display = 'none'; seeS.textContent = '\ud83d\udc40 \ubb38\uc7a5 \ubcf4\uae30';
+      } else {
+        dl.textContent = it.def; seeS.textContent = '\ud83d\ude48 \ubb38\uc7a5 \uc228\uae30\uae30';
+        dko.style.display = 'block';
+        dko.style.cssText = 'display:block;margin-top:8px;padding-top:8px;border-top:2px dashed #7CC6F5;font-size:17px;font-weight:700;color:#166534;line-height:1.45';
+        if(it.dk) dko.textContent = '\ud83c\uddf0\ud83c\uddf7 '+it.dk;
+        else {
+          dko.textContent = '\ud83c\uddf0\ud83c\uddf7 \ud55c\uae00 \ub73b \ubd88\ub7ec\uc624\ub294 \uc911\u2026';
+          sentKo(it, function(v, err){
+            if(myPos !== pos || !document.body.contains(dko)) return;
+            if(!shown) return;
+            dko.textContent = v ? '\ud83c\uddf0\ud83c\uddf7 '+v : '\ud83c\uddf0\ud83c\uddf7 (\ud55c\uae00 \ud574\uc11d\uc744 \ubd88\ub7ec\uc624\uc9c0 \ubabb\ud588\uc5b4\uc694: '+String(scanErrMsg(err)).split('\n')[0]+')';
+          });
+        }
+      }
+    }
+    paintDef();
+    seeS.onclick = function(){ shown = !shown; paintDef(); };
+    if(document.getElementById('seeK')){
+      var kOn = false;
+      document.getElementById('seeK').onclick = function(){
+        kOn = !kOn;
+        var ks = document.getElementById('kshow');
+        ks.style.display = kOn ? 'block' : 'none'; ks.textContent = kOn ? it.k : '';
+        this.textContent = kOn ? '\ud83d\ude48 \ud55c\uae00 \ub73b \uc228\uae30\uae30' : '\ud83d\udc40 \ud55c\uae00 \ub73b \ubcf4\uae30';
+      };
+    }
     play();   /* 문제 나오면 자동으로 한 번 들려준다 */
     document.getElementById('done').onclick = function(){ stopAll(); judge(
       document.getElementById('ansW').value.trim(),

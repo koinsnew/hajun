@@ -49,6 +49,7 @@ function doPost(e) {
   else if (action === 'ocr')   out = ocrScan(body);
   else if (action === 'hangul') out = hangulPron(body);
   else if (action === 'word')   out = wordInfo(body);
+  else if (action === 'trans')  out = transSentence(body);
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, null);
 }
@@ -381,6 +382,42 @@ function wordInfo(req) {
     else return { error: 'BAD_PRON' };
   }
   var out = { ok: true, p: p, m: m, model: g.model };
+  try { cache.put(ck, JSON.stringify(out), 21600); } catch (e) {}
+  return out;
+}
+
+/* ===== 영어 문장 → 한글 해석 (Gemini) =====
+ * 단어 테스트에서 [문장 보기]를 누르면 뜻풀이 문장의 한글 해석을 보여주는 데 쓴다.
+ * 같은 문장은 6시간 서버 캐시 + 앱 쪽(문제 데이터)에 저장해서 다시 안 부른다. (하루 상한은 HANGUL_DAILY_MAX 와 함께 센다)
+ */
+var TRANS_PROMPT =
+  '너는 한국 초등학생(3학년)에게 영어를 가르치는 선생님이다.\n' +
+  '아래 영어 문장(뜻풀이)을 초등학생이 이해하기 쉬운 자연스러운 한국어 한두 문장으로 해석하라. 직역투를 피하고, 설명을 덧붙이지 말 것.\n' +
+  'JSON으로만 답: {"ko":"한글 해석"}\n문장: ';
+
+function transSentence(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var text = String(req.text || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+  if (!text) return { error: 'EMPTY' };
+
+  var cache = CacheService.getScriptCache();
+  var ck = 'tr_' + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, text));
+  var hit = cache.get(ck);
+  if (hit) { try { return JSON.parse(hit); } catch (e) {} }
+
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'HG_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= HANGUL_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+
+  var g = _geminiJSON([{ text: TRANS_PROMPT + text }], 1000);
+  if (!g.ok) return { error: g.error };
+  var ko = String((g.data && g.data.ko) || '').trim();
+  if (!ko) return { error: 'EMPTY_RESULT' };
+  var out = { ok: true, ko: ko, model: g.model };
   try { cache.put(ck, JSON.stringify(out), 21600); } catch (e) {}
   return out;
 }
