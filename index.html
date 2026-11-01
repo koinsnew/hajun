@@ -530,7 +530,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.01 22:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.01 22:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -4793,7 +4793,7 @@ function screenOrigList(){
     var s = origById(this.dataset.id);
     if(!s) return;
     if(!(s.items||[]).length){ needDad(function(){ screenOrigEdit(s); }, screenOrigList); return; }
-    beep([700,900],.06); startOrig(s);
+    beep([700,900],.06); screenOrigPick(s);
   });
 }
 
@@ -4971,13 +4971,17 @@ function screenOrigEdit(set){
 }
 
 /* ── 시험 진행 — 스페셜 테스트와 같은 규칙 ── */
-function startOrig(set){
-  var items = set.items || [], i = 0, tries = 0, imgs = {};
-  var wasBefore = !!set.done;      /* 이미 통과한 적 있으면 다시 도전 */
+/* ids: 고른 그림의 id 목록(없으면 전부) / preImgs: 이미 불러온 그림 {id: dataURL}
+   전부 고르면 '시험'(별 뽑기 있음), 일부만 고르면 '연습'(별 뽑기 없음 — 한 장만 골라 별만 뽑는 것을 막으려고) */
+function startOrig(set, ids, preImgs){
+  var all = set.items || [];
+  var items = ids ? all.filter(function(it){ return ids.indexOf(it.id) >= 0; }) : all.slice();
+  var full = items.length === all.length, i = 0, tries = 0, imgs = preImgs || {};
+  var wasBefore = full && !!set.done;      /* 이미 통과한 적 있으면 다시 도전 */
   function head(){
     return '<div class="topbar">'+
         '<button class="iconbtn" id="oback">←</button>'+
-        '<h2>'+esc(set.e||'📘')+' '+esc(set.t)+'</h2>'+
+        '<h2>'+esc(set.e||'📘')+' '+esc(set.t)+(full?'':' (연습)')+'</h2>'+
         '<div class="pill">'+(i+1)+'/'+items.length+'</div>'+
       '</div>'+
       '<div class="stz">'+ items.map(function(_,k){ return '<div class="sz '+(k<i?'ok':(k===i?'on':''))+'"></div>'; }).join('') +'</div>';
@@ -5029,7 +5033,29 @@ function startOrig(set){
   }
 
   /* 통과! — 첫 통과는 별 1~STAR_ORIG개, 다시 도전은 STAR_ORIG_RE_LO~HI개를 뽑아 기존 별에 합산 */
+  function practiceEnd(){
+    confetti(30); starSound();
+    app.innerHTML =
+      '<div class="result">'+
+        '<div class="big">🎉</div>'+
+        '<h2>고른 그림 연습 끝!</h2>'+
+        '<p>'+esc(set.t)+'<br><b>그림 '+items.length+'개를 다 썼어요!</b></p>'+
+        '<div class="card" style="margin-bottom:12px">모든 그림을 다 시험 볼 때 ⭐ 별 뽑기를 할 수 있어요.</div>'+
+        '<div class="card" style="margin-bottom:12px">'+
+          items.map(function(it){
+            return '<div class="storyline done" style="text-align:left;font-size:13px">'+esc(it.en)+(it.ko?'<br><span class="muted">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
+          }).join('')+
+        '</div>'+
+        '<button class="btn primary wide" id="again3" style="margin-bottom:10px">🔁 같은 그림 다시 연습</button>'+
+        '<button class="btn wide" id="pickagain" style="margin-bottom:10px">🖼️ 그림 다시 고르기</button>'+
+        '<button class="btn go wide" id="lst">📘 목록으로</button>'+
+      '</div>';
+    document.getElementById('again3').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
+    document.getElementById('pickagain').onclick = function(){ screenOrigPick(set); };
+    document.getElementById('lst').onclick = screenOrigList;
+  }
   function pass(){
+    if(!full) return practiceEnd();
     var reMode = wasBefore, justGot = null, drawn = false;
     confetti(50); starSound();
     render();
@@ -5075,12 +5101,72 @@ function startOrig(set){
     }
   }
 
+  if(preImgs) return ask();
   app.innerHTML = '<div class="card" style="text-align:center;margin-top:40px"><div style="font-size:44px">🖼️</div><div class="muted">그림을 불러오는 중…</div></div>';
   origLoadImgs(set, function(map){ imgs = map; ask(); }, function(n, tot){
     app.innerHTML = '<div class="card" style="text-align:center;margin-top:40px"><div style="font-size:44px">☁️</div><div class="muted">그림을 서버에서 받는 중… '+n+'/'+tot+'</div></div>';
   });
 }
 
+/* ── 시험 볼 그림 고르기 — 여러 그림을 한꺼번에 골라서 볼 수 있다 ── */
+function screenOrigPick(set){
+  var items = set.items || [], sel = {}, imgs = {};
+  items.forEach(function(it){ sel[it.id] = true; });   /* 처음엔 전부 선택 */
+  function chosen(){ return items.filter(function(it){ return sel[it.id]; }); }
+  function head(){
+    return '<div class="topbar"><button class="iconbtn" id="pback">←</button><h2>'+esc(set.e||'📘')+' '+esc(set.t)+'</h2><div class="pill" id="pcnt"></div></div>';
+  }
+  app.innerHTML = head() + '<div class="card" style="text-align:center;margin-top:20px"><div style="font-size:44px">🖼️</div><div class="muted" id="pld">그림을 불러오는 중…</div></div>';
+  document.getElementById('pback').onclick = screenOrigList;
+  origLoadImgs(set, function(map){ imgs = map; draw(); }, function(n, tot){
+    var m = document.getElementById('pld'); if(m) m.textContent = '그림을 서버에서 받는 중… '+n+'/'+tot;
+  });
+  function draw(){
+    var tiles = items.map(function(it, i){
+      var u = imgs[it.id];
+      return '<button class="ogtile" data-id="'+esc(it.id)+'" style="position:relative;border:3px solid var(--line);border-radius:14px;background:#fff;padding:4px;min-height:96px;display:flex;align-items:center;justify-content:center">'+
+        (u ? '<img src="'+u+'" style="width:100%;max-height:110px;object-fit:contain;border-radius:10px">' : '<span class="muted">🖼️</span>')+
+        '<span style="position:absolute;left:6px;top:4px;background:rgba(255,255,255,.9);border-radius:10px;padding:0 7px;font-size:12px;font-weight:800">'+(i+1)+'</span>'+
+        '<span class="ogck" style="position:absolute;right:6px;top:4px;font-size:20px;line-height:1.1"></span>'+
+      '</button>';
+    }).join('');
+    app.innerHTML = head() +
+      '<div class="card" style="margin-bottom:10px;text-align:center">'+
+        '<div style="font-size:16px">🖼️ 시험 볼 그림을 골라요</div>'+
+        '<div class="muted" style="margin-top:4px">누르면 선택/해제돼요. 여러 개를 골라도 돼요.<br>다 고르면 <b>⭐ 별 뽑기</b>가 있는 시험, 일부만 고르면 <b>연습</b>이에요.</div>'+
+      '</div>'+
+      '<div class="row" style="margin-bottom:10px"><button class="btn" id="pall" style="flex:1">✅ 전체 선택</button><button class="btn" id="pnone" style="flex:1">⬜ 전체 해제</button></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+tiles+'</div>'+
+      '<button class="btn primary wide" id="pgo" style="font-size:18px;position:sticky;bottom:10px"></button>';
+    document.getElementById('pback').onclick = screenOrigList;
+    on('.ogtile', function(){ var id = this.dataset.id; sel[id] = !sel[id]; paint(); });
+    document.getElementById('pall').onclick = function(){ items.forEach(function(it){ sel[it.id] = true; }); paint(); };
+    document.getElementById('pnone').onclick = function(){ items.forEach(function(it){ sel[it.id] = false; }); paint(); };
+    document.getElementById('pgo').onclick = function(){
+      var c = chosen();
+      if(!c.length){ noSound(); return; }   /* 버튼에 '그림을 골라 주세요'가 이미 쓰여 있다 */
+      beep([700,900],.06);
+      startOrig(set, c.map(function(it){ return it.id; }), imgs);
+    };
+    paint();
+  }
+  function paint(){   /* 화면을 다시 그리지 않고 표시만 바꾼다 (스크롤 유지) */
+    var n = chosen().length, all = n === items.length;
+    Array.prototype.forEach.call(app.querySelectorAll('.ogtile'), function(b){
+      var on_ = !!sel[b.dataset.id];
+      b.style.borderColor = on_ ? 'var(--grape)' : 'var(--line)';
+      b.style.background = on_ ? '#F3EEFF' : '#fff';
+      b.style.opacity = on_ ? '1' : '.55';
+      b.querySelector('.ogck').textContent = on_ ? '✅' : '⬜';
+    });
+    var pc = document.getElementById('pcnt'); if(pc) pc.textContent = n+'/'+items.length;
+    var go = document.getElementById('pgo');
+    if(go){
+      go.textContent = !n ? '그림을 골라 주세요' : (all ? '▶ 전체 시험 보기 (⭐ 별 뽑기)' : '▶ 고른 '+n+'개 연습하기');
+      go.style.opacity = n ? '1' : '.5';
+    }
+  }
+}
 function screenSpecials(){
   var html =
     '<div class="topbar">'+

@@ -267,6 +267,26 @@ function ocrScan(req) {
 }
 
 
+/* 모델 답변에서 JSON 하나를 꺼낸다 — 코드블록(```)·앞뒤 설명·배열/객체 모두 견딘다. 못 읽으면 null */
+function _extractJson(text) {
+  var t = String(text || '').replace(/^\s*```(?:json)?/i, '').replace(/```\s*$/, '').trim();
+  try { return JSON.parse(t); } catch (e) { /* 아래에서 바깥 덩어리만 잘라 본다 */ }
+  var i = t.search(/[\[{]/);
+  if (i < 0) return null;
+  var open = t.charAt(i), close = open === '{' ? '}' : ']', depth = 0, inStr = false, esc = false;
+  for (var k = i; k < t.length; k++) {
+    var c = t.charAt(k);
+    if (inStr) { if (esc) esc = false; else if (c === '\\') esc = true; else if (c === '"') inStr = false; continue; }
+    if (c === '"') inStr = true;
+    else if (c === open) depth++;
+    else if (c === close) {
+      depth--;
+      if (depth === 0) { try { return JSON.parse(t.slice(i, k + 1)); } catch (e2) { return null; } }
+    }
+  }
+  return null;
+}
+
 /* 구글 Gemini 호출 (공통) — JSON 응답을 받는다.
    구글 쪽이 일시적으로 붐비면(503/429/500/504) 잠깐 쉬고 다시, 그래도 안 되면 예비 모델로 시도한다. */
 function _geminiJSON(parts, maxTokens) {
@@ -291,9 +311,10 @@ function _geminiJSON(parts, maxTokens) {
       var text = cand && cand.content && cand.content.parts
         ? cand.content.parts.map(function (p) { return p.thought ? '' : (p.text || ''); }).join('') : '';
       if (!text) { lastErr = 'EMPTY ' + (cand && cand.finishReason || ''); continue; }
-      var m = text.match(/\{[\s\S]*\}/);
-      if (!m) { lastErr = 'PARSE'; continue; }
-      return { ok: true, data: JSON.parse(m[0]), model: plan[t] };
+      var data = _extractJson(text);
+      if (data === null) { lastErr = 'PARSE'; continue; }          // 읽을 수 없으면 다시/다른 모델로
+      if (Array.isArray(data)) data = { items: data };            // 예비 모델은 {items:[…]} 대신 […] 로 답하기도 한다
+      return { ok: true, data: data, model: plan[t] };
     }
     return { error: 'BUSY ' + lastErr };
   } catch (e) { return { error: String(e) }; }
