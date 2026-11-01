@@ -50,6 +50,9 @@ function doPost(e) {
   else if (action === 'hangul') out = hangulPron(body);
   else if (action === 'word')   out = wordInfo(body);
   else if (action === 'trans')  out = transSentence(body);
+  else if (action === 'imgPut') out = origPutImg(body);
+  else if (action === 'imgGet') out = origGetImgs(body);
+  else if (action === 'imgDel') out = origDelImgs(body);
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, null);
 }
@@ -429,4 +432,77 @@ function transSentence(req) {
   var out = { ok: true, ko: ko, model: g.model };
   try { cache.put(ck, JSON.stringify(out), 21600); } catch (e) {}
   return out;
+}
+
+
+/* ===== 원서 테스트 그림 — 구글 드라이브에 저장해서 모든 기기에서 보이게 =====
+ * 처음 한 번: 앱스스크립트 편집기에서 위쪽 함수 선택칸을 authorizeDrive 로 바꾸고 ▶ 실행 →
+ *            「권한 검토」→ 내 계정 → 허용. (드라이브 권한을 한 번 주는 과정입니다)
+ *            그 다음 배포 > 배포 관리 > 새 버전 으로 올려 주세요.
+ * 그림은 내 드라이브의 '하준 원서 그림' 폴더에 파일 이름 = 그림 키(o_...)로 저장됩니다.
+ * 조절 상수: ORIG_IMG_MAX_B64 (그림 한 장 최대 크기, base64 글자 수)
+ */
+var ORIG_FOLDER_PROP = 'ORIG_FOLDER_ID';
+var ORIG_FOLDER_NAME = '하준 원서 그림';
+var ORIG_IMG_MAX_B64 = 2500000;   // 약 1.8MB
+
+function _origFolder(create) {
+  var sp = PropertiesService.getScriptProperties();
+  var id = sp.getProperty(ORIG_FOLDER_PROP);
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) { /* 폴더가 지워졌으면 아래에서 새로 */ } }
+  if (!create) return null;
+  var f = DriveApp.createFolder(ORIG_FOLDER_NAME);
+  sp.setProperty(ORIG_FOLDER_PROP, f.getId());
+  return f;
+}
+function authorizeDrive() { var f = _origFolder(true); return 'OK ' + f.getId(); }
+
+function _origKeyOk(k) { return /^o_[A-Za-z0-9_-]{3,90}$/.test(String(k || '')); }
+function _pinOk(req) {
+  var want = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  return String(req.pin || '') === want;
+}
+
+function origPutImg(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var key = String(req.key || '');
+  if (!_origKeyOk(key)) return { error: 'BAD_KEY' };
+  var data = String(req.data || '').replace(/^data:image\/jpeg;base64,/, '');
+  if (!data || data.length > ORIG_IMG_MAX_B64) return { error: 'BAD_IMAGE' };
+  try {
+    var f = _origFolder(true);
+    var old = f.getFilesByName(key);
+    while (old.hasNext()) old.next().setTrashed(true);
+    f.createFile(Utilities.newBlob(Utilities.base64Decode(data), 'image/jpeg', key));
+    return { ok: true };
+  } catch (e) { return { error: 'DRIVE ' + String(e).slice(0, 200) }; }
+}
+
+function origGetImgs(req) {
+  var keys = (req.keys || []).slice(0, 8), out = {};
+  try {
+    var f = _origFolder(false);
+    if (!f) return { ok: true, imgs: out };
+    keys.forEach(function (k) {
+      if (!_origKeyOk(k)) return;
+      var it = f.getFilesByName(k);
+      if (it.hasNext()) out[k] = 'data:image/jpeg;base64,' + Utilities.base64Encode(it.next().getBlob().getBytes());
+    });
+    return { ok: true, imgs: out };
+  } catch (e) { return { error: 'DRIVE ' + String(e).slice(0, 200) }; }
+}
+
+function origDelImgs(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var keys = (req.keys || []).slice(0, 60), n = 0;
+  try {
+    var f = _origFolder(false);
+    if (!f) return { ok: true, n: 0 };
+    keys.forEach(function (k) {
+      if (!_origKeyOk(k)) return;
+      var it = f.getFilesByName(k);
+      while (it.hasNext()) { it.next().setTrashed(true); n++; }
+    });
+    return { ok: true, n: n };
+  } catch (e) { return { error: 'DRIVE ' + String(e).slice(0, 200) }; }
 }
