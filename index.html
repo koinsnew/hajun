@@ -530,7 +530,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.10.20 21:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.01 21:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1624,6 +1624,7 @@ function normProg(){
   if(!PROG.wpron) PROG.wpron = {};
   if(PROG.pron) delete PROG.pron;   /* 예전 문장 한글 발음 기능은 없앴다 */
   if(!PROG.mimemal) PROG.mimemal = [];
+  if(!PROG.orig) PROG.orig = [];
   /* 옛 진도: 통과했는데 뽑은 별 기록이 없으면 예전 고정값으로 채운다 */
   PROG.quizzes.forEach(function(q){ if(q.done && typeof q.stars!=='number') q.stars = STAR_QUIZ; });
   PROG.sents.forEach(function(x){ if(x.done && typeof x.stars!=='number') x.stars = STAR_SENT; });
@@ -1692,7 +1693,7 @@ function giveBonus(n, memo){
   return n;
 }
 /* 지금까지 모은 별 (누적 기록용) */
-function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars(); }
+function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
    ★ 닌텐도도 카드도 모두 '이 별'을 쓴다. 카드를 사면 닌텐도가 그만큼 멀어진다. */
@@ -1768,7 +1769,7 @@ function useItem(it){
 function maxStars(){
   var a=0; LEVELS.forEach(function(L){ a += levelMax(L); });
   return a + LEVELS.length*STAR_TEST + books().length*STAR_BOOK + SPECIALS.length*STAR_SPEC
-           + papers().length*STAR_PAPER + (quizzes().length + sents().length) * STAR_PICK_MAX;
+           + papers().length*STAR_PAPER + (quizzes().length + sents().length) * STAR_PICK_MAX + origList().length*STAR_ORIG;
 }
 /* 별이 목표에 닿는 순간 어디서든 특별 보상이 열린다 */
 function checkFinal(cb){
@@ -2048,6 +2049,11 @@ function screenHome(){
       '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="ogbig" style="background:linear-gradient(135deg,#14B8A6,#6366F1);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
+      '<div class="ico">📘</div>'+
+      '<div class="t"><b>원서 테스트</b><small>그림 보고 영어 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
     '<button class="testbtn" id="pkbig" style="background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 6px 0 #065F46;margin:0 0 12px">'+
       '<div class="ico">⚽</div>'+
       '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+PK_SHOTS+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
@@ -2077,6 +2083,7 @@ function screenHome(){
   document.getElementById('spbig').onclick = screenSpecials;
   document.getElementById('pkbig').onclick = startPKGame;
   document.getElementById('mmbig').onclick = screenMimemal;
+  document.getElementById('ogbig').onclick = screenOrigList;
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
@@ -4208,6 +4215,685 @@ function startMimemal(){
   ask();
 }
 
+/* =========================================================
+   원서 테스트 — 원서(그림책) PDF 의 그림만 보고 영어 문장 쓰기
+   PROG.orig = [{id, e, t, items:[{id,en,ko}], done, stars, at}]
+   · 그림은 용량 때문에 진도(서버)에 넣지 않고 이 기기의 IndexedDB 에 따로 둔다 (키 'o_세트id_문제id').
+   · 시험 규칙은 스페셜 테스트와 같다: 아빠가 ⭕/❌ → ❌면 같은 문제를 다시 / 다 통과하면 별 뽑기
+     (첫 통과 1~STAR_ORIG개, 다시 도전 STAR_ORIG_RE_LO~STAR_ORIG_RE_HI개를 기존 별에 합산).
+   · 등록: PDF → 쪽마다 그림을 렌더 → AI(Code.gs ocr kind=orig)가 그림 위치·영어 문장·한글 해석을 읽음
+     → 그림 위치는 화면 픽셀로 한 번 더 보정해서 그림만 잘라냄.
+   조절 상수는 아래 ORIG_* / STAR_ORIG* 한 곳에 모아 두었다.
+   ========================================================= */
+var STAR_ORIG = 10;            /* 첫 통과 때 뽑는 별 최대 (스페셜과 같음) */
+var STAR_ORIG_RE_LO = 1;       /* 다시 도전 별 최소 */
+var STAR_ORIG_RE_HI = 3;       /* 다시 도전 별 최대 */
+var ORIG_PAGES_PER_CALL = 5;   /* AI 한 번에 보내는 쪽 수 */
+var ORIG_PDF_MAX_PAGES = 60;   /* PDF 한 번에 읽는 최대 쪽 수 (넘으면 몇 쪽부터인지 물어봄) */
+var ORIG_RENDER_SIDE = 1400;   /* 쪽을 그릴 때 긴 변 픽셀 */
+var ORIG_IMG_SIDE = 800;       /* 저장하는 그림의 긴 변 픽셀 */
+var ORIG_IMG_QUALITY = 0.72;   /* 저장하는 그림의 JPEG 품질 */
+var ORIG_PAGE_SIDE = 1100;     /* 그림 영역 조절용 쪽 사진의 긴 변 */
+var ORIG_AI_QUALITY = 0.75;    /* AI에게 보내는 쪽 사진 품질 */
+var ORIG_TIMEOUT = 150;        /* AI 한 묶음 최대 기다림(초) */
+var PDFJS_SRCS = [
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+];
+
+function origList(){ return PROG.orig || []; }
+function origById(id){ return origList().filter(function(s){ return s.id===id; })[0]; }
+function origStars(){ return origList().reduce(function(a,s){ return a + (s.done ? (s.stars||STAR_ORIG) : 0); }, 0); }
+function origKey(setId, itemId){ return 'o_'+setId+'_'+itemId; }
+function origNewId(){ return 'i'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36); }
+
+/* ── 그림 저장소 (이 기기 IndexedDB) ── */
+var ORIG_DB = null, ORIG_MEM = {};
+function origDb(cb){
+  if(ORIG_DB) return cb(ORIG_DB);
+  if(ORIG_DB === false) return cb(null);
+  try{
+    var rq = indexedDB.open('hajun_orig', 1);
+    rq.onupgradeneeded = function(){ try{ rq.result.createObjectStore('img'); }catch(e){} };
+    rq.onsuccess = function(){ ORIG_DB = rq.result; cb(ORIG_DB); };
+    rq.onerror = rq.onblocked = function(){ ORIG_DB = false; cb(null); };
+  }catch(e){ ORIG_DB = false; cb(null); }
+}
+function origImgPut(key, url, cb){
+  ORIG_MEM[key] = url;
+  origDb(function(db){
+    if(!db) return cb && cb(false);
+    try{
+      var tx = db.transaction('img','readwrite');
+      tx.objectStore('img').put(url, key);
+      tx.oncomplete = function(){ cb && cb(true); };
+      tx.onerror = tx.onabort = function(){ cb && cb(false); };
+    }catch(e){ cb && cb(false); }
+  });
+}
+function origImgGet(key, cb){
+  if(ORIG_MEM[key]) return cb(ORIG_MEM[key]);
+  origDb(function(db){
+    if(!db) return cb('');
+    try{
+      var rq = db.transaction('img','readonly').objectStore('img').get(key);
+      rq.onsuccess = function(){ var v = rq.result || ''; if(v) ORIG_MEM[key] = v; cb(v); };
+      rq.onerror = function(){ cb(''); };
+    }catch(e){ cb(''); }
+  });
+}
+function origImgDel(keys, cb){
+  keys.forEach(function(k){ delete ORIG_MEM[k]; });
+  if(!keys.length) return cb && cb();
+  origDb(function(db){
+    if(!db) return cb && cb();
+    try{
+      var tx = db.transaction('img','readwrite'), os = tx.objectStore('img');
+      keys.forEach(function(k){ os.delete(k); });
+      tx.oncomplete = tx.onerror = tx.onabort = function(){ cb && cb(); };
+    }catch(e){ cb && cb(); }
+  });
+}
+/* 세트의 그림을 모두 불러와 {문제id: dataURL} 로 돌려준다 */
+function origLoadImgs(set, cb){
+  var out = {}, items = set.items || [], k = 0;
+  (function next(){
+    if(k >= items.length) return cb(out);
+    var it = items[k++];
+    origImgGet(origKey(set.id, it.id), function(u){ if(u) out[it.id] = u; next(); });
+  })();
+}
+
+/* ── 그림 찾기 (화면 픽셀 분석) ──
+   쪽 이미지에서 배경색(가장자리)과 다르면서 속이 꽉 찬 덩어리를 '그림'으로 보고 [ymin,xmin,ymax,xmax](0~1000) 목록을 돌려준다.
+   글자(얇은 획)는 속이 비어 있어서 걸러진다. */
+function findPictureBoxes(d, w, h, opt){
+  opt = opt || {};
+  var cell = Math.max(3, Math.round(Math.max(w,h)/200));
+  var gw = Math.ceil(w/cell), gh = Math.ceil(h/cell);
+  var band = Math.max(2, Math.round(Math.min(w,h)*0.02)), rs=[], gs=[], bs=[];
+  function samp(x,y){ var i=(y*w+x)*4; rs.push(d[i]); gs.push(d[i+1]); bs.push(d[i+2]); }
+  var x, y;
+  for(x=0; x<w; x+=3){ for(y=0; y<band; y++){ samp(x,y); samp(x,h-1-y); } }
+  for(y=0; y<h; y+=3){ for(x=0; x<band; x++){ samp(x,y); samp(w-1-x,y); } }
+  function med(a){ a.sort(function(p,q){ return p-q; }); return a[a.length>>1]; }
+  var br=med(rs), bg=med(gs), bb=med(bs);
+  var TH = opt.th || 38, FULL = opt.full || 0.6;
+  var on = new Uint8Array(gw*gh), gx, gy;
+  for(gy=0; gy<gh; gy++){
+    for(gx=0; gx<gw; gx++){
+      var cnt=0, tot=0, x0=gx*cell, y0=gy*cell, x1=Math.min(w,x0+cell), y1=Math.min(h,y0+cell), xx, yy;
+      for(yy=y0; yy<y1; yy++){
+        for(xx=x0; xx<x1; xx++){
+          var i=(yy*w+xx)*4;
+          if(Math.max(Math.abs(d[i]-br), Math.abs(d[i+1]-bg), Math.abs(d[i+2]-bb)) > TH) cnt++;
+          tot++;
+        }
+      }
+      on[gy*gw+gx] = (tot && cnt/tot >= FULL) ? 1 : 0;
+    }
+  }
+  /* 한 칸 부풀려 작은 틈을 메우고, 연결된 덩어리로 묶는다 */
+  var on2 = new Uint8Array(on), oy, ox;
+  for(gy=0; gy<gh; gy++) for(gx=0; gx<gw; gx++){
+    if(!on[gy*gw+gx]) continue;
+    for(oy=-1; oy<=1; oy++) for(ox=-1; ox<=1; ox++){
+      var ny=gy+oy, nx=gx+ox; if(ny>=0&&ny<gh&&nx>=0&&nx<gw) on2[ny*gw+nx]=1;
+    }
+  }
+  var seen = new Uint8Array(gw*gh), out = [], s;
+  for(s=0; s<on2.length; s++){
+    if(!on2[s] || seen[s]) continue;
+    var stack=[s], c={solid:0,sx0:gw,sy0:gh,sx1:-1,sy1:-1}; seen[s]=1;
+    while(stack.length){
+      var cur=stack.pop(), cy=(cur/gw)|0, cx=cur-cy*gw;
+      if(on[cur]){ c.solid++; if(cx<c.sx0)c.sx0=cx; if(cx>c.sx1)c.sx1=cx; if(cy<c.sy0)c.sy0=cy; if(cy>c.sy1)c.sy1=cy; }
+      for(oy=-1; oy<=1; oy++) for(ox=-1; ox<=1; ox++){
+        var ny2=cy+oy, nx2=cx+ox; if(ny2<0||ny2>=gh||nx2<0||nx2>=gw) continue;
+        var ni=ny2*gw+nx2; if(on2[ni] && !seen[ni]){ seen[ni]=1; stack.push(ni); }
+      }
+    }
+    if(c.sx1 < 0) continue;
+    var bw=c.sx1-c.sx0+1, bh=c.sy1-c.sy0+1;
+    /* 그림 조건: 가로·세로가 쪽의 10% 이상이고 속이 꽉 차 있을 것 (글줄·밑줄 제외) */
+    if(bw < gw*0.10 || bh < gh*0.10) continue;
+    if(c.solid/(bw*bh) < 0.45) continue;
+    out.push([ Math.round(c.sy0/gh*1000), Math.round(c.sx0/gw*1000), Math.round((c.sy1+1)/gh*1000), Math.round((c.sx1+1)/gw*1000) ]);
+  }
+  return out;
+}
+function boxArea(b){ return Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]); }
+function boxIou(a,b){
+  var y0=Math.max(a[0],b[0]), x0=Math.max(a[1],b[1]), y1=Math.min(a[2],b[2]), x1=Math.min(a[3],b[3]);
+  var i=Math.max(0,y1-y0)*Math.max(0,x1-x0), u=boxArea(a)+boxArea(b)-i;
+  return u>0 ? i/u : 0;
+}
+/* AI 가 짚은 대략 위치(ai)와 픽셀로 찾은 덩어리(found)를 합쳐 최종 그림 영역을 정한다.
+   픽셀 결과가 AI 위치와 너무 다르거나(선화 등) 없으면 AI 위치를 조금 넓혀 쓴다. how: 'pixel' | 'ai' */
+function cropBox(ai, found){
+  var ah=ai[2]-ai[0], aw=ai[3]-ai[1], m=0.15;
+  var ex=[ai[0]-ah*m, ai[1]-aw*m, ai[2]+ah*m, ai[3]+aw*m], hit=[];
+  found.forEach(function(f){
+    var cy=(f[0]+f[2])/2, cx=(f[1]+f[3])/2;
+    if(cy>=ex[0] && cy<=ex[2] && cx>=ex[1] && cx<=ex[3]) hit.push(f);
+  });
+  if(hit.length){
+    var u=[1000,1000,0,0];
+    hit.forEach(function(f){ u[0]=Math.min(u[0],f[0]); u[1]=Math.min(u[1],f[1]); u[2]=Math.max(u[2],f[2]); u[3]=Math.max(u[3],f[3]); });
+    if(boxIou(u,ai) >= 0.35 && boxArea(u) >= boxArea(ai)*0.5) return {box:u, how:'pixel'};
+  }
+  var py=ah*0.03, px=aw*0.03;
+  return {box:[Math.max(0,ai[0]-py), Math.max(0,ai[1]-px), Math.min(1000,ai[2]+py), Math.min(1000,ai[3]+px)], how:'ai'};
+}
+function origNormBox(raw){
+  if(!raw || raw.length !== 4) return null;
+  var b = raw.map(function(v){ v = +v; return isFinite(v) ? Math.max(0, Math.min(1000, v)) : NaN; });
+  if(b.some(function(v){ return isNaN(v); })) return null;
+  if(b[2]-b[0] < 30 || b[3]-b[1] < 30) return null;
+  return b;
+}
+/* 이미지/캔버스에서 box(0~1000)만 잘라 JPEG dataURL 로 */
+function origCropToUrl(src, box, side, q){
+  var W = src.naturalWidth || src.width, H = src.naturalHeight || src.height;
+  var x0 = Math.max(0, Math.round(box[1]/1000*W)), y0 = Math.max(0, Math.round(box[0]/1000*H));
+  var x1 = Math.min(W, Math.round(box[3]/1000*W)), y1 = Math.min(H, Math.round(box[2]/1000*H));
+  var w = Math.max(8, x1-x0), h = Math.max(8, y1-y0);
+  var sc = Math.min(1, side/Math.max(w,h));
+  var out = document.createElement('canvas'); out.width = Math.max(1,Math.round(w*sc)); out.height = Math.max(1,Math.round(h*sc));
+  var cx = out.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0,0,out.width,out.height);
+  cx.drawImage(src, x0, y0, w, h, 0, 0, out.width, out.height);
+  return out.toDataURL('image/jpeg', q);
+}
+
+/* ── PDF 읽기 도구(pdf.js) 불러오기 — 원서 PDF 를 열 때만 내려받는다 ── */
+function loadPdfJs(cb){
+  if(window.pdfjsLib && window.pdfjsLib.getDocument) return cb(window.pdfjsLib, null);
+  var k = 0;
+  (function tryNext(){
+    if(k >= PDFJS_SRCS.length) return cb(null, 'PDF 읽는 도구를 내려받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.');
+    var src = PDFJS_SRCS[k++], sc = document.createElement('script');
+    sc.src = src;
+    sc.onload = function(){
+      var lib = window.pdfjsLib;
+      if(!lib || !lib.getDocument) return tryNext();
+      var wsrc = src.replace('pdf.min.js','pdf.worker.min.js');
+      function ready(u){ try{ lib.GlobalWorkerOptions.workerSrc = u; }catch(e){} cb(lib, null); }
+      /* 다른 주소의 worker 는 브라우저가 막는 일이 있어서 내려받아 blob 으로 쓴다 */
+      try{
+        fetch(wsrc).then(function(r){ if(!r.ok) throw new Error('w'); return r.blob(); })
+          .then(function(b){ ready(URL.createObjectURL(new Blob([b], {type:'text/javascript'}))); })
+          .catch(function(){ ready(wsrc); });
+      }catch(e){ ready(wsrc); }
+    };
+    sc.onerror = function(){ if(sc.parentNode) sc.parentNode.removeChild(sc); tryNext(); };
+    document.head.appendChild(sc);
+  })();
+}
+function origRenderPage(pdf, n, side, cb){
+  pdf.getPage(n).then(function(page){
+    var v0 = page.getViewport({scale:1}), sc = side/Math.max(v0.width, v0.height);
+    var vp = page.getViewport({scale:sc});
+    var cv = document.createElement('canvas');
+    cv.width = Math.max(1, Math.round(vp.width)); cv.height = Math.max(1, Math.round(vp.height));
+    page.render({canvasContext: cv.getContext('2d'), viewport: vp, background: 'rgb(255,255,255)'}).promise
+      .then(function(){ cb(cv, null); }, function(e){ cb(null, e); });
+  }, function(e){ cb(null, e); });
+}
+
+/* ── PDF → 그림 + 영어 문장 + 한글 해석 ──
+   onResult(items, info): items=[{id,en,ko,img,box,how,pg,src}] / info={name,total,from,to,next,failed}  */
+function origScanPdf(startHint, onResult){
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'application/pdf,.pdf'; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = function(){
+    var file = inp.files && inp.files[0];
+    if(inp.parentNode) inp.parentNode.removeChild(inp);
+    if(!file) return;
+    var cancelled = false, timer = null, acc = [], pdfRef = null;
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML = '<div style="background:#fff;border-radius:22px;padding:26px 22px;max-width:340px;width:100%;text-align:center">'+
+      '<div style="font-size:46px">📘</div>'+
+      '<div id="ogMsg" style="font-size:18px;font-weight:800;margin:8px 0 4px">PDF를 여는 중…</div>'+
+      '<div style="font-size:13px;color:#666;line-height:1.5">쪽마다 그림과 문장을 읽어요.<br>화면을 닫지 말고 기다려 주세요.</div>'+
+      '<button class="btn" id="ogCancel" style="margin-top:16px">✖ 취소</button></div>';
+    document.body.appendChild(ov);
+    function setMsg(t){ var m = document.getElementById('ogMsg'); if(m) m.textContent = t; }
+    function close(){ cancelled = true; clearTimeout(timer); try{ if(pdfRef) pdfRef.destroy(); }catch(e){} if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    var info = {name: String(file.name||'').replace(/\.pdf$/i,''), total: 0, from: 1, to: 0, next: 1, failed: false};
+    document.getElementById('ogCancel').onclick = function(){
+      var had = acc.length > 0;
+      close();
+      if(had && confirm('여기까지 읽은 '+acc.length+'개 문제를 넣을까요?')){ info.failed = true; onResult(acc, info); }
+    };
+    function fail(msg){
+      if(cancelled) return;
+      close(); noSound();
+      info.failed = true;
+      if(acc.length){
+        onResult(acc, info);
+        setTimeout(function(){ alert(msg+'\n\n앞쪽 '+acc.length+'개 문제는 입력됐어요. 이어서 하려면 「PDF 더 추가」를 누르고 '+info.next+'쪽부터 읽으세요.'); }, 80);
+      } else alert(msg);
+    }
+    var fr = new FileReader();
+    fr.onerror = function(){ fail('PDF 파일을 읽지 못했어요.'); };
+    fr.onload = function(){
+      if(cancelled) return;
+      setMsg('PDF 읽는 도구를 준비하는 중…');
+      loadPdfJs(function(lib, err){
+        if(cancelled) return;
+        if(!lib) return fail(err);
+        lib.getDocument({data: new Uint8Array(fr.result)}).promise.then(function(pdf){
+          if(cancelled){ try{ pdf.destroy(); }catch(e){} return; }
+          pdfRef = pdf;
+          var total = pdf.numPages, start = 1;
+          info.total = total;
+          if(startHint > 1 && startHint <= total){
+            var a = prompt('이어서 몇 쪽부터 읽을까요? (1~'+total+')', String(startHint));
+            if(a === null){ close(); return; }
+            start = Math.max(1, Math.min(total, parseInt(a,10) || startHint));
+          } else if(total > ORIG_PDF_MAX_PAGES){
+            var a2 = prompt('이 PDF는 '+total+'쪽이에요. 한 번에 '+ORIG_PDF_MAX_PAGES+'쪽까지 읽어요.\n몇 쪽부터 읽을까요? (1~'+total+')', '1');
+            if(a2 === null){ close(); return; }
+            start = Math.max(1, Math.min(total, parseInt(a2,10) || 1));
+          }
+          var end = Math.min(total, start + ORIG_PDF_MAX_PAGES - 1);
+          info.from = start; info.to = end; info.next = start;
+          runBatch(start);
+          function runBatch(p0){
+            if(cancelled) return;
+            if(p0 > end){
+              close();
+              info.next = end < total ? end + 1 : 1;
+              onResult(acc, info);
+              return;
+            }
+            var p1 = Math.min(end, p0 + ORIG_PAGES_PER_CALL - 1), cvs = [], nos = [], b64 = [];
+            (function render(p){
+              if(cancelled) return;
+              if(p > p1) return send();
+              setMsg('쪽 준비 '+p+'/'+end);
+              origRenderPage(pdf, p, ORIG_RENDER_SIDE, function(cv, e){
+                if(cv){
+                  var m = /^data:image\/jpeg;base64,(.+)$/.exec(cv.toDataURL('image/jpeg', ORIG_AI_QUALITY) || '');
+                  if(m){ cvs.push(cv); nos.push(p); b64.push(m[1]); }
+                }
+                setTimeout(function(){ render(p+1); }, 0);
+              });
+            })(p0);
+            function send(){
+              if(cancelled) return;
+              if(!b64.length){ info.next = p1 + 1; return runBatch(p1 + 1); }
+              setMsg('AI가 그림과 문장을 읽는 중… ('+p0+(p1>p0?'~'+p1:'')+'쪽 / 전체 '+end+'쪽)');
+              clearTimeout(timer);
+              timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 잠시 뒤 다시 해 주세요.'); }, ORIG_TIMEOUT*1000);
+              apiPost({action:'ocr', kind:'orig', pin:DAD_PIN, images:b64}, function(j){
+                if(cancelled) return;
+                clearTimeout(timer);
+                if(!j || j.error || !j.ok || !j.data) return fail(scanErrMsg(j));
+                var srcCache = {};
+                (j.data.items || []).forEach(function(x){
+                  var idx = (+x.page || 0) - 1;
+                  if(!(idx >= 0 && idx < cvs.length)) return;
+                  var en = String(x.en == null ? '' : x.en).replace(/\s+/g,' ').trim();
+                  if(!en) return;
+                  var ko = String(x.ko == null ? '' : x.ko).replace(/\s+/g,' ').trim();
+                  var cv = cvs[idx];
+                  if(!cv._found){
+                    try{ cv._found = findPictureBoxes(cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height); }
+                    catch(e){ cv._found = []; }
+                  }
+                  var ai = origNormBox(x.box || x.box_2d);
+                  var res = ai ? cropBox(ai, cv._found) : {box:[0,0,1000,1000], how:'page'};
+                  if(!srcCache[idx]){
+                    var sc = Math.min(1, ORIG_PAGE_SIDE/Math.max(cv.width, cv.height)), t = document.createElement('canvas');
+                    t.width = Math.round(cv.width*sc); t.height = Math.round(cv.height*sc);
+                    t.getContext('2d').drawImage(cv, 0, 0, t.width, t.height);
+                    srcCache[idx] = t.toDataURL('image/jpeg', 0.7);
+                  }
+                  acc.push({id: origNewId(), en: en, ko: ko, img: origCropToUrl(cv, res.box, ORIG_IMG_SIDE, ORIG_IMG_QUALITY),
+                            box: res.box, how: res.how, pg: nos[idx], src: srcCache[idx], dirty: true});
+                });
+                info.next = p1 + 1;
+                runBatch(p1 + 1);
+              });
+            }
+          }
+        }, function(){ fail('PDF를 열 수 없어요. 암호가 걸렸거나 손상된 파일일 수 있어요.'); });
+      });
+    };
+    fr.readAsArrayBuffer(file);
+  };
+  inp.click();
+}
+
+/* ── 그림 영역 조절 (슬라이더 4개) ── */
+function origCropModal(it, onApply){
+  var box = (it.box || [0,0,1000,1000]).map(Math.round), img = new Image();
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:14px';
+  function sl(id, label){ return '<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><span style="width:46px;font-size:13px;font-weight:700">'+label+'</span><input type="range" id="'+id+'" min="0" max="1000" step="2" style="flex:1"></div>'; }
+  ov.innerHTML = '<div style="background:#fff;border-radius:20px;padding:14px;max-width:420px;width:100%;max-height:94vh;overflow:auto">'+
+    '<div style="font-weight:800;font-size:16px;text-align:center;margin-bottom:8px">✂️ 그림 영역 조절</div>'+
+    '<canvas id="ogcv" style="width:100%;border-radius:10px;border:2px solid #ddd;display:block"></canvas>'+
+    '<div class="muted" style="font-size:12px;margin:6px 0">빨간 테두리 안이 그림으로 저장돼요.</div>'+
+    sl('ogT','위')+sl('ogB','아래')+sl('ogL','왼쪽')+sl('ogR','오른쪽')+
+    '<div class="row" style="margin-top:10px"><button class="btn" id="ogNo" style="flex:1">취소</button><button class="btn primary" id="ogOk" style="flex:1">✅ 이 영역으로</button></div></div>';
+  document.body.appendChild(ov);
+  var cv = ov.querySelector('#ogcv'), T = ov.querySelector('#ogT'), B = ov.querySelector('#ogB'), L = ov.querySelector('#ogL'), R = ov.querySelector('#ogR');
+  function paint(){
+    if(!img.width) return;
+    var W = 400, H = Math.round(400*img.height/img.width);
+    cv.width = W; cv.height = H;
+    var c = cv.getContext('2d'); c.drawImage(img, 0, 0, W, H);
+    var x0 = box[1]/1000*W, y0 = box[0]/1000*H, x1 = box[3]/1000*W, y1 = box[2]/1000*H;
+    c.fillStyle = 'rgba(0,0,0,.5)';
+    c.fillRect(0,0,W,y0); c.fillRect(0,y1,W,H-y1); c.fillRect(0,y0,x0,y1-y0); c.fillRect(x1,y0,W-x1,y1-y0);
+    c.strokeStyle = '#E11D48'; c.lineWidth = 2; c.strokeRect(x0, y0, x1-x0, y1-y0);
+  }
+  function sync(){ T.value = box[0]; B.value = box[2]; L.value = box[1]; R.value = box[3]; paint(); }
+  var MINS = 40;
+  T.oninput = function(){ box[0] = Math.min(+T.value, box[2]-MINS); sync(); };
+  B.oninput = function(){ box[2] = Math.max(+B.value, box[0]+MINS); sync(); };
+  L.oninput = function(){ box[1] = Math.min(+L.value, box[3]-MINS); sync(); };
+  R.oninput = function(){ box[3] = Math.max(+R.value, box[1]+MINS); sync(); };
+  img.onload = sync; img.src = it.src;
+  function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
+  ov.querySelector('#ogNo').onclick = close;
+  ov.querySelector('#ogOk').onclick = function(){
+    it.img = origCropToUrl(img, box, ORIG_IMG_SIDE, ORIG_IMG_QUALITY);
+    it.box = box.slice(); it.how = 'manual'; it.dirty = true;
+    close(); onApply();
+  };
+}
+
+/* ── 목록 ── */
+function screenOrigList(){
+  var os = origList();
+  var html =
+    '<div class="topbar">'+
+      '<button class="iconbtn" id="back">←</button>'+
+      '<h2>📘 원서 테스트</h2>'+
+      '<div class="pill">⭐ '+origStars()+'</div>'+
+    '</div>'+
+    '<div class="card" style="margin-bottom:12px;text-align:center">'+
+      '<div style="font-size:16px">📘 원서 그림을 보고 <b>영어 문장</b> 쓰기!</div>'+
+      '<div class="muted" style="margin-top:5px">그림을 보고 문장을 써요. 👨 아빠가 ⭕ 하면 다음 그림,<br>❌면 <b>같은 그림을 다시</b> 써요. 정답을 보면 <b>한글 해석</b>도 나와요.<br>'+
+        '다 통과하면 ⭐ 1~'+STAR_ORIG+'개 (다시 도전은 ⭐ '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)를 뽑아요!</div>'+
+    '</div>';
+  if(!os.length){
+    html += '<div class="card" style="text-align:center"><div style="font-size:44px">📘</div>'+
+      '<div class="muted" style="margin-top:6px">아직 원서가 없어요.<br>아빠가 아래 버튼으로 PDF를 넣어 주세요!</div></div>';
+  } else {
+    os.forEach(function(s){
+      html += '<div class="qzrow">'+
+        '<button class="qzbk '+(s.done?'done':'')+'" data-id="'+esc(s.id)+'" style="flex:1">'+
+          '<div class="ico">'+(s.done?'🏆':esc(s.e||'📘'))+'</div>'+
+          '<div class="t"><b>'+esc(s.t)+'</b><small>그림 '+(s.items||[]).length+'개'+(s.done?' · ✅ ⭐'+(s.stars||STAR_ORIG)+'개 받음 · 다시 도전 가능':' · ⭐1~'+STAR_ORIG)+'</small></div>'+
+          '<div style="font-size:20px">▶</div>'+
+        '</button>'+
+        '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기">✏️</button>'+
+      '</div>';
+    });
+  }
+  html += '<div class="row" style="margin-top:6px"><button class="btn primary" id="add" style="flex:1">➕ 원서 추가 (PDF)</button></div>'+
+    '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">PDF를 넣으면 AI가 쪽마다 <b>그림</b>과 <b>영어 문장·한글 해석</b>을 읽어 문제로 만들어요.<br>'+
+    '그림은 <b>이 기기에 저장</b>돼요. (진도·별은 서버에 저장)</div>';
+  app.innerHTML = html;
+  document.getElementById('back').onclick = screenHome;
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenOrigEdit(null); }, screenOrigList); };
+  on('.qzedit', function(ev){ ev.stopPropagation(); var s = origById(this.dataset.ed); if(s) needDad(function(){ screenOrigEdit(s); }, screenOrigList); });
+  on('.qzbk', function(){
+    var s = origById(this.dataset.id);
+    if(!s) return;
+    if(!(s.items||[]).length){ needDad(function(){ screenOrigEdit(s); }, screenOrigList); return; }
+    beep([700,900],.06); startOrig(s);
+  });
+}
+
+/* ── 원서 만들기 / 고치기 (아빠) ── */
+function screenOrigEdit(set){
+  var editing = !!set;
+  var st = {t: set ? set.t : '', e: set ? (set.e||'📘') : '📘', items: [], removed: [], next: 1, loading: editing, changed: false};
+  if(editing) st.items = (set.items||[]).map(function(it){ return {id: it.id, en: it.en, ko: it.ko||''}; });
+  function collect(){
+    var t = document.getElementById('ogt'), e = document.getElementById('oge');
+    if(t) st.t = t.value; if(e) st.e = e.value;
+    Array.prototype.forEach.call(document.querySelectorAll('.ogen'), function(el){ if(st.items[+el.dataset.i]) st.items[+el.dataset.i].en = el.value; });
+    Array.prototype.forEach.call(document.querySelectorAll('.ogko'), function(el){ if(st.items[+el.dataset.i]) st.items[+el.dataset.i].ko = el.value; });
+  }
+  function back(){
+    if(st.changed && !confirm('저장하지 않고 나갈까요? 지금까지 넣은 내용이 사라져요.')) return;
+    screenOrigList();
+  }
+  var TA = 'width:100%;box-sizing:border-box;margin:2px 0 6px;padding:10px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:15px;resize:vertical;line-height:1.4';
+  function card(it,i,n){
+    return '<div class="card frm" style="margin-bottom:10px;padding:10px">'+
+      '<div class="row" style="align-items:center;gap:6px;margin-bottom:6px">'+
+        '<div class="qlab" style="margin:0;flex:1">'+(i+1)+'번'+(it.pg?' <span class="muted" style="font-size:12px">(PDF '+it.pg+'쪽)</span>':'')+'</div>'+
+        '<button class="pgmv" data-up="'+i+'" '+(i===0?'disabled ':'')+'style="width:34px;height:28px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===0?'opacity:.3':'')+'">▲</button>'+
+        '<button class="pgmv" data-dn="'+i+'" '+(i===n-1?'disabled ':'')+'style="width:34px;height:28px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===n-1?'opacity:.3':'')+'">▼</button>'+
+        '<button class="delx" data-delit="'+i+'" title="이 문제 지우기">🗑</button>'+
+      '</div>'+
+      '<div style="text-align:center;margin-bottom:6px">'+
+        (it.img ? '<img src="'+it.img+'" style="max-width:100%;max-height:160px;border-radius:12px;border:2px solid var(--line)">'
+                : '<div class="muted" style="padding:14px">🖼️ 이 기기에는 그림이 없어요</div>')+
+      '</div>'+
+      (it.how==='ai' || it.how==='page' ? '<div style="color:var(--berry);font-size:12px;margin-bottom:6px">⚠️ 그림 영역을 AI가 짐작했어요. 아래 ✂️로 확인해 주세요.</div>' : '')+
+      (it.src ? '<button class="btn" data-crop="'+i+'" style="width:100%;margin-bottom:6px">✂️ 그림 영역 조절</button>' : '')+
+      '<div class="qlab">영어 문장 (정답)</div>'+
+      '<textarea class="ogen" data-i="'+i+'" rows="2" style="'+TA+'" placeholder="그림 아래 영어 문장">'+esc(it.en)+'</textarea>'+
+      '<div class="qlab">한글 해석 (정답을 볼 때 나와요)</div>'+
+      '<textarea class="ogko" data-i="'+i+'" rows="2" style="'+TA+'" placeholder="한글 해석">'+esc(it.ko||'')+'</textarea>'+
+    '</div>';
+  }
+  function draw(){
+    var head = '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>'+(editing?'✏️ 원서 고치기':'➕ 원서 추가')+'</h2><div style="width:44px"></div></div>';
+    if(st.loading){
+      app.innerHTML = head + '<div class="card" style="text-align:center"><div style="font-size:40px">🖼️</div><div class="muted">그림을 불러오는 중…</div></div>';
+      document.getElementById('back').onclick = screenOrigList;
+      return;
+    }
+    var n = st.items.length;
+    app.innerHTML = head +
+      '<div class="card frm">'+
+        '<div class="qlab">원서 이름</div>'+
+        '<input id="ogt" placeholder="예: Max and the Red Kite" value="'+esc(st.t)+'">'+
+        '<div class="qlab" style="margin-top:10px">그림 이모지</div>'+
+        '<input id="oge" maxlength="4" value="'+esc(st.e)+'">'+
+      '</div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">'+(n?'📄 PDF 더 추가해서 이어 입력':'📄 PDF로 자동 입력 (그림 + 영어 문장 + 한글 해석)')+'</button>'+
+      '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">'+
+        'PDF를 고르면 쪽마다 그림만 잘라내고, 그림 아래 영어 문장과 한글 해석을 AI가 채워요.<br>'+
+        '표지·글만 있는 쪽은 건너뛰어요. '+ORIG_PAGES_PER_CALL+'쪽씩 읽어서 쪽이 많으면 시간이 걸려요.'+
+        (st.next>1 ? '<br><b>이어 읽기: PDF '+st.next+'쪽부터</b>' : '')+
+      '</div>'+
+      '<div class="sechd">🖼️ 문제 목록 <span style="font-size:12px">· 그림 '+n+'개 · ▲▼로 순서 변경</span></div>'+
+      (n ? st.items.map(function(it,i){ return card(it,i,n); }).join('') :
+           '<div class="card" style="text-align:center"><div class="muted">아직 문제가 없어요. 위 버튼으로 PDF를 넣어 주세요.</div></div>')+
+      '<button class="btn primary wide" id="save" style="font-size:18px;margin-top:6px">💾 저장하기</button>'+
+      (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 원서 지우기</button>' : '')+
+      '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">그림은 이 기기에 저장돼요. 큰 PDF는 한 번에 '+ORIG_PDF_MAX_PAGES+'쪽까지 읽어요.</div>';
+    document.getElementById('back').onclick = function(){ collect(); back(); };
+    app.querySelectorAll('textarea, input').forEach(function(el){ el.addEventListener('input', function(){ st.changed = true; }); });
+    on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); var t=st.items[i-1]; st.items[i-1]=st.items[i]; st.items[i]=t; st.changed=true; draw(); });
+    on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=st.items.length-1) return; collect(); var t=st.items[i+1]; st.items[i+1]=st.items[i]; st.items[i]=t; st.changed=true; draw(); });
+    on('[data-delit]', function(){
+      var i=+this.dataset.delit; collect();
+      if(!confirm((i+1)+'번 문제를 지울까요?')) return;
+      var r = st.items.splice(i,1)[0]; if(r && editing) st.removed.push(r.id);
+      st.changed = true; draw();
+    });
+    on('[data-crop]', function(){ var it = st.items[+this.dataset.crop]; collect(); if(it && it.src) origCropModal(it, function(){ st.changed = true; draw(); }); });
+    document.getElementById('scan').onclick = function(){
+      collect();
+      origScanPdf(st.next, function(items, info){
+        if(!items.length){ noSound(); alert('PDF에서 그림과 영어 문장을 찾지 못했어요.\n그림 아래에 영어 문장이 있는 PDF인지 확인해 주세요.'); return; }
+        st.items = st.items.concat(items); st.changed = true; st.next = info.next;
+        if(!String(st.t||'').trim() && info.name) st.t = info.name;
+        okSound(); draw();
+        var warn = items.filter(function(x){ return x.how!=='pixel'; }).length;
+        setTimeout(function(){
+          alert('✅ 그림 '+items.length+'개를 읽어서 넣었어요. (지금 모두 '+st.items.length+'개)\n'+
+            (warn ? '⚠️ '+warn+'개는 그림 영역을 AI가 짐작했어요. ✂️로 확인해 주세요.\n' : '')+
+            '영어 문장과 한글 해석이 맞는지 한 번 훑어보고 저장해 주세요.');
+        }, 80);
+      });
+    };
+    document.getElementById('save').onclick = function(){
+      collect();
+      var t = String(st.t||'').trim();
+      if(!t){ noSound(); alert('원서 이름을 넣어 주세요.'); return; }
+      var ok = st.items.filter(function(it){ return String(it.en||'').trim(); });
+      if(!ok.length){ noSound(); alert('영어 문장이 있는 문제가 하나는 있어야 해요.'); return; }
+      if(ok.length < st.items.length && !confirm('영어 문장이 빈 문제 '+(st.items.length-ok.length)+'개는 빼고 저장할까요?')) return;
+      var sid = editing ? set.id : 'o'+Date.now();
+      var meta = ok.map(function(it){ return {id: it.id, en: String(it.en).replace(/\s+/g,' ').trim(), ko: String(it.ko||'').replace(/\s+/g,' ').trim()}; });
+      var left = 0, failed = false;
+      function done(){
+        if(editing){ set.t = t; set.e = (st.e||'').trim() || '📘'; set.items = meta; }
+        else PROG.orig.push({id: sid, e: (st.e||'').trim() || '📘', t: t, items: meta, done: false, stars: 0});
+        saveProgress(); okSound(); toast('📘');
+        if(failed) alert('⚠️ 일부 그림을 이 기기에 저장하지 못했어요. (저장 공간 부족이거나 사생활 보호 모드일 수 있어요)\n앱을 닫으면 그림이 사라질 수 있어요.');
+        screenOrigList();
+      }
+      var puts = ok.filter(function(it){ return it.dirty && it.img; });
+      left = puts.length;
+      origImgDel(st.removed.map(function(id){ return origKey(sid, id); }), function(){
+        if(!left) return done();
+        puts.forEach(function(it){
+          origImgPut(origKey(sid, it.id), it.img, function(good){ if(!good) failed = true; if(--left === 0) done(); });
+        });
+      });
+    };
+    if(document.getElementById('del')) document.getElementById('del').onclick = function(){
+      if(!confirm('이 원서와 그림을 지울까요? (받은 별은 그대로 남아요)')) return;
+      var keys = (set.items||[]).map(function(it){ return origKey(set.id, it.id); });
+      origImgDel(keys, function(){
+        PROG.orig = origList().filter(function(x){ return x.id !== set.id; });
+        saveProgress(); toast('🗑'); screenOrigList();
+      });
+    };
+  }
+  draw();
+  if(editing){
+    origLoadImgs(set, function(map){
+      st.items.forEach(function(it){ if(map[it.id]) it.img = map[it.id]; });
+      st.loading = false; draw();
+    });
+  }
+}
+
+/* ── 시험 진행 — 스페셜 테스트와 같은 규칙 ── */
+function startOrig(set){
+  var items = set.items || [], i = 0, tries = 0, imgs = {};
+  var wasBefore = !!set.done;      /* 이미 통과한 적 있으면 다시 도전 */
+  function head(){
+    return '<div class="topbar">'+
+        '<button class="iconbtn" id="oback">←</button>'+
+        '<h2>'+esc(set.e||'📘')+' '+esc(set.t)+'</h2>'+
+        '<div class="pill">'+(i+1)+'/'+items.length+'</div>'+
+      '</div>'+
+      '<div class="stz">'+ items.map(function(_,k){ return '<div class="sz '+(k<i?'ok':(k===i?'on':''))+'"></div>'; }).join('') +'</div>';
+  }
+  function bindB(){ document.getElementById('oback').onclick = function(){ stopAll(); screenOrigList(); }; }
+
+  function ask(){
+    var cur = items[i], url = imgs[cur.id] || '', shown = false;
+    app.innerHTML = head() +
+      '<div class="card" style="text-align:center">'+
+        '<div class="traceBig">그림을 보고 <b>영어 문장</b>을 써 보세요!'+(tries?' <span style="color:var(--berry);font-size:15px">(다시 '+tries+'번째)</span>':'')+'</div>'+
+        (url
+          ? '<img src="'+url+'" style="max-width:100%;max-height:240px;border-radius:14px;border:2px solid var(--line);margin:6px 0">'
+          : '<div class="card" style="margin:8px 0;background:#FFF6DF">🖼️ 이 기기에는 그림이 없어요<br><span class="muted">아빠가 PDF를 넣은 기기에서 해 주세요</span>'+(cur.ko?'<br><b>🇰🇷 '+esc(cur.ko)+'</b>':'')+'</div>')+
+        '<div id="ans" style="display:none">'+
+          '<div class="sentHint">'+esc(cur.en)+'</div>'+
+          (cur.ko ? '<div id="ansko" style="margin:6px 0;padding:9px 12px;border-radius:12px;background:#EAF7EE;font-size:16px;font-weight:700;line-height:1.5">🇰🇷 '+esc(cur.ko)+'</div>' : '')+
+          '<div class="row" style="justify-content:center"><button class="btn primary" id="say">🔊 듣기</button><button class="btn" id="slow">🐢</button></div>'+
+        '</div>'+
+        '<div class="drawTip">✏️ 아래 <b>큰 칸</b>에 펜(손가락)으로 <b>영어 문장</b>을 써요</div>'+
+        '<div class="drawWrap big"><canvas id="cv"></canvas></div>'+
+        '<div class="drawBtns">'+
+          '<button class="btn" id="clr">↺ 지우고 다시</button>'+
+          '<button class="btn" id="peek">👁 정답 보기</button>'+
+        '</div>'+
+        '<div class="sechd" style="margin-top:14px">👨 아빠가 채점해주세요</div>'+
+        '<div class="judge2">'+
+          '<button class="btn no" id="bad">❌ 다시</button>'+
+          '<button class="btn go" id="ok">⭕ 통과</button>'+
+        '</div>'+
+      '</div>';
+    bindB();
+    var pad = makeSentCanvas(document.getElementById('cv'), cur.en, false, 320);
+    var words = cur.en.split(/\s+/);
+    document.getElementById('clr').onclick = function(){ pad.clear(); };
+    document.getElementById('peek').onclick = function(){
+      shown = !shown;                               /* 화면을 다시 그리지 않아서 쓴 글씨가 지워지지 않는다 */
+      document.getElementById('ans').style.display = shown ? 'block' : 'none';
+      this.textContent = shown ? '🙈 정답 숨기기' : '👁 정답 보기';
+      if(!shown) stopAll();
+    };
+    document.getElementById('say').onclick = function(){ speakWords(words, RATE, function(){}); };
+    document.getElementById('slow').onclick = function(){ speakWords(words, 0.6, function(){}); };
+    document.getElementById('bad').onclick = function(){ beep([300],.1); tries++; stopAll(); toast('✏️'); ask(); };   /* ❌ = 같은 문제 다시 */
+    document.getElementById('ok').onclick = function(){
+      okSound(); toast('⭕'); stopAll(); tries = 0; i++;
+      if(i >= items.length) pass(); else ask();
+    };
+  }
+
+  /* 통과! — 첫 통과는 별 1~STAR_ORIG개, 다시 도전은 STAR_ORIG_RE_LO~HI개를 뽑아 기존 별에 합산 */
+  function pass(){
+    var reMode = wasBefore, justGot = null, drawn = false;
+    confetti(50); starSound();
+    render();
+    function render(){
+      var lo = reMode ? STAR_ORIG_RE_LO : 1, hi = reMode ? STAR_ORIG_RE_HI : STAR_ORIG;
+      app.innerHTML =
+        '<div class="result">'+
+          '<div class="big">🏆</div>'+
+          '<h2>원서 테스트 통과!</h2>'+
+          '<p>'+esc(set.t)+'<br><b>그림 '+items.length+'개를 다 썼어요!</b></p>'+
+          (justGot!==null
+            ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+
+                (reMode?'🔁 다시 도전 성공!':'🎖️ 새 트로피!')+'<br>'+
+                new Array(justGot+1).join('⭐')+'<br><b>별 '+justGot+'개</b>를 받았어요!</div>'
+            : '<div class="card" style="margin-bottom:12px;background:#FFF8E6">'+
+                (reMode
+                  ? '🔁 <b>다시 도전 성공!</b> 별 <b>'+lo+'~'+hi+'개</b>를 뽑을 수 있어요!'
+                  : '🎖️ <b>새 트로피</b>! 그리고 별 <b>'+lo+'~'+hi+'개</b>를 뽑을 수 있어요!')+'</div>'+
+                '<button class="drawbtn" id="sdraw">'+
+                  '<span class="spk" style="left:14px;top:10px">✨</span>'+
+                  '<span class="spk" style="right:16px;top:12px;animation-delay:.5s">⭐</span>'+
+                  '<span class="spk" style="left:22px;bottom:10px;animation-delay:.9s">✨</span>'+
+                  '🎰 별 뽑기!'+
+                '</button>')+
+          '<div class="card" style="margin-bottom:12px">'+
+            items.map(function(it){
+              return '<div class="storyline done" style="text-align:left;font-size:13px">'+esc(it.en)+(it.ko?'<br><span class="muted">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
+            }).join('')+
+          '</div>'+
+          (drawn ? '<button class="btn primary wide" id="again2" style="margin-bottom:10px">🔁 처음부터 다시 (별 '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)</button>' : '')+
+          '<button class="btn go wide" id="lst">📘 목록으로</button>'+
+        '</div>';
+      if(document.getElementById('sdraw')) document.getElementById('sdraw').onclick = function(){
+        modalStarDraw(function(got){
+          var prev = (reMode && typeof set.stars==='number') ? set.stars : 0;
+          set.done = true; set.at = Date.now(); set.stars = prev + got;
+          saveProgress();
+          justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkFinal();
+        }, lo, hi);
+      };
+      if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
+      document.getElementById('lst').onclick = screenOrigList;
+    }
+  }
+
+  app.innerHTML = '<div class="card" style="text-align:center;margin-top:40px"><div style="font-size:44px">🖼️</div><div class="muted">그림을 불러오는 중…</div></div>';
+  origLoadImgs(set, function(map){ imgs = map; ask(); });
+}
+
 function screenSpecials(){
   var html =
     '<div class="topbar">'+
@@ -5881,7 +6567,7 @@ function screenSettings(){
     '<div class="sheet">'+
       '<h3>📊 진도</h3>'+
       '<div class="muted">모은 별: <b>⭐ '+totalStars()+' / '+maxStars()+'</b> · 캐릭터 <b>Lv.'+heroLv()+' '+esc(heroTitle())+'</b><br>'+
-      '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
+      '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
       '&nbsp;· <b>지금 가진 별 '+walletStars()+'</b> = 모은 별 '+totalStars()+' − 카드로 쓴 '+spentStars()+' (카드 '+cards().length+'장)<br>'+
       '&nbsp;· ★ '+esc(FINAL.n)+'까지 <b style="color:var(--berry)">'+Math.max(0, STAR_GOAL-walletStars())+'개</b> 남음<br>'+
       '테스트 통과: <b>'+passedCount()+'/'+LEVELS.length+'</b> · 읽은 책: <b>'+books().filter(function(L){ return bookRead(L.id)>0; }).length+'/'+books().length+'</b> · 스페셜: <b>'+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</b><br><br>'+
@@ -5921,7 +6607,7 @@ function screenSettings(){
         '• 놀이 5개를 모두 끝내야 테스트가 열립니다. 20문제 · 1문제 5점 · <b>90점 이상 통과</b>입니다.<br>'+
         '• 90점 이상 통과하면 캐릭터가 <b>레벨업</b>하고 <b>별 '+STAR_TEST+'개</b>를 받습니다. (16단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
         '• 특별 보상 <b>★ 닌텐도 게임 칩</b>은 <b>별 '+STAR_GOAL+'개</b>(만점 '+maxStars()+')를 모으면 열립니다.<br>'+
-        '&nbsp;&nbsp;별: 놀이 '+LEVELS.reduce(function(a,L){ return a+levelMax(L); },0)+' + 레벨업 '+(LEVELS.length*STAR_TEST)+' + 책 '+(books().length*STAR_BOOK)+' + 스페셜 '+(SPECIALS.length*STAR_SPEC)+' + 종이책 '+(papers().length*STAR_PAPER)+' + 단어/문장테스트 '+((quizzes().length+sents().length)*STAR_PICK_MAX)+' (세트당 최대 '+STAR_PICK_MAX+')<br>'+
+        '&nbsp;&nbsp;별: 놀이 '+LEVELS.reduce(function(a,L){ return a+levelMax(L); },0)+' + 레벨업 '+(LEVELS.length*STAR_TEST)+' + 책 '+(books().length*STAR_BOOK)+' + 스페셜 '+(SPECIALS.length*STAR_SPEC)+' + 원서 '+(origList().length*STAR_ORIG)+' + 종이책 '+(papers().length*STAR_PAPER)+' + 단어/문장테스트 '+((quizzes().length+sents().length)*STAR_PICK_MAX)+' (세트당 최대 '+STAR_PICK_MAX+')<br>'+
         '&nbsp;&nbsp;쉽게 하시려면 Index.html의 <b>STAR_GOAL</b> 숫자만 고치세요.<br>'+
         '• 다음 레벨은 테스트와 상관없이 놀이만 끝내면 열립니다. (막히지 않게)<br>'+
         '• 얻은 보상은 하준이 <b>🎒 가방</b>에 아이템으로 들어갑니다. 실제로 해주신 뒤 아이템을 눌러 <b>사용함</b>으로 바꿔주세요.<br><br>'+
@@ -6040,7 +6726,7 @@ function screenDiag(){
     ['화면 버전', APP_VERSION],
     ['화면 크기', window.innerWidth+' × '+window.innerHeight],
     ['모은 별 / 지갑', totalStars()+' / '+walletStars()],
-    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 스페셜 '+specStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
+    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 스페셜 '+specStars()+' + 원서 '+origStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
     ['브라우저', navigator.userAgent]
   ];
   app.innerHTML =
