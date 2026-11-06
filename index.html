@@ -19,6 +19,10 @@
     --mango:#FFB020;
     --melon:#22C55E;
     --berry:#FF5C8A;
+    /* 글자용 진한 톤 — 흰 배경에서 4.5:1 이상 (밝은 원색은 테두리·배경·장식에만) */
+    --mango-ink:#B45309;
+    --melon-ink:#15803D;
+    --berry-ink:#BE185D;
     --paper:#FFFFFF;
     --line:#E4E0F5;
     --shadow:0 6px 0 rgba(35,32,74,.14);
@@ -26,6 +30,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;padding:0;height:100%}
   body{
+    word-break:keep-all;overflow-wrap:break-word;
     font-family:'Jua', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     color:var(--ink);
     background:
@@ -46,10 +51,10 @@
   }
   .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(35,32,74,.14)}
   .btn:focus-visible{outline:3px solid var(--grape);outline-offset:2px}
-  .btn.primary{background:var(--grape);color:#fff;box-shadow:0 6px 0 #6D3FD6}
-  .btn.primary:active{box-shadow:0 2px 0 #6D3FD6}
-  .btn.go{background:var(--melon);color:#fff;box-shadow:0 6px 0 #16A34A}
-  .btn.go:active{box-shadow:0 2px 0 #16A34A}
+  .btn.primary{background:#7C3AED;color:#fff;box-shadow:0 6px 0 #5B21B6}
+  .btn.primary:active{box-shadow:0 2px 0 #5B21B6}
+  .btn.go{background:#15803D;color:#fff;box-shadow:0 6px 0 #14532D}
+  .btn.go:active{box-shadow:0 2px 0 #14532D}
   .btn.wide{display:block;width:100%}
   .btn[disabled]{opacity:.45;pointer-events:none}
 
@@ -96,16 +101,16 @@
     font-family:inherit;cursor:default;color:var(--ink-soft);width:100%}
   .rchip .ri{font-size:19px;flex:none;filter:grayscale(1);opacity:.5}
   .rchip .rn{flex:1;min-width:0}
-  .rchip.won{background:#FFF8E6;border-color:var(--mango);color:var(--ink);cursor:pointer}
+  .rchip.won{background:#FFF8E6;border-color:var(--mango-ink);color:var(--ink);cursor:pointer}
   .rchip.won .ri{filter:none;opacity:1}
-  .rchip.won .rn:after{content:' 획득!';color:var(--mango)}
-  .rchip.given{background:#F0FDF4;border-color:var(--melon)}
-  .rchip.given .rn:after{content:' 받음 ✅';color:var(--melon)}
+  .rchip.won .rn:after{content:' 획득!';color:var(--mango-ink)}
+  .rchip.given{background:#F0FDF4;border-color:var(--melon-ink)}
+  .rchip.given .rn:after{content:' 받음 ✅';color:var(--melon-ink)}
   .rule{display:flex;align-items:stretch;gap:5px;margin:0 0 12px}
   .rule .rs{flex:1;background:#F3ECFF;border:2px solid #E4D9FF;border-radius:14px;padding:8px 4px;text-align:center}
   .rule .rs b{display:block;font-size:22px;line-height:1.2}
   .rule .rs span{font-size:12px;line-height:1.3;color:var(--ink)}
-  .rule .rs.hit{background:#FFF6DF;border-color:var(--mango)}
+  .rule .rs.hit{background:#FFF6DF;border-color:var(--mango-ink)}
   .rule .ra{align-self:center;color:var(--grape);font-size:17px;flex:none}
 
   .rchip.final{grid-column:1/-1;position:relative;overflow:hidden;padding:12px 11px;
@@ -128,7 +133,7 @@
 
   .testbtn{display:flex;align-items:center;gap:12px;width:100%;border:none;border-radius:20px;padding:16px;
     margin:14px 0 4px;font-family:inherit;text-align:left;cursor:pointer;color:#fff;
-    background:linear-gradient(135deg,#FF8A3D,#FF5C8A);box-shadow:0 6px 0 #C2410C}
+    background:linear-gradient(135deg,#C2410C,#DB2765);box-shadow:0 6px 0 #9A3412}
   .testbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C2410C}
   .testbtn.lock{background:#E5E1F2;color:var(--ink-soft);box-shadow:0 6px 0 #CFC9E8;cursor:not-allowed}
   .testbtn .ico{font-size:30px;flex:none}
@@ -149,10 +154,12 @@
   .mod p{color:var(--ink-soft);margin:4px 0 16px;font-size:16px}
   .reel{font-size:22px;background:#F7F5FF;border:3px dashed var(--line);border-radius:18px;
     padding:22px 10px;margin:12px 0;min-height:84px;display:flex;align-items:center;justify-content:center;gap:8px}
-  .reel.hit{border-style:solid;border-color:var(--mango);background:#FFF8E6;animation:pop .45s}
+  .reel.hit{border-style:solid;border-color:var(--mango-ink);background:#FFF8E6;animation:pop .45s}
   .reel .e{font-size:34px}
   .lvup{font-size:20px;color:var(--grape)}
   .conf{position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:70;overflow:hidden}
+  .ov .conf{position:fixed;z-index:0}
+  .ov .mod{position:relative;z-index:1}
   .cf{position:absolute;font-size:22px;animation:fall linear forwards}
   @keyframes fall{from{transform:translateY(-40px) rotate(0)}to{transform:translateY(110vh) rotate(540deg)}}
   .lvl{display:flex;align-items:center;gap:12px;background:#fff;border-radius:22px;padding:12px 14px;
@@ -205,8 +212,8 @@
   }
   .opt.pic{font-size:52px;font-family:inherit;padding:14px 8px}
   .opt:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(35,32,74,.14)}
-  .opt.ok{background:#DCFCE7;border-color:var(--melon)}
-  .opt.no{background:#FFE4E6;border-color:var(--berry);animation:shake .3s}
+  .opt.ok{background:#DCFCE7;border-color:var(--melon-ink)}
+  .opt.no{background:#FFE4E6;border-color:var(--berry-ink);animation:shake .3s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
   .shake{animation:shake .3s}
 
@@ -236,7 +243,7 @@
   .sw.hasnote{background:#FFF3D6;box-shadow:inset 0 0 0 2px var(--mango);
     display:inline-flex;flex-direction:column;align-items:center;vertical-align:top}
   .wnote{display:block;margin-top:2px;font-family:'Noto Sans KR',sans-serif;font-weight:600;
-    font-size:12px;line-height:1.25;color:var(--berry);background:#fff;
+    font-size:12px;line-height:1.25;color:var(--berry-ink);background:#fff;
     border:1.5px solid var(--mango);border-radius:8px;padding:1px 6px;max-width:150px;
     white-space:normal;word-break:break-word;cursor:pointer}
   .readtip{background:#FFF6DF;border:2px dashed var(--mango);border-radius:16px;padding:12px;
@@ -267,7 +274,7 @@
     margin-bottom:10px;font-family:inherit;text-align:left;cursor:pointer;background:#fff;box-shadow:var(--shadow);
     border-bottom:6px solid #E9E5F8}
   .spbtn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(35,32,74,.14)}
-  .spbtn.done{border-bottom-color:var(--mango)}
+  .spbtn.done{border-bottom-color:var(--mango-ink)}
   .spbtn .ico{font-size:32px;flex:none}
   .spbtn .t{flex:1}
   .spbtn .t b{display:block;font-family:'Fredoka',sans-serif;font-size:17px}
@@ -279,7 +286,7 @@
     margin-bottom:9px;font-family:inherit;text-align:left;cursor:pointer;background:#fff;
     box-shadow:var(--shadow);border-left:7px solid #A78BFA}
   .pbk:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(35,32,74,.14)}
-  .pbk.done{border-left-color:var(--mango)}
+  .pbk.done{border-left-color:var(--mango-ink)}
   .pbk .ico{font-size:28px;flex:none}
   .pbk .t{flex:1;min-width:0}
   .pbk .t b{display:block;font-family:'Fredoka',sans-serif;font-size:15px;line-height:1.25}
@@ -293,7 +300,7 @@
     margin-bottom:9px;font-family:inherit;text-align:left;cursor:pointer;background:#fff;
     box-shadow:var(--shadow);border-left:7px solid #38BDF8}
   .qzbk:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(35,32,74,.14)}
-  .qzbk.done{border-left-color:var(--mango)}
+  .qzbk.done{border-left-color:var(--mango-ink)}
   .qzbk .ico{font-size:26px;flex:none}
   .qzbk .t{flex:1;min-width:0}
   .qzbk .t b{display:block;font-family:'Fredoka',sans-serif;font-size:15px}
@@ -331,14 +338,14 @@
   .traceIn{width:100%;padding:16px;border:none;background:transparent;position:relative;z-index:2;
     font-family:'Fredoka',sans-serif;font-weight:700;font-size:40px;letter-spacing:.06em;
     color:var(--ink);text-align:left;outline:none}
-  .traceIn.good{color:var(--melon)}
+  .traceIn.good{color:var(--melon-ink)}
   .traceCount{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0}
   .tc{width:30px;height:30px;border-radius:50%;background:#EDEAF8;color:var(--ink-soft);
     font-family:'Fredoka',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;
     justify-content:center;transition:transform .12s}
   .tc.done{background:var(--melon);color:#fff;transform:scale(1.08)}
   .tc.now{background:var(--grape);color:#fff;box-shadow:0 0 0 3px rgba(124,58,237,.22)}
-  .traceBig{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--mango);text-align:center}
+  .traceBig{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--mango-ink);text-align:center}
 
   .drawWrap{position:relative;background:#FBFAFF;border:2.5px dashed #C4B8ED;border-radius:18px;
     margin:8px 0 6px;overflow:hidden;touch-action:none}
@@ -407,13 +414,46 @@
     margin:10px 0;padding:16px;border:3px solid #FDE68A;transition:transform .1s}
   .bigreel.spinning{animation:reelshake .12s linear infinite}
   @keyframes reelshake{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-  .bigreel.hit{border-color:var(--mango);background:linear-gradient(135deg,#FEF3C7,#FDE68A)}
-  .bigreel .num{font-size:56px;line-height:1;color:var(--mango)}
+  .bigreel.hit{border-color:var(--mango-ink);background:linear-gradient(135deg,#FEF3C7,#FDE68A)}
+  .bigreel .num{font-size:56px;line-height:1;color:var(--mango-ink)}
   .bigreel .stars{font-size:30px;letter-spacing:2px;line-height:1.2}
   .sentKo{font-size:22px;font-weight:800;line-height:1.4;color:var(--ink);text-align:center;
     background:#FFF6DF;border-radius:14px;padding:14px 12px;margin:8px 0 4px}
-  .sentHint{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--melon);
+  .sentHint{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--melon-ink);
     text-align:center;background:#ECFDF5;border-radius:12px;padding:10px;margin:8px 0;word-break:break-word}
+  /* ── 원서 테스트 ── */
+  .ogcard{padding:16px 14px}
+  .ogpic{position:relative;min-height:190px;display:flex;align-items:center;justify-content:center;margin:10px 0 8px;border-radius:16px;background:#F7F5FF;overflow:hidden}
+  .ogpic img{display:block;max-width:100%;max-height:240px;border-radius:14px}
+  .ogpic-miss{padding:18px;color:var(--ink-soft);font-size:15px;line-height:1.6;text-align:center}
+  .ogans{position:absolute;inset:0;background:rgba(255,255,255,.97);display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px;overflow:auto;animation:ogin .2s cubic-bezier(.16,1,.3,1)}
+  .ogans[hidden]{display:none}
+  @keyframes ogin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .ogko{font-size:16px;line-height:1.5;color:var(--ink);background:#EEF9F1;border-radius:12px;padding:8px 12px;text-align:center}
+  .ogsay{display:flex;gap:8px;justify-content:center}
+  .ogsay .btn{padding:10px 16px;font-size:16px;min-height:44px}
+  .ogbar{position:sticky;bottom:0;z-index:5;margin:12px -6px 0;padding:14px 6px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(250,246,255,0),rgba(250,246,255,.98) 14px)}
+  .ogdone{font-size:20px;padding:17px}
+  .ogjudge{display:flex;gap:22px}
+  .ogjudge .btn{flex:1;font-size:19px;padding:16px 8px;min-height:60px}
+  .oggrade-h{font-size:21px;text-align:center;margin-bottom:12px}
+  .ogmine{display:block;width:100%;border:2.5px dashed #C4B8ED;border-radius:16px;background:#FFFDF7}
+  .oganswer{display:flex;flex-direction:column;gap:8px;background:#F7FDF9;border:2px solid #BBF7D0;border-radius:16px;padding:12px}
+  .ogwarn{color:var(--berry-ink)}
+  .ogline{text-align:left;font-size:14px;line-height:1.45}
+  .ogline-ko{display:block;font-family:'Jua',sans-serif;color:var(--ink-soft);margin-top:2px}
+  .ogmini{width:44px;height:44px;flex:none;border:0;border-radius:12px;background:#EEF0FF;font-size:15px;color:var(--ink);cursor:pointer;font-family:inherit}
+  .ogmini:disabled{opacity:.3;cursor:default}
+  .ogmini.ogdel{background:#FFE4E6}
+  .ognote{font-size:13px;line-height:1.45;color:var(--ink-soft);margin-bottom:6px}
+  .ognote-todo{color:var(--berry-ink);font-weight:700}
+  .ognote-warn{color:var(--mango-ink)}
+  .ogsavebar{display:flex;align-items:center;gap:12px}
+  .ogsum{flex:1;font-size:14px;line-height:1.4;color:var(--ink-soft)}
+  .ogsum b{color:var(--ink)}
+  .ogsum-todo{color:var(--berry-ink)}
+  .ogsavebar .btn{font-size:18px;padding:14px 22px}
+  #pgo:disabled{opacity:.45;cursor:default}
   .judge2{display:flex;gap:10px;margin-top:10px}
   .judge2 .btn{flex:1;font-size:18px;padding:16px}
   .drawBtns{display:flex;gap:8px;margin-top:2px}
@@ -430,7 +470,7 @@
 
   .wallet{display:flex;gap:8px;margin-bottom:12px}
   .wcard{flex:1;background:#fff;border-radius:18px;padding:11px;text-align:center;box-shadow:var(--shadow)}
-  .wcard b{display:block;font-family:'Fredoka',sans-serif;font-size:26px;color:var(--mango);line-height:1.1}
+  .wcard b{display:block;font-family:'Fredoka',sans-serif;font-size:26px;color:#D97706;line-height:1.1}
   .wcard small{font-size:12px;color:var(--ink-soft)}
 
   .igrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -456,7 +496,7 @@
     padding:2px 3px;color:#DCD6F0;transition:transform .1s, color .15s}
   .starpick .sp.on{color:var(--mango);text-shadow:0 3px 0 rgba(212,150,0,.28)}
   .starpick .sp:active{transform:scale(1.25)}
-  .pickcnt{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;color:var(--mango);margin-bottom:4px}
+  .pickcnt{font-family:'Fredoka',sans-serif;font-weight:600;font-size:19px;color:var(--mango-ink);margin-bottom:4px}
   .dots4{display:flex;gap:12px;justify-content:center;margin:16px 0}
   .d4{width:18px;height:18px;border-radius:50%;background:#E0DBF3}
   .d4.on{background:var(--grape)}
@@ -472,7 +512,7 @@
   .bk .lv{position:absolute;top:6px;left:8px;font-size:11px;color:var(--ink-soft)}
   .bk .rd{position:absolute;top:6px;right:8px;font-size:12px}
   .bk.locked{opacity:.45;filter:grayscale(.7);cursor:not-allowed}
-  .bk.read{border-bottom-color:var(--melon)}
+  .bk.read{border-bottom-color:var(--melon-ink)}
 
   .page{background:#fff;border-radius:24px;box-shadow:var(--shadow);padding:20px 16px;text-align:center;min-height:330px;
     display:flex;flex-direction:column;justify-content:center}
@@ -530,7 +570,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.01 22:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.07 01:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -599,7 +639,7 @@ setTimeout(function(){
   box.innerHTML =
     '<div class="intro"><div style="font-size:54px">😢</div>'+
     '<h1 style="font-size:21px">앱을 여는 데 문제가 생겼어요</h1>'+
-    '<p style="font-size:12.5px;color:#FF5C8A;word-break:break-all;line-height:1.6">'+
+    '<p style="font-size:12.5px;color:var(--berry-ink);word-break:break-all;line-height:1.6">'+
       (ERRS.length ? ERRS.slice(0,3).join('<br>') : '알 수 없는 오류') +'</p>'+
     '<button class="btn primary wide" onclick="location.reload()" style="margin-top:10px">🔄 다시 열기</button>'+
     '<p style="font-size:12px;margin-top:14px;color:#5B5680">이 화면을 캡처해서 아빠에게 보여주세요</p></div>';
@@ -1556,7 +1596,7 @@ function bootFail(e){
   document.getElementById('app').innerHTML =
     '<div class="intro"><div style="font-size:54px">😢</div>'+
     '<h1 style="font-size:22px">앱을 여는 데 문제가 생겼어요</h1>'+
-    '<p style="font-size:13px;color:var(--berry)">'+String(e)+'</p>'+
+    '<p style="font-size:13px;color:var(--berry-ink)">'+String(e)+'</p>'+
     '<button class="btn primary wide" onclick="location.reload()">다시 열기</button></div>';
 }
 var saveTimer=null;
@@ -1855,9 +1895,12 @@ function confetti(n){
     d.style.animationDelay=(Math.random()*.6)+'s';
     box.appendChild(d);
   }
-  document.body.appendChild(box);
+  var ovs = document.querySelectorAll('.ov');            /* 모달이 열려 있으면 카드 뒤에 깔아서 글자를 가리지 않게 */
+  if(ovs.length){ var o = ovs[ovs.length-1]; o.insertBefore(box, o.firstChild); } else document.body.appendChild(box);
   setTimeout(function(){ box.remove(); }, 4200);
 }
+/* 화면을 옮길 때 남은 색종이를 치운다 */
+function clearConfetti(){ Array.prototype.forEach.call(document.querySelectorAll('.conf'), function(c){ c.remove(); }); }
 
 /* =========================================================
    5) 도우미
@@ -1947,7 +1990,7 @@ function heroCard(){
 /* 90점 → 레벨업 → 별 획득 규칙을 항상 보여주는 띠 */
 function ruleStrip(){
   return '<div class="rule">'+
-      '<div class="rs hit"><b>🎯</b><span>단계 테스트<br><b style="display:inline;font-size:13px;color:var(--berry)">90점 넘기!</b></span></div>'+
+      '<div class="rs hit"><b>🎯</b><span>단계 테스트<br><b style="display:inline;font-size:13px;color:var(--berry-ink)">90점 넘기!</b></span></div>'+
       '<div class="ra">➜</div>'+
       '<div class="rs"><b>⬆️</b><span>하준이<br>레벨 업!</span></div>'+
       '<div class="ra">➜</div>'+
@@ -1960,7 +2003,7 @@ function rewardPanel(){
   var drew = draws().length, unused = draws().filter(function(r){ return !r.used; }).length;
   var html = '<div class="card rw">'+
     '<h3>🎁 보상 뽑기</h3>'+
-    '<div class="sub">별 <b style="color:var(--berry)">'+DRAW_PRICE+'개</b>로 랜덤 보상을 뽑아요! 뽑은 보상은 🎒 가방에 담겨요.<br>'+
+    '<div class="sub">별 <b style="color:var(--berry-ink)">'+DRAW_PRICE+'개</b>로 랜덤 보상을 뽑아요! 뽑은 보상은 🎒 가방에 담겨요.<br>'+
       '지금 가진 별 <b>⭐ '+walletStars()+'</b> · 지금까지 뽑은 보상 <b>'+drew+'개</b>'+(drew?' (안 쓴 것 '+unused+'개)':'')+'</div>'+
     ruleStrip()+
     '<div class="bar" style="margin:10px 0 6px"><i style="width:'+Math.min(100,Math.round(walletStars()/DRAW_PRICE*100))+'%"></i></div>'+
@@ -2005,56 +2048,56 @@ function screenHome(){
       '<div class="wcard"><b style="color:'+(hasFinal()?'var(--melon)':'var(--grape)')+'">'+
         (hasFinal() ? '🕹️' : Math.max(0, STAR_GOAL-walletStars()))+'</b><small>'+
         (hasFinal() ? '닌텐도 받음!' : '닌텐도까지')+'</small></div>'+
-      '<div class="wcard"><b style="color:var(--melon)">'+cards().length+'</b><small>축구카드</small></div>'+
+      '<div class="wcard"><b style="color:#16A34A">'+cards().length+'</b><small>축구카드</small></div>'+
     '</div>'+
-    '<button class="testbtn" id="dadbtn" style="background:linear-gradient(135deg,#0EA5E9,#6366F1);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
+    '<button class="testbtn" id="dadbtn" style="background:linear-gradient(135deg,#0B7EB2,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
       '<div class="ico">👨</div>'+
       '<div class="t"><b>아빠가 별 주기 🔒</b><small>심부름·약속 잘 지키면 ⭐1~'+MAX_BONUS+'개 · 지금까지 '+bonusStars()+'개</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     (missList().length
-      ? '<button class="testbtn" id="miss" style="background:linear-gradient(135deg,#FF5C8A,#FB923C);box-shadow:0 6px 0 #BE123C;margin:0 0 12px">'+
+      ? '<button class="testbtn" id="miss" style="background:linear-gradient(135deg,#DB2765,#C2410C);box-shadow:0 6px 0 #BE123C;margin:0 0 12px">'+
           '<div class="ico">🔁</div>'+
           '<div class="t"><b>다시 볼 단어 '+missList().length+'개</b><small>👨 아빠랑 5분 · 못 읽은 것만 모았어요</small></div>'+
           '<div style="font-size:22px">▶</div>'+
         '</button>'
       : '')+
-    '<button class="testbtn" id="qzbig" style="background:linear-gradient(135deg,#0EA5E9,#22D3EE);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
+    '<button class="testbtn" id="qzbig" style="background:linear-gradient(135deg,#0B7EB2,#0E7490);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
       '<div class="ico">📝</div>'+
       '<div class="t"><b>단어 테스트</b><small>뜻풀이 듣고 타이핑 · 단어장 '+
         quizzes().filter(function(q){ return q.done; }).length+'/'+quizzes().length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="stbig" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);box-shadow:0 6px 0 #6D28D9;margin:0 0 12px">'+
+    '<button class="testbtn" id="stbig" style="background:linear-gradient(135deg,#7C3AED,#DB2777);box-shadow:0 6px 0 #6D28D9;margin:0 0 12px">'+
       '<div class="ico">📖</div>'+
       '<div class="t"><b>문장 암기</b><small>듣고 '+SENT_TIMES+'번 · \u2b50'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+' · 문장 '+
         sents().filter(function(x){ return x.done; }).length+'/'+sents().length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="spbig" style="background:linear-gradient(135deg,#F59E0B,#EF4444);box-shadow:0 6px 0 #9A3412;margin:0 0 12px">'+
+    '<button class="testbtn" id="spbig" style="background:linear-gradient(135deg,#B45309,#DC2626);box-shadow:0 6px 0 #9A3412;margin:0 0 12px">'+
       '<div class="ico">🌟</div>'+
       '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
         SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
         ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="libbig" style="background:linear-gradient(135deg,#22C55E,#38BDF8);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
+    '<button class="testbtn" id="libbig" style="background:linear-gradient(135deg,#15803D,#0369A1);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
       '<div class="ico">📚</div>'+
       '<div class="t"><b>하준이 도서관</b><small>이야기책 '+books().length+'권 · 읽은 책 '+
         books().filter(function(L){ return bookRead(L.id)>0; }).length+'권</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="mmbig" style="background:linear-gradient(135deg,#F472B6,#A855F7);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
+    '<button class="testbtn" id="mmbig" style="background:linear-gradient(135deg,#DB2777,#9333EA);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
       '<div class="ico">📷</div>'+
       '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="ogbig" style="background:linear-gradient(135deg,#14B8A6,#6366F1);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
+    '<button class="testbtn" id="ogbig" style="background:linear-gradient(135deg,#0F766E,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
       '<div class="ico">📘</div>'+
       '<div class="t"><b>원서 테스트</b><small>그림 보고 영어 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="pkbig" style="background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 6px 0 #065F46;margin:0 0 12px">'+
+    '<button class="testbtn" id="pkbig" style="background:linear-gradient(135deg,#047857,#065F46);box-shadow:0 6px 0 #065F46;margin:0 0 12px">'+
       '<div class="ico">⚽</div>'+
       '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+PK_SHOTS+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
       '<div style="font-size:22px">▶</div>'+
@@ -2153,7 +2196,7 @@ function startPKGame(){
     (walletStars() >= PK_PRICE
       ? '<div class="card" style="margin-bottom:12px">지금 별 <b>'+walletStars()+'개</b> → 도전하면 <b>'+(walletStars()-PK_PRICE)+'개</b>가 남아요.</div>'+
         '<button class="btn primary wide" id="ok" style="font-size:20px;padding:16px;margin-bottom:9px">별 '+PK_PRICE+'개 내고 도전! ⚽</button>'
-      : '<div class="card" style="margin-bottom:12px;color:var(--berry)">별이 <b>'+(PK_PRICE-walletStars())+'개</b> 모자라요. 더 모아서 오자!</div>')+
+      : '<div class="card" style="margin-bottom:12px;color:var(--berry-ink)">별이 <b>'+(PK_PRICE-walletStars())+'개</b> 모자라요. 더 모아서 오자!</div>')+
     '<button class="btn wide" id="no">다음에 할래요</button>'
   );
   ov.querySelector('#no').onclick = function(){ beep([500],.06); ov.remove(); };
@@ -2239,7 +2282,7 @@ function screenPKGame(){
         try{ beep([700,900,1100],.14); }catch(e){}
       } else {
         noSound();
-        msg.innerHTML='<b style="color:var(--berry);font-size:20px">🧤 골키퍼가 막았다!</b>';
+        msg.innerHTML='<b style="color:var(--berry-ink);font-size:20px">🧤 골키퍼가 막았다!</b>';
       }
       var sc=document.getElementById('score'); if(sc) sc.textContent='🥅 '+goals+'골 · '+shot+'/'+PK_SHOTS+'번';
       setTimeout(function(){
@@ -2257,7 +2300,7 @@ function screenPKGame(){
         '<div class="big">'+(won?'🏆':'😅')+'</div>'+
         '<h2>'+(won?'승리!':'아쉬워요!')+'</h2>'+
         '<p>'+PK_SHOTS+'번 차서 <b>'+goals+'골</b>을 넣었어요!<br>'+
-          (won ? '<b style="color:var(--melon)">'+PK_WIN_NEED+'골 이상 성공! 상품을 뽑으세요! 🎁</b>'
+          (won ? '<b style="color:var(--melon-ink)">'+PK_WIN_NEED+'골 이상 성공! 상품을 뽑으세요! 🎁</b>'
                : PK_WIN_NEED+'골 이상 넣으면 상품을 받아요. 다시 도전해봐요!')+'</p>'+
         '<div class="card" style="margin-bottom:12px;font-size:26px">'+
           shotLog.map(function(r){ return r?'⚽':'🧤'; }).join(' ')+
@@ -2369,7 +2412,7 @@ function modalPrizeDraw(cb){
       if(n<total) setTimeout(spin, 38 + n*n*0.6);
       else {
         reel.classList.remove('spinning'); reel.classList.add('hit');
-        reel.innerHTML = '<div class="num" style="font-size:52px">'+got.e+'</div><div style="font-size:17px;font-weight:800;color:var(--mango)">'+got.n+'!</div>';
+        reel.innerHTML = '<div class="num" style="font-size:52px">'+got.e+'</div><div style="font-size:17px;font-weight:800;color:var(--mango-ink)">'+got.n+'!</div>';
         starSound(); confetti(24);
         go.style.display='none';
         var done = document.createElement('button');
@@ -2396,15 +2439,15 @@ function screenBag(){
       '<div class="wcard"><b style="color:'+(hasFinal()?'var(--melon)':'var(--grape)')+'">'+
         (hasFinal() ? '🕹️' : Math.max(0, STAR_GOAL-walletStars()))+'</b><small>'+
         (hasFinal() ? '닌텐도 받음!' : '닌텐도까지')+'</small></div>'+
-      '<div class="wcard"><b style="color:var(--melon)">'+cards().length+'</b><small>축구카드</small></div>'+
+      '<div class="wcard"><b style="color:#16A34A">'+cards().length+'</b><small>축구카드</small></div>'+
     '</div>'+
     /* 보상 뽑기 (별 100개) */
     '<div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,#EEF2FF,#FCE7F3)">'+
       '<div style="display:flex;align-items:center;gap:12px">'+
         '<div style="font-size:38px">🎁</div>'+
         '<div style="flex:1"><b style="font-size:17px">보상 뽑기</b>'+
-          '<div class="muted">별 <b style="color:var(--berry)">'+DRAW_PRICE+'개</b> → 랜덤 보상 <b>1개</b>!'+
-          (hasFinal() ? '' : '<br><b style="color:var(--berry)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
+          '<div class="muted">별 <b style="color:var(--berry-ink)">'+DRAW_PRICE+'개</b> → 랜덤 보상 <b>1개</b>!'+
+          (hasFinal() ? '' : '<br><b style="color:var(--berry-ink)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
       '</div>'+
       '<div class="bar" style="margin:10px 0 6px"><i style="width:'+Math.min(100,Math.round(walletStars()/DRAW_PRICE*100))+'%"></i></div>'+
       (walletStars()>=DRAW_PRICE
@@ -2416,8 +2459,8 @@ function screenBag(){
       '<div style="display:flex;align-items:center;gap:12px">'+
         '<div style="font-size:38px">🃏</div>'+
         '<div style="flex:1"><b style="font-size:17px">축구카드 바꾸기</b>'+
-          '<div class="muted">별 <b style="color:var(--berry)">'+CARD_PRICE+'개</b> → 축구카드 1만원권 <b>1장</b>'+
-          (hasFinal() ? '' : '<br><b style="color:var(--berry)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
+          '<div class="muted">별 <b style="color:var(--berry-ink)">'+CARD_PRICE+'개</b> → 축구카드 1만원권 <b>1장</b>'+
+          (hasFinal() ? '' : '<br><b style="color:var(--berry-ink)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
       '</div>'+
       '<div class="bar" style="margin:10px 0 6px"><i style="width:'+Math.min(100,Math.round(walletStars()/CARD_PRICE*100))+'%"></i></div>'+
       (walletStars()>=CARD_PRICE
@@ -2429,7 +2472,7 @@ function screenBag(){
       '<div style="display:flex;align-items:center;gap:12px">'+
         '<div style="font-size:38px">🔁</div>'+
         '<div style="flex:1"><b style="font-size:17px">아이템으로 카드 바꾸기</b>'+
-          '<div class="muted">안 쓴 아이템 <b style="color:var(--berry)">'+TRADE_NEED+'개</b> → 축구카드 1만원권 <b>1장</b>'+
+          '<div class="muted">안 쓴 아이템 <b style="color:var(--berry-ink)">'+TRADE_NEED+'개</b> → 축구카드 1만원권 <b>1장</b>'+
           '<br>별은 안 써요! (지금 바꿀 수 있는 아이템 '+tradeItems().length+'개)</div></div>'+
       '</div>'+
       (tradeItems().length>=TRADE_NEED
@@ -2462,8 +2505,8 @@ function screenBag(){
         '<h2>정말 바꿀까?</h2>'+
         '<p>카드를 사면 별이 <b>'+CARD_PRICE+'개</b> 줄어요.</p>'+
         '<div class="card" style="text-align:left;background:#FFF6DF;margin-bottom:14px;line-height:1.9">'+
-          '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry)">'+after+'</b><br>'+
-          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
+          '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry-ink)">'+after+'</b><br>'+
+          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry-ink)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
         '</div>'+
         '<button class="btn go wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🃏 그래도 카드 살래!</button>'+
         '<button class="btn wide" id="no">🕹️ 아니야, 닌텐도 모을래</button>');
@@ -2495,7 +2538,7 @@ function screenBag(){
     var ask = openMod(
       '<div style="font-size:48px">🔁</div>'+
       '<h2>어떤 아이템을 낼까?</h2>'+
-      '<p>낼 아이템 <b>'+TRADE_NEED+'개</b>를 골라주세요.<br><b style="color:var(--berry)">낸 아이템은 가방에서 사라져요!</b></p>'+
+      '<p>낼 아이템 <b>'+TRADE_NEED+'개</b>를 골라주세요.<br><b style="color:var(--berry-ink)">낸 아이템은 가방에서 사라져요!</b></p>'+
       '<div class="igrid" id="tgrid" style="margin-bottom:12px">'+
         pool.map(function(x){
           return '<button class="item" data-k="'+esc(x.key)+'">'+
@@ -2542,8 +2585,8 @@ function screenBag(){
         '<h2>보상을 뽑을까?</h2>'+
         '<p>뽑기를 하면 별이 <b>'+DRAW_PRICE+'개</b> 줄어요.</p>'+
         '<div class="card" style="text-align:left;background:#FFF6DF;margin-bottom:14px;line-height:1.9">'+
-          '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry)">'+after+'</b><br>'+
-          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
+          '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry-ink)">'+after+'</b><br>'+
+          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry-ink)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
         '</div>'+
         '<button class="btn primary wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🎁 그래도 뽑을래!</button>'+
         '<button class="btn wide" id="no">🕹️ 아니야, 닌텐도 모을래</button>');
@@ -3281,7 +3324,7 @@ function startQuiz(q){
         '<div class="big">\ud83d\udd01</div>'+
         '<h2>'+round+'\ubc88\uc9f8 \ub05d!</h2>'+
         '<p>'+order.length+'\ubb38\uc81c \uc911 <b>'+(order.length-wrong.length)+'\uac1c</b> \ub9de\ucd94\uace0<br>'+
-          '<b style="color:var(--berry)">'+wrong.length+'\uac1c</b>\ub97c \ud2c0\ub838\uc5b4\uc694.</p>'+
+          '<b style="color:var(--berry-ink)">'+wrong.length+'\uac1c</b>\ub97c \ud2c0\ub838\uc5b4\uc694.</p>'+
         '<div class="card" style="margin-bottom:12px">'+
           wrong.map(function(idx){ return '<span class="misschip">'+esc(q.items[idx].w)+'</span>'; }).join('')+
         '</div>'+
@@ -3730,7 +3773,7 @@ function startSent(s){
         '<div class="big">🔁</div>'+
         '<h2>'+round+'번째 끝!</h2>'+
         '<p>'+order.length+'문장 중 <b>'+(order.length-wrong.length)+'개</b> 통과<br>'+
-          '<b style="color:var(--berry)">'+wrong.length+'개</b>를 다시 해요.</p>'+
+          '<b style="color:var(--berry-ink)">'+wrong.length+'개</b>를 다시 해요.</p>'+
         '<div class="card" style="margin-bottom:12px">'+
           wrong.map(function(idx){ return '<span class="misschip">'+esc(s.items[idx].ko)+'</span>'; }).join('')+
         '</div>'+
@@ -3805,7 +3848,7 @@ function screenMimemal(){
     html += '<div class="card" style="text-align:center"><div style="font-size:44px">📷</div>'+
       '<div class="muted" style="margin-top:6px">아직 문제가 없어요.<br>아빠가 아래 버튼으로 사진을 찍어 만들어 주세요!</div></div>';
   } else {
-    html += '<button class="testbtn" id="play" style="background:linear-gradient(135deg,#F472B6,#A855F7);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
+    html += '<button class="testbtn" id="play" style="background:linear-gradient(135deg,#DB2777,#9333EA);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
         '<div class="ico">▶</div>'+
         '<div class="t"><b>미매말 시작!</b><small>문제 '+ms.length+'개 · 순서대로 · '+(allDone?'✅ 다 통과!':'⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX)+'</small></div>'+
         '<div style="font-size:22px">🎯</div>'+
@@ -4318,6 +4361,23 @@ function origSrvDel(keys, cb){
   if(!hasServer || !keys.length) return cb && cb();
   apiPost({action:'imgDel', pin:DAD_PIN, keys:keys}, function(){ cb && cb(); });
 }
+/* ── 원서 추가/고치기 초안 — 중간에 끊겨도(전화·새로고침) AI가 읽은 결과와 쓴 문장을 잃지 않게 이 기기에 둔다 ── */
+function origDraftPut(key, obj){
+  origDb(function(db){ if(!db) return; try{ db.transaction('img','readwrite').objectStore('img').put(obj, key); }catch(e){} });
+}
+function origDraftGet(key, cb){
+  origDb(function(db){
+    if(!db) return cb(null);
+    try{
+      var rq = db.transaction('img','readonly').objectStore('img').get(key);
+      rq.onsuccess = function(){ var v = rq.result; cb(v && typeof v === 'object' && v.items ? v : null); };
+      rq.onerror = function(){ cb(null); };
+    }catch(e){ cb(null); }
+  });
+}
+function origDraftDel(key){
+  origDb(function(db){ if(!db) return; try{ db.transaction('img','readwrite').objectStore('img').delete(key); }catch(e){} });
+}
 /* 세트의 그림을 모두 불러와 {문제id: dataURL} 로 돌려준다 — 이 기기에 없으면 서버에서 받아 와 저장해 둔다.
    onProg(n, total): 서버에서 받는 중 진행 알림 */
 var ORIG_FETCH_CHUNK = 4;      /* 서버에서 한 번에 받는 그림 수 */
@@ -4535,9 +4595,21 @@ function origPageSrc(cv){   /* 그림 영역 조절용 쪽 사진 */
   t.getContext('2d').drawImage(cv, 0, 0, t.width, t.height);
   return t.toDataURL('image/jpeg', 0.7);
 }
-function origWholeItem(cv, label){   /* 사진 전체를 그림으로, 문장은 비워 둔다(직접 입력) */
-  return {id: origNewId(), en: '', ko: '', img: origCropToUrl(cv, [0,0,1000,1000], ORIG_IMG_SIDE, ORIG_IMG_QUALITY),
-          box: [0,0,1000,1000], how: 'whole', pgl: label, src: origPageSrc(cv), dirty: true};
+/* 사진 한 장을 문제로 — 문장은 비워 둔다(직접 입력).
+   페이지 사진에는 원문 문장이 같이 찍혀 있기 쉬워서, 그림 덩어리를 픽셀로 찾아 그 부분만 자른다(how:'auto').
+   못 찾으면 사진 전체(how:'whole') — 저장 전에 그림 영역을 확인하라고 알린다. */
+function origWholeItem(cv, label){
+  var box = [0,0,1000,1000], how = 'whole';
+  try{
+    var found = findPictureBoxes(cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height);
+    if(found.length){
+      var u = [1000,1000,0,0];
+      found.forEach(function(f){ u[0]=Math.min(u[0],f[0]); u[1]=Math.min(u[1],f[1]); u[2]=Math.max(u[2],f[2]); u[3]=Math.max(u[3],f[3]); });
+      if(boxArea(u) >= 1000*1000*0.12 && boxArea(u) <= 1000*1000*0.97){ box = u; how = 'auto'; }
+    }
+  }catch(e){}
+  return {id: origNewId(), en: '', ko: '', img: origCropToUrl(cv, box, ORIG_IMG_SIDE, ORIG_IMG_QUALITY),
+          box: box, how: how, pgl: label, src: origPageSrc(cv), dirty: true};
 }
 function origScan(kind, startHint, onResult){
   var inp = document.createElement('input');
@@ -4754,10 +4826,11 @@ function origBusy(msg){
 
 /* ── 목록 ── */
 function screenOrigList(){
+  clearConfetti();
   var os = origList();
   var html =
     '<div class="topbar">'+
-      '<button class="iconbtn" id="back">←</button>'+
+      '<button class="iconbtn" id="back" aria-label="뒤로">←</button>'+
       '<h2>📘 원서 테스트</h2>'+
       '<div class="pill">⭐ '+origStars()+'</div>'+
     '</div>'+
@@ -4777,7 +4850,7 @@ function screenOrigList(){
           '<div class="t"><b>'+esc(s.t)+'</b><small>그림 '+(s.items||[]).length+'개'+(s.done?' · ✅ ⭐'+(s.stars||STAR_ORIG)+'개 받음 · 다시 도전 가능':' · ⭐1~'+STAR_ORIG)+'</small></div>'+
           '<div style="font-size:20px">▶</div>'+
         '</button>'+
-        '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기">✏️</button>'+
+        '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기" aria-label="아빠가 고치기">✏️</button>'+
       '</div>';
     });
   }
@@ -4802,6 +4875,19 @@ function screenOrigEdit(set){
   var editing = !!set;
   var st = {t: set ? set.t : '', e: set ? (set.e||'📘') : '📘', items: [], removed: [], next: 1, loading: editing, changed: false};
   if(editing) st.items = (set.items||[]).map(function(it){ return {id: it.id, en: it.en, ko: it.ko||'', s: it.s}; });
+  var DKEY = editing ? 'draft_'+set.id : 'draft_new', draftTimer = null;
+  function saveDraft(){   /* 바뀐 게 있으면 0.8초 뒤 이 기기에 초안 저장 */
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(function(){
+      if(!st.changed || st.loading) return;
+      origDraftPut(DKEY, {t: st.t, e: st.e, items: st.items, removed: st.removed, next: st.next, at: Date.now()});
+    }, 800);
+  }
+  function updSum(){
+    var el = document.getElementById('ogsum'); if(!el) return;
+    var blank = st.items.filter(function(it){ return !String(it.en||'').trim(); }).length;
+    el.innerHTML = '그림 <b>'+st.items.length+'</b>개'+(blank ? ' · <span class="ogsum-todo">빈 문장 '+blank+'개</span>' : '');
+  }
   function collect(){
     var t = document.getElementById('ogt'), e = document.getElementById('oge');
     if(t) st.t = t.value; if(e) st.e = e.value;
@@ -4810,32 +4896,35 @@ function screenOrigEdit(set){
   }
   function back(){
     if(st.changed && !confirm('저장하지 않고 나갈까요? 지금까지 넣은 내용이 사라져요.')) return;
+    clearTimeout(draftTimer); origDraftDel(DKEY);
     screenOrigList();
   }
   var TA = 'width:100%;box-sizing:border-box;margin:2px 0 6px;padding:10px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:15px;resize:vertical;line-height:1.4';
   function card(it,i,n){
-    return '<div class="card frm" style="margin-bottom:10px;padding:10px">'+
+    return '<div class="card frm" id="ogc'+i+'" style="margin-bottom:10px;padding:10px">'+
       '<div class="row" style="align-items:center;gap:6px;margin-bottom:6px">'+
         '<div class="qlab" style="margin:0;flex:1">'+(i+1)+'번'+(it.pgl?' <span class="muted" style="font-size:12px">('+esc(it.pgl)+')</span>':'')+'</div>'+
-        '<button class="pgmv" data-up="'+i+'" '+(i===0?'disabled ':'')+'style="width:34px;height:28px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===0?'opacity:.3':'')+'">▲</button>'+
-        '<button class="pgmv" data-dn="'+i+'" '+(i===n-1?'disabled ':'')+'style="width:34px;height:28px;border:0;border-radius:8px;background:#EEF0FF;font-size:12px;'+(i===n-1?'opacity:.3':'')+'">▼</button>'+
-        '<button class="delx" data-delit="'+i+'" title="이 문제 지우기">🗑</button>'+
+        '<button class="ogmini" data-up="'+i+'" aria-label="위로 옮기기" '+(i===0?'disabled':'')+'>▲</button>'+
+        '<button class="ogmini" data-dn="'+i+'" aria-label="아래로 옮기기" '+(i===n-1?'disabled':'')+'>▼</button>'+
+        '<button class="ogmini ogdel" data-delit="'+i+'" aria-label="'+(i+1)+'번 문제 지우기">🗑</button>'+
       '</div>'+
       '<div style="text-align:center;margin-bottom:6px">'+
-        (it.img ? '<img src="'+it.img+'" style="max-width:100%;max-height:160px;border-radius:12px;border:2px solid var(--line)">'
+        (it.img ? '<img src="'+it.img+'" alt="'+(i+1)+'번 그림" style="max-width:100%;max-height:160px;border-radius:12px;border:2px solid var(--line)">'
                 : '<div class="muted" style="padding:14px">🖼️ 그림을 불러오지 못했어요</div>')+
       '</div>'+
-      (!String(it.en||'').trim() ? '<div style="color:var(--berry);font-size:13px;font-weight:700;margin-bottom:6px">✍️ 영어 문장을 직접 써 주세요 (그림 아래 문장을 보고 적어요)</div>' : '')+
-      (it.how==='ai' || it.how==='page' ? '<div style="color:var(--berry);font-size:12px;margin-bottom:6px">⚠️ 그림 영역을 AI가 짐작했어요. 아래 ✂️로 확인해 주세요.</div>' : '')+
+      (!String(it.en||'').trim() ? '<div class="ognote ognote-todo">✍️ 영어 문장을 직접 써 주세요</div>' : '')+
+      (it.how==='ai' || it.how==='page' ? '<div class="ognote ognote-warn">⚠️ 그림 영역을 AI가 짐작했어요. 글자가 보이면 ✂️로 줄여 주세요.</div>' : '')+
+      (it.how==='whole' ? '<div class="ognote ognote-warn">⚠️ 사진 전체가 그림이에요. 사진에 정답 문장이 보이면 ✂️로 그림만 남겨 주세요.</div>' : '')+
+      (it.how==='auto' ? '<div class="ognote">✂️ 그림 부분만 자동으로 잘랐어요. 글자가 보이면 ✂️로 줄여 주세요.</div>' : '')+
       (it.src ? '<button class="btn" data-crop="'+i+'" style="width:100%;margin-bottom:6px">✂️ 그림 영역 조절</button>' : '')+
       '<div class="qlab">영어 문장 (정답)</div>'+
-      '<textarea class="ogen" data-i="'+i+'" rows="2" style="'+TA+'" placeholder="그림에 알맞은 영어 문장을 써 주세요">'+esc(it.en)+'</textarea>'+
+      '<textarea class="ogen" data-i="'+i+'" rows="2" style="'+TA+'" placeholder="그림에 맞는 영어 문장">'+esc(it.en)+'</textarea>'+
       '<div class="qlab">한글 해석 (정답을 볼 때 나와요)</div>'+
       '<textarea class="ogko" data-i="'+i+'" rows="2" style="'+TA+'" placeholder="한글 해석">'+esc(it.ko||'')+'</textarea>'+
     '</div>';
   }
   function draw(){
-    var head = '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>'+(editing?'✏️ 원서 고치기':'➕ 원서 추가')+'</h2><div style="width:44px"></div></div>';
+    var head = '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>'+(editing?'✏️ 원서 고치기':'➕ 원서 추가')+'</h2><div style="width:44px"></div></div>';
     if(st.loading){
       app.innerHTML = head + '<div class="card" style="text-align:center"><div style="font-size:40px">🖼️</div><div class="muted">그림을 불러오는 중…</div></div>';
       document.getElementById('back').onclick = screenOrigList;
@@ -4851,7 +4940,7 @@ function screenOrigEdit(set){
       '</div>'+
       '<button class="btn wide" id="scan" style="margin-bottom:8px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">'+(n?'📄 PDF 더 추가':'📄 PDF로 자동 입력 (그림 + 영어 문장 + 한글 해석)')+'</button>'+
       '<button class="btn wide" id="scanimg" style="margin-bottom:8px;background:#EAF2FF;box-shadow:0 4px 0 #BFD4FF">'+(n?'🖼️ 이미지 더 추가':'🖼️ 이미지 파일로 자동 입력 (JPG·PNG, 여러 장)')+'</button>'+
-      '<button class="btn wide" id="scanpic" style="margin-bottom:6px;background:#FFF6DF;box-shadow:0 4px 0 #F3DFA2">✋ 그림만 넣고 영어 문장은 직접 쓰기 (AI 안 씀)</button>'+
+      '<button class="btn wide" id="scanpic" style="margin-bottom:6px;background:#FFF6DF;box-shadow:0 4px 0 #F3DFA2">✋ 그림만 넣고 문장은 직접 쓰기</button>'+
       '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">'+
         'PDF·이미지는 AI가 그림 아래 영어 문장과 한글 해석을 채워요. <b>영어 문장이 없는 그림</b>은 그림만 넣고 ✍️ 칸에 직접 쓰면 돼요.<br>'+
         '표지·글만 있는 PDF 쪽은 건너뛰어요. '+ORIG_PAGES_PER_CALL+'장씩 읽어서 많으면 시간이 걸려요.'+
@@ -4860,11 +4949,12 @@ function screenOrigEdit(set){
       '<div class="sechd">🖼️ 문제 목록 <span style="font-size:12px">· 그림 '+n+'개 · ▲▼로 순서 변경</span></div>'+
       (n ? st.items.map(function(it,i){ return card(it,i,n); }).join('') :
            '<div class="card" style="text-align:center"><div class="muted">아직 문제가 없어요. 위 버튼으로 PDF를 넣어 주세요.</div></div>')+
-      '<button class="btn primary wide" id="save" style="font-size:18px;margin-top:6px">💾 저장하기</button>'+
+      '<div class="ogbar ogsavebar"><div class="ogsum" id="ogsum"></div><button class="btn primary" id="save">💾 저장하기</button></div>'+
       (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 원서 지우기</button>' : '')+
       '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">그림은 서버(구글 드라이브)에 저장돼서 다른 기기에서도 보여요. 한 번에 '+ORIG_PDF_MAX_PAGES+'쪽(장)까지 넣어요.</div>';
     document.getElementById('back').onclick = function(){ collect(); back(); };
-    app.querySelectorAll('textarea, input').forEach(function(el){ el.addEventListener('input', function(){ st.changed = true; }); });
+    app.querySelectorAll('textarea, input').forEach(function(el){ el.addEventListener('input', function(){ st.changed = true; collect(); updSum(); saveDraft(); }); });
+    updSum(); saveDraft();
     on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); var t=st.items[i-1]; st.items[i-1]=st.items[i]; st.items[i]=t; st.changed=true; draw(); });
     on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=st.items.length-1) return; collect(); var t=st.items[i+1]; st.items[i+1]=st.items[i]; st.items[i]=t; st.changed=true; draw(); });
     on('[data-delit]', function(){
@@ -4901,6 +4991,11 @@ function screenOrigEdit(set){
       if(!t){ noSound(); alert('원서 이름을 넣어 주세요.'); return; }
       var ok = st.items.filter(function(it){ return String(it.en||'').trim(); });
       if(!ok.length){ noSound(); alert('영어 문장이 있는 문제가 하나는 있어야 해요.\n✍️ 칸에 영어 문장을 써 주세요.'); return; }
+      var loose = ok.filter(function(it){ return it.how === 'whole' || it.how === 'page'; });
+      if(loose.length && !confirm('⚠️ 그림 '+loose.length+'개는 사진 전체가 그림으로 들어가 있어요.\n사진에 정답 문장이 보이면 하준이가 보고 따라 쓰게 돼요.\n\n확인 = 그대로 저장\n취소 = 돌아가서 ✂️로 그림만 남기기')){
+        var el = document.getElementById('ogc'+st.items.indexOf(loose[0])); if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
       if(ok.length < st.items.length && !confirm('영어 문장이 빈 문제 '+(st.items.length-ok.length)+'개는 빼고 저장할까요?\n(취소를 누르면 돌아가서 문장을 쓸 수 있어요)')) return;
       var sid = editing ? set.id : 'o'+Date.now();
       var busy = origBusy('그림을 저장하는 중…');
@@ -4943,6 +5038,7 @@ function screenOrigEdit(set){
         if(editing){ set.t = t; set.e = (st.e||'').trim() || '📘'; set.items = meta; }
         else PROG.orig.push({id: sid, e: (st.e||'').trim() || '📘', t: t, items: meta, done: false, stars: 0});
         saveProgress(); okSound(); toast('📘');
+        clearTimeout(draftTimer); origDraftDel(DKEY);
         var msgs = [];
         if(srvErr) msgs.push('⚠️ 그림을 서버에 저장하지 못했어요. 지금은 이 기기에서만 그림이 보여요.\n'+origErrMsg(srvErr)+'\n(고친 뒤 원서 목록을 열면 자동으로 다시 올려요)');
         if(localFail) msgs.push('⚠️ 일부 그림을 이 기기에 저장하지 못했어요. (저장 공간 부족이거나 사생활 보호 모드일 수 있어요)');
@@ -4955,86 +5051,151 @@ function screenOrigEdit(set){
       var keys = (set.items||[]).map(function(it){ return origKey(set.id, it.id); });
       origImgDel(keys, function(){
         origSrvDel(keys, function(){
+          clearTimeout(draftTimer); origDraftDel(DKEY);
           PROG.orig = origList().filter(function(x){ return x.id !== set.id; });
           saveProgress(); toast('🗑'); screenOrigList();
         });
       });
     };
   }
-  draw();
-  if(editing){
-    origLoadImgs(set, function(map){
-      st.items.forEach(function(it){ if(map[it.id]) it.img = map[it.id]; });
-      st.loading = false; draw();
-    });
+  function startFresh(){
+    st.loading = editing; draw();
+    if(editing){
+      origLoadImgs(set, function(map){
+        st.items.forEach(function(it){ if(map[it.id]) it.img = map[it.id]; });
+        st.loading = false; draw();
+      });
+    }
   }
+  st.loading = true; draw();
+  origDraftGet(DKEY, function(d){
+    if(d && d.items.length && confirm('저장하지 않은 원서 초안이 있어요 (그림 '+d.items.length+'개).\n이어서 할까요?')){
+      st.t = d.t; st.e = d.e; st.items = d.items; st.removed = d.removed || []; st.next = d.next || 1;
+      st.changed = true; st.loading = false; draw();
+    } else {
+      if(d) origDraftDel(DKEY);
+      startFresh();
+    }
+  });
 }
 
 /* ── 시험 진행 — 스페셜 테스트와 같은 규칙 ── */
 /* ids: 고른 그림의 id 목록(없으면 전부) / preImgs: 이미 불러온 그림 {id: dataURL}
    전부 고르면 '시험'(별 뽑기 있음), 일부만 고르면 '연습'(별 뽑기 없음 — 한 장만 골라 별만 뽑는 것을 막으려고) */
 function startOrig(set, ids, preImgs){
+  clearConfetti();
   var all = set.items || [];
   var items = ids ? all.filter(function(it){ return ids.indexOf(it.id) >= 0; }) : all.slice();
   var full = items.length === all.length, i = 0, tries = 0, imgs = preImgs || {};
   var wasBefore = full && !!set.done;      /* 이미 통과한 적 있으면 다시 도전 */
   function head(){
     return '<div class="topbar">'+
-        '<button class="iconbtn" id="oback">←</button>'+
+        '<button class="iconbtn" id="oback" aria-label="뒤로">←</button>'+
         '<h2>'+esc(set.e||'📘')+' '+esc(set.t)+(full?'':' (연습)')+'</h2>'+
         '<div class="pill">'+(i+1)+'/'+items.length+'</div>'+
       '</div>'+
       '<div class="stz">'+ items.map(function(_,k){ return '<div class="sz '+(k<i?'ok':(k===i?'on':''))+'"></div>'; }).join('') +'</div>';
   }
-  function bindB(){ document.getElementById('oback').onclick = function(){ stopAll(); screenOrigList(); }; }
-
+  function bindB(){
+    document.getElementById('oback').onclick = function(){
+      if((i > 0 || tries > 0) && !confirm('시험을 그만할까요? 지금까지 한 건 저장되지 않아요.')) return;
+      stopAll(); screenOrigList();
+    };
+  }
+  function ansHtml(cur){
+    return '<div class="sentHint">'+esc(cur.en)+'</div>'+
+      (cur.ko ? '<div class="ogko">🇰🇷 '+esc(cur.ko)+'</div>' : '')+
+      '<div class="ogsay"><button class="btn primary" data-say="1">🔊 듣기</button><button class="btn" data-say="0.6" aria-label="천천히 듣기">🐢 천천히</button></div>';
+  }
+  /* ① 하준이가 쓰기 → ✋ 다 썼어요! → ② 아빠가 쓴 글씨와 정답을 보고 채점 (❌ 다시 = 같은 그림 처음부터) */
   function ask(){
     var cur = items[i], url = imgs[cur.id] || '', shown = false;
+    var words = cur.en.split(/\s+/);
     app.innerHTML = head() +
-      '<div class="card" style="text-align:center">'+
-        '<div class="traceBig">그림을 보고 <b>영어 문장</b>을 써 보세요!'+(tries?' <span style="color:var(--berry);font-size:15px">(다시 '+tries+'번째)</span>':'')+'</div>'+
-        (url
-          ? '<img src="'+url+'" style="max-width:100%;max-height:240px;border-radius:14px;border:2px solid var(--line);margin:6px 0">'
-          : '<div class="card" style="margin:8px 0;background:#FFF6DF">🖼️ 그림을 불러오지 못했어요<br><span class="muted">인터넷을 확인하고 다시 들어와 보세요</span>'+(cur.ko?'<br><b>🇰🇷 '+esc(cur.ko)+'</b>':'')+'</div>')+
-        '<div id="ans" style="display:none">'+
-          '<div class="sentHint">'+esc(cur.en)+'</div>'+
-          (cur.ko ? '<div id="ansko" style="margin:6px 0;padding:9px 12px;border-radius:12px;background:#EAF7EE;font-size:16px;font-weight:700;line-height:1.5">🇰🇷 '+esc(cur.ko)+'</div>' : '')+
-          '<div class="row" style="justify-content:center"><button class="btn primary" id="say">🔊 듣기</button><button class="btn" id="slow">🐢</button></div>'+
+      '<div id="stW">'+
+        '<div class="card ogcard">'+
+          '<div class="traceBig">'+(tries ? '한 번 더! 이번엔 할 수 있어 💪' : '그림을 보고 <b>영어 문장</b>을 써 보세요!')+'</div>'+
+          '<div class="ogpic">'+
+            (url ? '<img src="'+url+'" alt="'+esc(set.t)+' '+(i+1)+'번 그림">'
+                 : '<div class="ogpic-miss">🖼️ 그림을 불러오지 못했어요'+(cur.ko?'<br><b>🇰🇷 '+esc(cur.ko)+'</b>':'')+'</div>')+
+            '<div class="ogans" id="ans" hidden>'+ansHtml(cur)+'</div>'+
+          '</div>'+
+          '<div class="drawTip" id="tip">✏️ 아래 칸에 손가락으로 <b>영어 문장</b>을 써요</div>'+
+          '<div class="drawWrap big"><canvas id="cv" role="img" aria-label="영어 문장을 쓰는 칸"></canvas></div>'+
+          '<div class="drawBtns">'+
+            '<button class="btn" id="clr">↺ 지우고 다시</button>'+
+            '<button class="btn" id="peek" aria-pressed="false">👁 정답 보기</button>'+
+          '</div>'+
         '</div>'+
-        '<div class="drawTip">✏️ 아래 <b>큰 칸</b>에 펜(손가락)으로 <b>영어 문장</b>을 써요</div>'+
-        '<div class="drawWrap big"><canvas id="cv"></canvas></div>'+
-        '<div class="drawBtns">'+
-          '<button class="btn" id="clr">↺ 지우고 다시</button>'+
-          '<button class="btn" id="peek">👁 정답 보기</button>'+
+        '<div class="ogbar"><button class="btn primary wide ogdone" id="done">✋ 다 썼어요! 아빠 불러요</button></div>'+
+      '</div>'+
+      '<div id="stG" hidden>'+
+        '<div class="card ogcard">'+
+          '<div class="oggrade-h">👨 아빠 차례! 채점해 주세요</div>'+
+          '<div class="qlab">하준이가 쓴 문장</div>'+
+          '<img id="mine" class="ogmine" alt="하준이가 쓴 글씨">'+
+          '<div class="qlab" style="margin-top:12px">정답</div>'+
+          '<div class="oganswer">'+ansHtml(cur)+'</div>'+
+          '<button class="btn wide" id="more" style="margin-top:12px">✏️ 더 쓸래요 (하준이에게 돌려주기)</button>'+
         '</div>'+
-        '<div class="sechd" style="margin-top:14px">👨 아빠가 채점해주세요</div>'+
-        '<div class="judge2">'+
-          '<button class="btn no" id="bad">❌ 다시</button>'+
+        '<div class="ogbar ogjudge">'+
+          '<button class="btn no" id="bad">❌ 다시 쓰기</button>'+
           '<button class="btn go" id="ok">⭕ 통과</button>'+
         '</div>'+
       '</div>';
     bindB();
-    var pad = makeSentCanvas(document.getElementById('cv'), cur.en, false, 320);
-    var words = cur.en.split(/\s+/);
-    document.getElementById('clr').onclick = function(){ pad.clear(); };
+    var cv = document.getElementById('cv');
+    var pad = makeSentCanvas(cv, cur.en, false, 240);
+    Array.prototype.forEach.call(app.querySelectorAll('[data-say]'), function(b){
+      b.onclick = function(){ speakWords(words, +b.dataset.say === 1 ? RATE : 0.6, function(){}); };
+    });
+    document.getElementById('clr').onclick = function(){ pad.clear(); inkBase = inkCount(); };
     document.getElementById('peek').onclick = function(){
-      shown = !shown;                               /* 화면을 다시 그리지 않아서 쓴 글씨가 지워지지 않는다 */
-      document.getElementById('ans').style.display = shown ? 'block' : 'none';
+      shown = !shown;                               /* 그림 위에 겹쳐 보여줘서 화면이 밀리지 않고, 쓴 글씨도 그대로 */
+      document.getElementById('ans').hidden = !shown;
       this.textContent = shown ? '🙈 정답 숨기기' : '👁 정답 보기';
+      this.setAttribute('aria-pressed', shown ? 'true' : 'false');
       if(!shown) stopAll();
     };
-    document.getElementById('say').onclick = function(){ speakWords(words, RATE, function(){}); };
-    document.getElementById('slow').onclick = function(){ speakWords(words, 0.6, function(){}); };
-    document.getElementById('bad').onclick = function(){ beep([300],.1); tries++; stopAll(); toast('✏️'); ask(); };   /* ❌ = 같은 문제 다시 */
+    /* 쓰기 칸에는 점선 안내선이 그려져 있어서, 처음 상태보다 칠해진 점이 늘었는지로 '썼는지'를 본다 */
+    function inkCount(){
+      try{
+        var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data, n = 0;
+        for(var k = 3; k < d.length; k += 16) if(d[k] > 0) n++;
+        return n;
+      }catch(e){ return -1; }
+    }
+    var inkBase = inkCount();
+    function inked(){ var n = inkCount(); return n < 0 || n > inkBase + 40; }
+    document.getElementById('done').onclick = function(){
+      if(!inked()){
+        noSound();
+        var tp = document.getElementById('tip');
+        tp.innerHTML = '✏️ 먼저 아래 칸에 <b>영어 문장</b>을 써 주세요!'; tp.classList.add('ogwarn');
+        return;
+      }
+      stopAll(); okSound();
+      document.getElementById('mine').src = cv.toDataURL('image/png');
+      document.getElementById('stW').hidden = true;
+      document.getElementById('stG').hidden = false;
+      window.scrollTo(0, 0);
+    };
+    document.getElementById('more').onclick = function(){
+      stopAll();
+      document.getElementById('stG').hidden = true;
+      document.getElementById('stW').hidden = false;
+    };
+    document.getElementById('bad').onclick = function(){ beep([300],.1); tries++; stopAll(); ask(); window.scrollTo(0, 0); };   /* ❌ = 같은 그림 처음부터 */
     document.getElementById('ok').onclick = function(){
       okSound(); toast('⭕'); stopAll(); tries = 0; i++;
+      window.scrollTo(0, 0);
       if(i >= items.length) pass(); else ask();
     };
   }
 
   /* 통과! — 첫 통과는 별 1~STAR_ORIG개, 다시 도전은 STAR_ORIG_RE_LO~HI개를 뽑아 기존 별에 합산 */
   function practiceEnd(){
-    confetti(30); starSound();
+    clearConfetti(); confetti(30); starSound();
     app.innerHTML =
       '<div class="result">'+
         '<div class="big">🎉</div>'+
@@ -5043,12 +5204,11 @@ function startOrig(set, ids, preImgs){
         '<div class="card" style="margin-bottom:12px">모든 그림을 다 시험 볼 때 ⭐ 별 뽑기를 할 수 있어요.</div>'+
         '<div class="card" style="margin-bottom:12px">'+
           items.map(function(it){
-            return '<div class="storyline done" style="text-align:left;font-size:13px">'+esc(it.en)+(it.ko?'<br><span class="muted">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
+            return '<div class="storyline done ogline">'+esc(it.en)+(it.ko?'<span class="ogline-ko">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
           }).join('')+
         '</div>'+
-        '<button class="btn primary wide" id="again3" style="margin-bottom:10px">🔁 같은 그림 다시 연습</button>'+
-        '<button class="btn wide" id="pickagain" style="margin-bottom:10px">🖼️ 그림 다시 고르기</button>'+
-        '<button class="btn go wide" id="lst">📘 목록으로</button>'+
+        '<button class="btn primary wide" id="lst" style="margin-bottom:10px">📘 목록으로</button>'+
+        '<div class="row"><button class="btn" id="again3" style="flex:1">🔁 같은 그림 다시</button><button class="btn" id="pickagain" style="flex:1">🖼️ 다시 고르기</button></div>'+
       '</div>';
     document.getElementById('again3').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
     document.getElementById('pickagain').onclick = function(){ screenOrigPick(set); };
@@ -5056,7 +5216,8 @@ function startOrig(set, ids, preImgs){
   }
   function pass(){
     if(!full) return practiceEnd();
-    var reMode = wasBefore, justGot = null, drawn = false;
+    var reMode = wasBefore, justGot = null, drawn = false, gotRe = false;   /* gotRe: 방금 뽑은 별이 '다시 도전' 별이었는지 */
+    clearConfetti();
     confetti(50); starSound();
     render();
     function render(){
@@ -5068,7 +5229,7 @@ function startOrig(set, ids, preImgs){
           '<p>'+esc(set.t)+'<br><b>그림 '+items.length+'개를 다 썼어요!</b></p>'+
           (justGot!==null
             ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+
-                (reMode?'🔁 다시 도전 성공!':'🎖️ 새 트로피!')+'<br>'+
+                (gotRe?'🔁 다시 도전 성공!':'🎖️ 새 트로피!')+'<br>'+
                 new Array(justGot+1).join('⭐')+'<br><b>별 '+justGot+'개</b>를 받았어요!</div>'
             : '<div class="card" style="margin-bottom:12px;background:#FFF8E6">'+
                 (reMode
@@ -5082,18 +5243,19 @@ function startOrig(set, ids, preImgs){
                 '</button>')+
           '<div class="card" style="margin-bottom:12px">'+
             items.map(function(it){
-              return '<div class="storyline done" style="text-align:left;font-size:13px">'+esc(it.en)+(it.ko?'<br><span class="muted">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
+              return '<div class="storyline done ogline">'+esc(it.en)+(it.ko?'<span class="ogline-ko">🇰🇷 '+esc(it.ko)+'</span>':'')+'</div>';
             }).join('')+
           '</div>'+
-          (drawn ? '<button class="btn primary wide" id="again2" style="margin-bottom:10px">🔁 처음부터 다시 (별 '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)</button>' : '')+
-          '<button class="btn go wide" id="lst">📘 목록으로</button>'+
+          (drawn ? '<button class="btn primary wide" id="lst" style="margin-bottom:10px">📘 목록으로</button>'+
+                   '<button class="btn wide" id="again2">🔁 처음부터 다시 (별 '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)</button>'
+                 : '<button class="btn wide" id="lst">📘 목록으로</button>')+
         '</div>';
       if(document.getElementById('sdraw')) document.getElementById('sdraw').onclick = function(){
         modalStarDraw(function(got){
           var prev = (reMode && typeof set.stars==='number') ? set.stars : 0;
           set.done = true; set.at = Date.now(); set.stars = prev + got;
           saveProgress();
-          justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkFinal();
+          gotRe = reMode; justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkFinal();
         }, lo, hi);
       };
       if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
@@ -5110,11 +5272,12 @@ function startOrig(set, ids, preImgs){
 
 /* ── 시험 볼 그림 고르기 — 여러 그림을 한꺼번에 골라서 볼 수 있다 ── */
 function screenOrigPick(set){
+  clearConfetti();
   var items = set.items || [], sel = {}, imgs = {};
   items.forEach(function(it){ sel[it.id] = true; });   /* 처음엔 전부 선택 */
   function chosen(){ return items.filter(function(it){ return sel[it.id]; }); }
   function head(){
-    return '<div class="topbar"><button class="iconbtn" id="pback">←</button><h2>'+esc(set.e||'📘')+' '+esc(set.t)+'</h2><div class="pill" id="pcnt"></div></div>';
+    return '<div class="topbar"><button class="iconbtn" id="pback" aria-label="뒤로">←</button><h2>'+esc(set.e||'📘')+' '+esc(set.t)+'</h2><div class="pill" id="pcnt"></div></div>';
   }
   app.innerHTML = head() + '<div class="card" style="text-align:center;margin-top:20px"><div style="font-size:44px">🖼️</div><div class="muted" id="pld">그림을 불러오는 중…</div></div>';
   document.getElementById('pback').onclick = screenOrigList;
@@ -5124,8 +5287,8 @@ function screenOrigPick(set){
   function draw(){
     var tiles = items.map(function(it, i){
       var u = imgs[it.id];
-      return '<button class="ogtile" data-id="'+esc(it.id)+'" style="position:relative;border:3px solid var(--line);border-radius:14px;background:#fff;padding:4px;min-height:96px;display:flex;align-items:center;justify-content:center">'+
-        (u ? '<img src="'+u+'" style="width:100%;max-height:110px;object-fit:contain;border-radius:10px">' : '<span class="muted">🖼️</span>')+
+      return '<button class="ogtile" aria-pressed="true" data-id="'+esc(it.id)+'" style="position:relative;border:3px solid var(--line);border-radius:14px;background:#fff;padding:4px;min-height:96px;display:flex;align-items:center;justify-content:center">'+
+        (u ? '<img src="'+u+'" alt="'+(i+1)+'번 그림" style="width:100%;max-height:110px;object-fit:contain;border-radius:10px">' : '<span class="muted">🖼️</span>')+
         '<span style="position:absolute;left:6px;top:4px;background:rgba(255,255,255,.9);border-radius:10px;padding:0 7px;font-size:12px;font-weight:800">'+(i+1)+'</span>'+
         '<span class="ogck" style="position:absolute;right:6px;top:4px;font-size:20px;line-height:1.1"></span>'+
       '</button>';
@@ -5144,7 +5307,7 @@ function screenOrigPick(set){
     document.getElementById('pnone').onclick = function(){ items.forEach(function(it){ sel[it.id] = false; }); paint(); };
     document.getElementById('pgo').onclick = function(){
       var c = chosen();
-      if(!c.length){ noSound(); return; }   /* 버튼에 '그림을 골라 주세요'가 이미 쓰여 있다 */
+      if(!c.length) return;   /* 0개면 버튼이 꺼져 있다 */
       beep([700,900],.06);
       startOrig(set, c.map(function(it){ return it.id; }), imgs);
     };
@@ -5158,12 +5321,13 @@ function screenOrigPick(set){
       b.style.background = on_ ? '#F3EEFF' : '#fff';
       b.style.opacity = on_ ? '1' : '.55';
       b.querySelector('.ogck').textContent = on_ ? '✅' : '⬜';
+      b.setAttribute('aria-pressed', on_ ? 'true' : 'false');
     });
     var pc = document.getElementById('pcnt'); if(pc) pc.textContent = n+'/'+items.length;
     var go = document.getElementById('pgo');
     if(go){
       go.textContent = !n ? '그림을 골라 주세요' : (all ? '▶ 전체 시험 보기 (⭐ 별 뽑기)' : '▶ 고른 '+n+'개 연습하기');
-      go.style.opacity = n ? '1' : '.5';
+      go.disabled = !n;
     }
   }
 }
@@ -5176,7 +5340,7 @@ function screenSpecials(){
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
       '<div style="font-size:16px">👨 아빠 앞에서 시 한 편을 끝까지!</div>'+
-      '<div class="muted" style="margin-top:5px">한 연씩 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>한 편 통과하면 별 <b style="color:var(--mango)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
+      '<div class="muted" style="margin-top:5px">한 연씩 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>한 편 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
     '</div>';
   html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
   SPECIALS.forEach(function(sp){
@@ -5641,7 +5805,7 @@ function openWordMemo(spId, w, el){
   var cur = getNote(spId, w);
   var ov = openMod(
     '<div style="text-align:center">'+
-      '<div style="font-size:13px;color:var(--berry)">모르는 단어</div>'+
+      '<div style="font-size:13px;color:var(--berry-ink)">모르는 단어</div>'+
       '<div style="font-size:34px;font-weight:800;margin:2px 0 10px">'+esc(w)+'</div>'+
       '<button class="btn primary" id="wnhear" style="margin-bottom:10px">🔊 다시 듣기</button>'+
       '<div style="font-size:13px;color:#666;text-align:left;margin:4px 2px">✏️ 메모 (뜻·읽는 법 등을 적어두면 다음에 눌렀을 때 나와요)</div>'+
@@ -6565,7 +6729,7 @@ function tSpell(q){
     tAnswer(ok, function(){
       var box=app.querySelector('.slots');
       if(ok){ box.classList.add('pop'); sayParts(blendOf(it),RATE); }
-      else { box.classList.add('shake'); box.innerHTML='<div class="word en small" style="width:100%;color:var(--berry)">'+esc(it.w)+'</div>'; say(it.w,0.85); }
+      else { box.classList.add('shake'); box.innerHTML='<div class="word en small" style="width:100%;color:var(--berry-ink)">'+esc(it.w)+'</div>'; say(it.w,0.85); }
     });
   }
   draw();
@@ -6588,7 +6752,7 @@ function tCloze(q){
   /* 그래도 중복이면 모든 자리를 함께 가린다 */
   var idx = words.map(function(_,i){ return i; }).filter(function(i){ return clean(words[i])===ans; });
   var opts = shuffle(pickN(L.items.filter(function(x){ return x.w.toLowerCase()!==ans; }),TEST_OPTS-1).map(function(x){return x.w;}).concat([ans]));
-  var shown = words.map(function(w,i){ return idx.indexOf(i)>=0 ? '<span style="color:var(--berry)">____</span>' : esc(w); }).join(' ');
+  var shown = words.map(function(w,i){ return idx.indexOf(i)>=0 ? '<span style="color:var(--berry-ink)">____</span>' : esc(w); }).join(' ');
 
   app.innerHTML = tHead('문장을 듣고 빈칸을 채워요') +
     '<div class="card" style="text-align:center">'+
@@ -6701,6 +6865,7 @@ function openMod(inner){
   var ov=document.createElement('div'); ov.className='ov';
   ov.innerHTML='<div class="mod">'+inner+'</div>';
   document.body.appendChild(ov);
+  Array.prototype.forEach.call(document.querySelectorAll('body > .conf'), function(c){ ov.insertBefore(c, ov.firstChild); });   /* 이미 떨어지는 색종이도 카드 뒤로 */
   return ov;
 }
 function bigHero(lv){ return heroSVG(lv).replace('class="hsvg"','class="hsvg lg"'); }
@@ -6779,7 +6944,7 @@ function modalStarDraw(cb, min, max){
       else {
         reel.classList.remove('spinning'); reel.classList.add('hit');
         reel.innerHTML = '<div class="num">'+got+'</div><div class="stars">'+new Array(got+1).join('⭐')+'</div>'+
-          '<div style="font-size:17px;font-weight:800;color:var(--mango)">별 '+got+'개!</div>';
+          '<div style="font-size:17px;font-weight:800;color:var(--mango-ink)">별 '+got+'개!</div>';
         starSound(); confetti(14 + got*7);
         go.style.display='none';
         var done = document.createElement('button');
@@ -6833,7 +6998,7 @@ function screenSettings(){
           }).join('')+
           '<div class="row" style="justify-content:flex-start;margin-top:12px">'+
             '<button class="btn" id="dorev">🔁 지금 같이 보기</button>'+
-            '<button class="btn" id="clrmiss" style="color:var(--berry)">목록 비우기</button>'+
+            '<button class="btn" id="clrmiss" style="color:var(--berry-ink)">목록 비우기</button>'+
           '</div>'
         : '<div class="muted">아직 없어요. 단어 읽기를 하면 여기에 모입니다.</div>')+
     '</div>'+
@@ -6842,7 +7007,7 @@ function screenSettings(){
       '<div class="muted">모은 별: <b>⭐ '+totalStars()+' / '+maxStars()+'</b> · 캐릭터 <b>Lv.'+heroLv()+' '+esc(heroTitle())+'</b><br>'+
       '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
       '&nbsp;· <b>지금 가진 별 '+walletStars()+'</b> = 모은 별 '+totalStars()+' − 카드로 쓴 '+spentStars()+' (카드 '+cards().length+'장)<br>'+
-      '&nbsp;· ★ '+esc(FINAL.n)+'까지 <b style="color:var(--berry)">'+Math.max(0, STAR_GOAL-walletStars())+'개</b> 남음<br>'+
+      '&nbsp;· ★ '+esc(FINAL.n)+'까지 <b style="color:var(--berry-ink)">'+Math.max(0, STAR_GOAL-walletStars())+'개</b> 남음<br>'+
       '테스트 통과: <b>'+passedCount()+'/'+LEVELS.length+'</b> · 읽은 책: <b>'+books().filter(function(L){ return bookRead(L.id)>0; }).length+'/'+books().length+'</b> · 스페셜: <b>'+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</b><br><br>'+
       LEVELS.map(function(L){
         var t=testInfo(L.id);
@@ -6850,13 +7015,13 @@ function screenSettings(){
                ' · 테스트 '+(t.best? t.best+'점'+(t.passed?' 🏅':'') : '미응시');
       }).join('<br>')+
       '</div>'+
-      '<div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn" id="reset" style="color:var(--berry)">진도 초기화</button></div>'+
+      '<div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn" id="reset" style="color:var(--berry-ink)">진도 초기화</button></div>'+
     '</div>'+
     '<div class="sheet">'+
       '<h3>🩺 문제 해결</h3>'+
       '<div class="muted">앱이 안 열리거나 소리가 안 나면 여기부터 보세요.<br>'+
         '현재 화면 버전: <b>'+APP_VERSION+'</b>'+
-        (OFFLINE ? '<br><b style="color:var(--berry)">⚠️ 지금 서버 연결이 안 되고 있어요!</b>' : '')+'</div>'+
+        (OFFLINE ? '<br><b style="color:var(--berry-ink)">⚠️ 지금 서버 연결이 안 되고 있어요!</b>' : '')+'</div>'+
       '<div class="row" style="justify-content:flex-start;margin-top:10px;flex-wrap:wrap">'+
         '<button class="btn primary" id="freshen">🔄 최신으로 새로고침</button>'+
         '<button class="btn" id="diag">🩺 진단 화면 열기</button></div>'+
@@ -6957,7 +7122,7 @@ function drawVoices(){
       if(r === undefined) r = {error:'응답 없음'};
       (function(r){
       if(!r || r.error || !r.voices){
-        w.innerHTML = '<div class="muted" style="color:var(--berry)">목소리 목록을 못 받았어요: '+esc(r && r.error ? r.error : '알 수 없음')+'</div>';
+        w.innerHTML = '<div class="muted" style="color:var(--berry-ink)">목소리 목록을 못 받았어요: '+esc(r && r.error ? r.error : '알 수 없음')+'</div>';
         return;
       }
       var rank = function(n){
