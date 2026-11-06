@@ -28,6 +28,7 @@
     --shadow:0 6px 0 rgba(35,32,74,.14);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}   /* 버튼(.btn) 등 display 를 가진 요소도 hidden 이면 확실히 숨김 */
   html,body{margin:0;padding:0;height:100%}
   body{
     word-break:keep-all;overflow-wrap:break-word;
@@ -78,7 +79,7 @@
   @keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-10px) rotate(4deg)}}
 
   /* ---------- 홈: 레벨 목록 ---------- */
-  .hero{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#8B5CF6,#4FA8F7);
+  .hero{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#7C3AED,#2563EB);
     color:#fff;border-radius:24px;padding:14px;box-shadow:0 6px 0 #5B34C0;margin-bottom:12px}
   .hero .face{font-size:44px}
   .hero b{display:block;font-size:20px}
@@ -159,6 +160,7 @@
   .lvup{font-size:20px;color:var(--grape)}
   .conf{position:fixed;top:0;right:0;bottom:0;left:0;pointer-events:none;z-index:70;overflow:hidden}
   .ov .conf{position:fixed;z-index:0}
+  body:has(.result) > .conf{z-index:-1}   /* 결과 화면: 색종이는 배경 위·카드와 글자 뒤로 */
   .ov .mod{position:relative;z-index:1}
   .cf{position:absolute;font-size:22px;animation:fall linear forwards}
   @keyframes fall{from{transform:translateY(-40px) rotate(0)}to{transform:translateY(110vh) rotate(540deg)}}
@@ -170,7 +172,7 @@
   .lvl .t{flex:1;min-width:0}
   .lvl .t b{display:block;font-size:17px}
   .lvl .t small{color:var(--ink-soft);font-size:13px}
-  .lvl .stars{font-size:13px;color:var(--mango);white-space:nowrap}
+  .lvl .stars{font-size:13px;color:var(--mango-ink);white-space:nowrap}
   .lvl.locked{opacity:.5;filter:grayscale(.6)}
   .lvl.done{border-color:#BBF7D0}
 
@@ -234,9 +236,10 @@
   .tile.used{visibility:hidden}
 
   .sent{font-family:'Fredoka',sans-serif;font-weight:600;font-size:26px;text-align:center;line-height:1.5}
-  .qzrow{display:flex;gap:8px;align-items:stretch;margin-bottom:10px}
+  .qzrow{display:flex;gap:8px;align-items:stretch;margin-bottom:16px}
+  .qzrow .qzbk{margin-bottom:0}
   .qzedit{flex:0 0 auto;width:52px;border:none;border-radius:16px;background:#EEF0FF;
-    font-size:22px;cursor:pointer;box-shadow:0 4px 0 #C7CCF0}
+    font-size:22px;cursor:pointer;box-shadow:0 6px 0 #C7CCF0}
   .qzedit:active{transform:translateY(2px);box-shadow:0 2px 0 #C7CCF0}
   .sw{display:inline-block;padding:2px 4px;border-radius:8px;cursor:pointer}
   .sw.hi{background:var(--mango);color:#fff}
@@ -421,6 +424,29 @@
     background:#FFF6DF;border-radius:14px;padding:14px 12px;margin:8px 0 4px}
   .sentHint{font-family:'Fredoka',sans-serif;font-weight:700;font-size:20px;color:var(--melon-ink);
     text-align:center;background:#ECFDF5;border-radius:12px;padding:10px;margin:8px 0;word-break:break-word}
+  /* ── 홈: 오늘 할 것 · 메뉴 묶음 ── */
+  .today{background:#fff;border-radius:22px;padding:14px 14px 6px;box-shadow:var(--shadow);margin-bottom:16px;border:2.5px solid #FCD34D}
+  .today-h{font-size:18px;margin:0 2px 8px}
+  .todo{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;margin:0 0 8px;padding:10px 12px;border:0;border-radius:16px;
+    background:#FFF8E6;font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 4px 0 #F3DFA2}
+  .todo:active{transform:translateY(2px);box-shadow:0 2px 0 #F3DFA2}
+  .todo-i{font-size:28px;flex:none}
+  .todo-t{flex:1;min-width:0}
+  .todo-t b{display:block;font-size:17px}
+  .todo-t small{display:block;font-size:13.5px;color:var(--ink-soft);margin-top:2px}
+  .todo-go{flex:none;font-size:15px;color:var(--mango-ink)}
+  .homehd{font-size:17px;margin:4px 2px 10px;color:var(--ink)}
+  .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
+  .tgrid .testbtn{margin:0 !important;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 13px 15px;min-height:128px}
+  .tgrid .testbtn .ico{font-size:30px}
+  .tgrid .testbtn .t b{font-size:18px}
+  .tgrid .testbtn .t small{display:block;font-size:13px;line-height:1.4;margin-top:3px}
+  .tgrid .testbtn > div:last-child{display:none}
+  .tgrid .testbtn:last-child:nth-child(odd){grid-column:1 / -1;min-height:0;flex-direction:row;align-items:center}
+  .lvtoggle{margin:2px 0 16px}
+  /* ── 아직 안 뽑은 별 ── */
+  .pendtag{display:block;margin-top:3px;font-size:13px;color:var(--mango-ink);font-family:'Jua',sans-serif}
+  .runtag{display:block;margin-top:3px;font-size:13px;color:#6D28D9;font-family:'Jua',sans-serif}
   /* ── 원서 테스트 ── */
   .ogcard{padding:16px 14px}
   .ogpic{position:relative;min-height:190px;display:flex;align-items:center;justify-content:center;margin:10px 0 8px;border-radius:16px;background:#F7F5FF;overflow:hidden}
@@ -437,9 +463,13 @@
   .ogjudge{display:flex;gap:22px}
   .ogjudge .btn{flex:1;font-size:19px;padding:16px 8px;min-height:60px}
   .oggrade-h{font-size:21px;text-align:center;margin-bottom:12px}
+  .oggrade-h.ogmiss{color:var(--berry-ink)}
+  #stW .drawBtns .btn:only-child{flex:1}
   .ogmine{display:block;width:100%;border:2.5px dashed #C4B8ED;border-radius:16px;background:#FFFDF7}
   .oganswer{display:flex;flex-direction:column;gap:8px;background:#F7FDF9;border:2px solid #BBF7D0;border-radius:16px;padding:12px}
   .ogwarn{color:var(--berry-ink)}
+  .kidtxt{font-size:15px;line-height:1.55;color:var(--ink-soft)}
+  .kidtip{font-size:15px}
   .ogline{text-align:left;font-size:14px;line-height:1.45}
   .ogline-ko{display:block;font-family:'Jua',sans-serif;color:var(--ink-soft);margin-top:2px}
   .ogmini{width:44px;height:44px;flex:none;border:0;border-radius:12px;background:#EEF0FF;font-size:15px;color:var(--ink);cursor:pointer;font-family:inherit}
@@ -453,6 +483,14 @@
   .ogsum b{color:var(--ink)}
   .ogsum-todo{color:var(--berry-ink)}
   .ogsavebar .btn{font-size:18px;padding:14px 22px}
+  .ogjump{display:inline-block;margin-left:6px;border:0;background:#FFE4EC;color:var(--berry-ink);font:inherit;font-size:14px;border-radius:12px;padding:10px 12px;min-height:44px;cursor:pointer}
+  .ogposw{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+  .ogpos{font:inherit;font-size:16px;color:var(--ink);padding:8px 10px;border:2px solid var(--line);border-radius:12px;background:#fff;min-height:44px}
+  .ogfine{margin:4px 0 2px;font-size:14px}
+  .ogfine summary{cursor:pointer;color:var(--ink-soft);padding:8px 0;min-height:44px;display:flex;align-items:center}
+  .ogchk{text-align:left;margin:6px 0 16px;padding-left:20px;line-height:1.55;font-size:15px;color:var(--ink)}
+  .ogchk li{margin-bottom:6px}
+  #ogt,#oge{min-height:44px}
   #pgo:disabled{opacity:.45;cursor:default}
   .judge2{display:flex;gap:10px;margin-top:10px}
   .judge2 .btn{flex:1;font-size:18px;padding:16px}
@@ -570,7 +608,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.07 01:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.07 04:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2018,7 +2056,7 @@ function rewardPanel(){
                    '<span style="display:block;height:6px;background:rgba(255,255,255,.25);border-radius:99px;margin-top:5px;overflow:hidden">'+
                      '<span style="display:block;height:100%;width:'+Math.min(100,Math.round(walletStars()/STAR_GOAL*100))+'%;background:#FDE047;border-radius:99px"></span>'+
                    '</span>'+
-                   '<span style="display:block;font-size:10.5px;margin-top:4px;opacity:.85">🎁 뽑기·🃏 카드를 사면 별이 줄어서 멀어져요!</span>')+
+                   '<span style="display:block;font-size:12.5px;margin-top:4px;opacity:.92">🎁 뽑기·🃏 카드를 사면 별이 줄어서 멀어져요!</span>')+
       '</span></button>'+
     '</div>';
   return html;
@@ -2035,8 +2073,8 @@ function screenHome(){
     '<div class="topbar">'+
       '<div class="pill">⭐ '+walletStars()+'</div>'+
       '<h2>영어랑 놀자!</h2>'+
-      '<button class="iconbtn" id="lib">📚</button>'+
-      '<button class="iconbtn" id="setting">'+(OFFLINE?'⚠️':'⚙️')+'</button>'+
+      '<button class="iconbtn" id="lib" aria-label="도서관">📚</button>'+
+      '<button class="iconbtn" id="setting" aria-label="설정">'+(OFFLINE?'⚠️':'⚙️')+'</button>'+
     '</div>'+
     (OFFLINE
       ? '<div class="card" style="margin-bottom:12px;background:#FFF6DF;text-align:center">'+
@@ -2050,18 +2088,9 @@ function screenHome(){
         (hasFinal() ? '닌텐도 받음!' : '닌텐도까지')+'</small></div>'+
       '<div class="wcard"><b style="color:#16A34A">'+cards().length+'</b><small>축구카드</small></div>'+
     '</div>'+
-    '<button class="testbtn" id="dadbtn" style="background:linear-gradient(135deg,#0B7EB2,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
-      '<div class="ico">👨</div>'+
-      '<div class="t"><b>아빠가 별 주기 🔒</b><small>심부름·약속 잘 지키면 ⭐1~'+MAX_BONUS+'개 · 지금까지 '+bonusStars()+'개</small></div>'+
-      '<div style="font-size:22px">▶</div>'+
-    '</button>'+
-    (missList().length
-      ? '<button class="testbtn" id="miss" style="background:linear-gradient(135deg,#DB2765,#C2410C);box-shadow:0 6px 0 #BE123C;margin:0 0 12px">'+
-          '<div class="ico">🔁</div>'+
-          '<div class="t"><b>다시 볼 단어 '+missList().length+'개</b><small>👨 아빠랑 5분 · 못 읽은 것만 모았어요</small></div>'+
-          '<div style="font-size:22px">▶</div>'+
-        '</button>'
-      : '')+
+    todayHtml()+
+    '<div class="homehd">✏️ 시험</div>'+
+    '<div class="tgrid">'+
     '<button class="testbtn" id="qzbig" style="background:linear-gradient(135deg,#0B7EB2,#0E7490);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
       '<div class="ico">📝</div>'+
       '<div class="t"><b>단어 테스트</b><small>뜻풀이 듣고 타이핑 · 단어장 '+
@@ -2074,17 +2103,9 @@ function screenHome(){
         sents().filter(function(x){ return x.done; }).length+'/'+sents().length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="spbig" style="background:linear-gradient(135deg,#B45309,#DC2626);box-shadow:0 6px 0 #9A3412;margin:0 0 12px">'+
-      '<div class="ico">🌟</div>'+
-      '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
-        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
-        ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
-      '<div style="font-size:22px">▶</div>'+
-    '</button>'+
-    '<button class="testbtn" id="libbig" style="background:linear-gradient(135deg,#15803D,#0369A1);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
-      '<div class="ico">📚</div>'+
-      '<div class="t"><b>하준이 도서관</b><small>이야기책 '+books().length+'권 · 읽은 책 '+
-        books().filter(function(L){ return bookRead(L.id)>0; }).length+'권</small></div>'+
+    '<button class="testbtn" id="ogbig" style="background:linear-gradient(135deg,#0F766E,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
+      '<div class="ico">📘</div>'+
+      '<div class="t"><b>원서 테스트</b><small>그림 보고 영어 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="mmbig" style="background:linear-gradient(135deg,#DB2777,#9333EA);box-shadow:0 6px 0 #7E22CE;margin:0 0 12px">'+
@@ -2092,9 +2113,20 @@ function screenHome(){
       '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="ogbig" style="background:linear-gradient(135deg,#0F766E,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
-      '<div class="ico">📘</div>'+
-      '<div class="t"><b>원서 테스트</b><small>그림 보고 영어 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
+    '<button class="testbtn" id="spbig" style="background:linear-gradient(135deg,#B45309,#DC2626);box-shadow:0 6px 0 #9A3412;margin:0 0 12px">'+
+      '<div class="ico">🌟</div>'+
+      '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
+        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
+        ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
+    '</div>'+
+    '<div class="homehd">🎈 놀고 받기</div>'+
+    '<div class="tgrid">'+
+    '<button class="testbtn" id="libbig" style="background:linear-gradient(135deg,#15803D,#0369A1);box-shadow:0 6px 0 #0E7490;margin:0 0 12px">'+
+      '<div class="ico">📚</div>'+
+      '<div class="t"><b>하준이 도서관</b><small>이야기책 '+books().length+'권 · 읽은 책 '+
+        books().filter(function(L){ return bookRead(L.id)>0; }).length+'권</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="pkbig" style="background:linear-gradient(135deg,#047857,#065F46);box-shadow:0 6px 0 #065F46;margin:0 0 12px">'+
@@ -2102,9 +2134,20 @@ function screenHome(){
       '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+PK_SHOTS+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="dadbtn" style="background:linear-gradient(135deg,#0B7EB2,#4F46E5);box-shadow:0 6px 0 #3730A3;margin:0 0 12px">'+
+      '<div class="ico">👨</div>'+
+      '<div class="t"><b>아빠가 별 주기 🔒</b><small>심부름·약속 잘 지키면 ⭐1~'+MAX_BONUS+'개 · 지금까지 '+bonusStars()+'개</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
+    '</div>'+
     rewardPanel();
 
-  LEVELS.forEach(function(L){
+  /* 파닉스 단계: 지금 할 단계와 다음 단계만 보여주고 나머지는 접어 둔다 */
+  var curIx = 0; LEVELS.forEach(function(L,k){ if(unlocked(L) && !levelDone(L) && !curIx) curIx = k + 1; });
+  curIx = curIx ? curIx - 1 : Math.max(0, LEVELS.filter(unlocked).length - 1);
+  html += '<div class="homehd">🔤 파닉스 단계</div>';
+  LEVELS.forEach(function(L,k){
+    if(!HOME_LV_OPEN && (k < curIx || k > curIx + 1)) return;
     var un = unlocked(L), done = levelDone(L), tp = testInfo(L.id).passed;
     html += '<button class="lvl '+(un?'':'locked')+' '+(done?'done':'')+'" data-id="'+L.id+'">'+
       '<div class="no">'+(un ? L.icon : '🔒')+'</div>'+
@@ -2112,6 +2155,7 @@ function screenHome(){
       '<div class="stars">'+(un ? '⭐ '+levelStars(L)+'/'+levelMax(L) : '')+'</div>'+
     '</button>';
   });
+  html += '<button class="btn wide lvtoggle" id="lvall">'+(HOME_LV_OPEN ? '▲ 접기' : '▼ 전체 '+LEVELS.length+'단계 보기')+'</button>';
   app.innerHTML = html;
 
   on('.lvl', function(){
@@ -2131,7 +2175,15 @@ function screenHome(){
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
   document.getElementById('dadbtn').onclick = screenDad;
+  bindPendHome();
   if(document.getElementById('miss')) document.getElementById('miss').onclick = startReview;
+  document.getElementById('lvall').onclick = function(){ HOME_LV_OPEN = !HOME_LV_OPEN; beep([700],.04); screenHome(); };
+  if(document.getElementById('todorun')) document.getElementById('todorun').onclick = function(){
+    var r = PROG.origRun, o = r && origById(r.sid); if(o){ beep([700,900],.06); startOrig(o, r.ids, null, r.i); }
+  };
+  if(document.getElementById('todolv')) document.getElementById('todolv').onclick = function(){
+    var id = +this.dataset.id, L = LEVELS.filter(function(x){ return x.id === id; })[0]; if(L){ beep([700],.06); screenLevel(L); }
+  };
   document.getElementById('setting').addEventListener('click', screenSettings);
 }
 
@@ -3344,6 +3396,7 @@ function startQuiz(q){
   function pass(){
     var justGot = null;
     starSound(); confetti(50);
+    if(!q.done) pendAdd({key:'quiz:'+q.id, k:'quiz', id:q.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📝 '+q.title});
     render();
     if(q.done) checkFinal();
 
@@ -3369,7 +3422,7 @@ function startQuiz(q){
         '</div>';
       if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
         modalStarDraw(function(got){
-          q.done = true; q.stars = got; saveProgress();
+          q.done = true; q.stars = got; pendDone('quiz:'+q.id);
           justGot = got; render(); checkFinal();
         });
       };
@@ -3793,6 +3846,7 @@ function startSent(s){
   function pass(){
     var justGot = null;
     starSound(); confetti(50);
+    if(!s.done) pendAdd({key:'sent:'+s.id, k:'sent', id:s.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📖 '+s.title});
     render();
     if(s.done) checkFinal();
 
@@ -3818,7 +3872,7 @@ function startSent(s){
         '</div>';
       if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
         modalStarDraw(function(got){
-          s.done = true; s.stars = got; saveProgress();
+          s.done = true; s.stars = got; pendDone('sent:'+s.id);
           justGot = got; render(); checkFinal();
         });
       };
@@ -4222,6 +4276,8 @@ function startMimemal(){
   function finish(){
     var allOk = results.every(function(r){ return r==='ok'; });
     starSound(); confetti(50);
+    var mmKey = 'mm:'+list.map(function(m){ return m.id; }).join(',');
+    if(allOk) pendAdd({key:mmKey, k:'mm', ids:list.map(function(m){ return m.id; }), lo:MM_STAR_MIN, hi:MM_STAR_MAX, t:'📷 미매말'});
     var justGot = null;
     render();
     function render(){
@@ -4246,7 +4302,7 @@ function startMimemal(){
           /* 통과 표시 + 별 저장 (문제별로 나눠 저장) */
           var per = Math.floor(got/list.length), rem = got - per*list.length;
           list.forEach(function(m,i){ m.done = true; m.stars = per + (i<rem?1:0); });
-          saveProgress();
+          pendDone(mmKey);
           justGot = got; render(); checkFinal();
         }, MM_STAR_MIN, MM_STAR_MAX);
       };
@@ -4781,8 +4837,8 @@ function origCropModal(it, onApply){
   ov.innerHTML = '<div style="background:#fff;border-radius:20px;padding:14px;max-width:420px;width:100%;max-height:94vh;overflow:auto">'+
     '<div style="font-weight:800;font-size:16px;text-align:center;margin-bottom:8px">✂️ 그림 영역 조절</div>'+
     '<canvas id="ogcv" style="width:100%;border-radius:10px;border:2px solid #ddd;display:block"></canvas>'+
-    '<div class="muted" style="font-size:12px;margin:6px 0">빨간 테두리 안이 그림으로 저장돼요.</div>'+
-    sl('ogT','위')+sl('ogB','아래')+sl('ogL','왼쪽')+sl('ogR','오른쪽')+
+    '<div class="ognote" style="margin:8px 0">빨간 테두리의 <b>모서리나 변</b>을 손가락으로 끌어서 맞춰요. 안쪽을 끌면 통째로 옮겨져요.</div>'+
+    '<details class="ogfine"><summary>⚙️ 세밀하게 조절 ▾</summary>'+sl('ogT','위')+sl('ogB','아래')+sl('ogL','왼쪽')+sl('ogR','오른쪽')+'</details>'+
     '<div class="row" style="margin-top:10px"><button class="btn" id="ogNo" style="flex:1">취소</button><button class="btn primary" id="ogOk" style="flex:1">✅ 이 영역으로</button></div></div>';
   document.body.appendChild(ov);
   var cv = ov.querySelector('#ogcv'), T = ov.querySelector('#ogT'), B = ov.querySelector('#ogB'), L = ov.querySelector('#ogL'), R = ov.querySelector('#ogR');
@@ -4794,7 +4850,13 @@ function origCropModal(it, onApply){
     var x0 = box[1]/1000*W, y0 = box[0]/1000*H, x1 = box[3]/1000*W, y1 = box[2]/1000*H;
     c.fillStyle = 'rgba(0,0,0,.5)';
     c.fillRect(0,0,W,y0); c.fillRect(0,y1,W,H-y1); c.fillRect(0,y0,x0,y1-y0); c.fillRect(x1,y0,W-x1,y1-y0);
-    c.strokeStyle = '#E11D48'; c.lineWidth = 2; c.strokeRect(x0, y0, x1-x0, y1-y0);
+    c.strokeStyle = '#E11D48'; c.lineWidth = 3; c.strokeRect(x0, y0, x1-x0, y1-y0);
+    /* 끌 수 있는 손잡이 (모서리 4 + 변 가운데 4) */
+    var hs = 9, mx = (x0+x1)/2, my = (y0+y1)/2;
+    [[x0,y0],[x1,y0],[x0,y1],[x1,y1],[mx,y0],[mx,y1],[x0,my],[x1,my]].forEach(function(q){
+      c.fillStyle = '#fff'; c.fillRect(q[0]-hs, q[1]-hs, hs*2, hs*2);
+      c.lineWidth = 2.5; c.strokeRect(q[0]-hs, q[1]-hs, hs*2, hs*2);
+    });
   }
   function sync(){ T.value = box[0]; B.value = box[2]; L.value = box[1]; R.value = box[3]; paint(); }
   var MINS = 40;
@@ -4802,6 +4864,38 @@ function origCropModal(it, onApply){
   B.oninput = function(){ box[2] = Math.max(+B.value, box[0]+MINS); sync(); };
   L.oninput = function(){ box[1] = Math.min(+L.value, box[3]-MINS); sync(); };
   R.oninput = function(){ box[3] = Math.max(+R.value, box[1]+MINS); sync(); };
+  /* 끌어서 자르기: 모서리·변을 끌면 크기, 안쪽을 끌면 위치 */
+  var drag = null;
+  cv.style.touchAction = 'none';
+  function pt(e){ var r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)/r.width*1000, y:(e.clientY-r.top)/r.height*1000, tol:Math.max(30, 26/r.width*1000)}; }
+  cv.addEventListener('pointerdown', function(e){
+    var q = pt(e), t = q.tol;
+    var inX = q.x > box[1]-t && q.x < box[3]+t, inY = q.y > box[0]-t && q.y < box[2]+t;
+    var m = {l: Math.abs(q.x-box[1]) < t && inY, r: Math.abs(q.x-box[3]) < t && inY, t: Math.abs(q.y-box[0]) < t && inX, b: Math.abs(q.y-box[2]) < t && inX};
+    if(!m.l && !m.r && !m.t && !m.b){
+      if(q.x > box[1] && q.x < box[3] && q.y > box[0] && q.y < box[2]) m.move = true; else return;
+    }
+    drag = {m: m, q0: q, b0: box.slice()};
+    try{ cv.setPointerCapture(e.pointerId); }catch(er){}
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    var q = pt(e), dx = q.x - drag.q0.x, dy = q.y - drag.q0.y, b0 = drag.b0, m = drag.m;
+    if(m.move){
+      var w = b0[3]-b0[1], hh = b0[2]-b0[0];
+      var nx = Math.max(0, Math.min(1000-w, b0[1]+dx)), ny = Math.max(0, Math.min(1000-hh, b0[0]+dy));
+      box = [ny, nx, ny+hh, nx+w];
+    } else {
+      if(m.l) box[1] = Math.max(0, Math.min(b0[1]+dx, box[3]-MINS));
+      if(m.r) box[3] = Math.min(1000, Math.max(b0[3]+dx, box[1]+MINS));
+      if(m.t) box[0] = Math.max(0, Math.min(b0[0]+dy, box[2]-MINS));
+      if(m.b) box[2] = Math.min(1000, Math.max(b0[2]+dy, box[0]+MINS));
+    }
+    box = box.map(Math.round); sync();
+  });
+  function endDrag(){ drag = null; }
+  cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
   img.onload = sync; img.src = it.src;
   function close(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }
   ov.querySelector('#ogNo').onclick = close;
@@ -4824,6 +4918,26 @@ function origBusy(msg){
           close: function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }};
 }
 
+/* ── 시험 이어하기 ──
+   PROG.origRun = {sid, ids(고른 그림), i(지금 그림), at} — 그림이 바뀔 때마다 저장해서, 나갔다가(←·폰 뒤로가기·전화·새로고침)
+   목록에서 "이어서 하기"로 그 그림부터 다시 시작한다. 통과하거나 연습을 끝내면 지운다. */
+function origRunGet(sid){ var r = PROG.origRun; return (r && r.sid === sid) ? r : null; }
+function origRunClear(){ if(PROG.origRun){ PROG.origRun = null; saveProgress(); } }
+/* 폰의 뒤로가기(안드로이드 뒤로·아이폰 밀기)를 누르면 앱 밖으로 나가지 않고 원서 목록으로 */
+var OG_HIST = false, OG_IGNORE_POP = false, OG_ON_BACK = null;
+function ogHistEnter(onBack){
+  OG_ON_BACK = onBack;
+  if(!OG_HIST){ try{ history.pushState({og:1}, ''); OG_HIST = true; }catch(e){} }
+}
+function ogHistLeave(){
+  OG_ON_BACK = null;
+  if(OG_HIST){ OG_HIST = false; OG_IGNORE_POP = true; try{ history.back(); }catch(e){ OG_IGNORE_POP = false; } }
+}
+window.addEventListener('popstate', function(){
+  if(OG_IGNORE_POP){ OG_IGNORE_POP = false; return; }
+  if(OG_HIST){ OG_HIST = false; var f = OG_ON_BACK; OG_ON_BACK = null; if(f) f(); }
+});
+
 /* ── 목록 ── */
 function screenOrigList(){
   clearConfetti();
@@ -4836,7 +4950,7 @@ function screenOrigList(){
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
       '<div style="font-size:16px">📘 원서 그림을 보고 <b>영어 문장</b> 쓰기!</div>'+
-      '<div class="muted" style="margin-top:5px">그림을 보고 문장을 써요. 👨 아빠가 ⭕ 하면 다음 그림,<br>❌면 <b>같은 그림을 다시</b> 써요. 정답을 보면 <b>한글 해석</b>도 나와요.<br>'+
+      '<div class="kidtxt" style="margin-top:5px">그림을 보고 문장을 써요. 👨 아빠가 ⭕ 하면 다음 그림,<br>❌면 <b>같은 그림을 다시</b> 써요. 정답을 보면 <b>한글 해석</b>도 나와요.<br>'+
         '다 통과하면 ⭐ 1~'+STAR_ORIG+'개 (다시 도전은 ⭐ '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)를 뽑아요!</div>'+
     '</div>';
   if(!os.length){
@@ -4847,7 +4961,9 @@ function screenOrigList(){
       html += '<div class="qzrow">'+
         '<button class="qzbk '+(s.done?'done':'')+'" data-id="'+esc(s.id)+'" style="flex:1">'+
           '<div class="ico">'+(s.done?'🏆':esc(s.e||'📘'))+'</div>'+
-          '<div class="t"><b>'+esc(s.t)+'</b><small>그림 '+(s.items||[]).length+'개'+(s.done?' · ✅ ⭐'+(s.stars||STAR_ORIG)+'개 받음 · 다시 도전 가능':' · ⭐1~'+STAR_ORIG)+'</small></div>'+
+          '<div class="t"><b>'+esc(s.t)+'</b><small>그림 '+(s.items||[]).length+'개'+(s.done?' · ✅ ⭐'+(s.stars||STAR_ORIG)+' 받음 · 다시 도전 OK':' · ⭐1~'+STAR_ORIG)+'</small>'+
+            (pendFind('orig:'+s.id) ? '<span class="pendtag">🎁 별 뽑기 남았어요! 눌러서 뽑기</span>'
+              : (origRunGet(s.id) ? '<span class="runtag">▶ '+(origRunGet(s.id).i+1)+'번째 그림부터 이어서 할 수 있어요</span>' : ''))+'</div>'+
           '<div style="font-size:20px">▶</div>'+
         '</button>'+
         '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기" aria-label="아빠가 고치기">✏️</button>'+
@@ -4866,6 +4982,19 @@ function screenOrigList(){
     var s = origById(this.dataset.id);
     if(!s) return;
     if(!(s.items||[]).length){ needDad(function(){ screenOrigEdit(s); }, screenOrigList); return; }
+    var pd = pendFind('orig:'+s.id);
+    if(pd){ pendDraw(pd, function(){ screenOrigList(); }); return; }
+    var run = origRunGet(s.id);
+    if(run){
+      var n = (run.ids||[]).filter(function(id){ return (s.items||[]).some(function(it){ return it.id === id; }); }).length;
+      var ov = openMod('<div style="font-size:46px">📘</div><h2>이어서 할까요?</h2>'+
+        '<p>지난번에 '+n+'개 중 <b>'+(run.i+1)+'번째 그림</b>에서 멈췄어요.</p>'+
+        '<button class="btn primary wide" id="rgo" style="font-size:19px;padding:16px;margin-bottom:10px">▶ 이어서 하기</button>'+
+        '<button class="btn wide" id="rnew">🖼️ 처음부터 (그림 고르기)</button>');
+      ov.querySelector('#rgo').onclick = function(){ ov.remove(); beep([700,900],.06); startOrig(s, run.ids, null, run.i); };
+      ov.querySelector('#rnew').onclick = function(){ ov.remove(); origRunClear(); screenOrigPick(s); };
+      return;
+    }
     beep([700,900],.06); screenOrigPick(s);
   });
 }
@@ -4886,7 +5015,17 @@ function screenOrigEdit(set){
   function updSum(){
     var el = document.getElementById('ogsum'); if(!el) return;
     var blank = st.items.filter(function(it){ return !String(it.en||'').trim(); }).length;
-    el.innerHTML = '그림 <b>'+st.items.length+'</b>개'+(blank ? ' · <span class="ogsum-todo">빈 문장 '+blank+'개</span>' : '');
+    el.innerHTML = '그림 <b>'+st.items.length+'</b>개'+(blank ? '<button class="ogjump" id="ogjump">✍️ 빈 문장 '+blank+'개 ›</button>' : '');
+    var j = document.getElementById('ogjump');
+    if(j) j.onclick = function(){   /* 누를 때마다 다음 빈 문장 카드로 */
+      var idx = []; st.items.forEach(function(it, k){ if(!String(it.en||'').trim()) idx.push(k); });
+      if(!idx.length) return;
+      var nx = idx.filter(function(k){ return k > (st.jumpAt == null ? -1 : st.jumpAt); })[0];
+      if(nx == null) nx = idx[0];
+      st.jumpAt = nx;
+      var c = document.getElementById('ogc'+nx); if(c) c.scrollIntoView({behavior:'smooth', block:'center'});
+      var ta = document.querySelector('.ogen[data-i="'+nx+'"]'); if(ta) setTimeout(function(){ ta.focus({preventScroll:true}); }, 350);
+    };
   }
   function collect(){
     var t = document.getElementById('ogt'), e = document.getElementById('oge');
@@ -4900,10 +5039,14 @@ function screenOrigEdit(set){
     screenOrigList();
   }
   var TA = 'width:100%;box-sizing:border-box;margin:2px 0 6px;padding:10px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:15px;resize:vertical;line-height:1.4';
+  function posOpts(i, n){   /* 번호를 누르면 원하는 순서로 바로 옮긴다 */
+    var o = ''; for(var k = 0; k < n; k++) o += '<option value="'+k+'"'+(k===i?' selected':'')+'>'+(k+1)+'번</option>'; return o;
+  }
   function card(it,i,n){
     return '<div class="card frm" id="ogc'+i+'" style="margin-bottom:10px;padding:10px">'+
       '<div class="row" style="align-items:center;gap:6px;margin-bottom:6px">'+
-        '<div class="qlab" style="margin:0;flex:1">'+(i+1)+'번'+(it.pgl?' <span class="muted" style="font-size:12px">('+esc(it.pgl)+')</span>':'')+'</div>'+
+        '<label class="ogposw"><select class="ogpos" data-i="'+i+'" aria-label="'+(i+1)+'번 문제를 다른 순서로 옮기기">'+posOpts(i,n)+'</select>'+
+          (it.pgl?'<span class="muted" style="font-size:12px">'+esc(it.pgl)+'</span>':'')+'</label>'+
         '<button class="ogmini" data-up="'+i+'" aria-label="위로 옮기기" '+(i===0?'disabled':'')+'>▲</button>'+
         '<button class="ogmini" data-dn="'+i+'" aria-label="아래로 옮기기" '+(i===n-1?'disabled':'')+'>▼</button>'+
         '<button class="ogmini ogdel" data-delit="'+i+'" aria-label="'+(i+1)+'번 문제 지우기">🗑</button>'+
@@ -4948,7 +5091,7 @@ function screenOrigEdit(set){
       '</div>'+
       '<div class="sechd">🖼️ 문제 목록 <span style="font-size:12px">· 그림 '+n+'개 · ▲▼로 순서 변경</span></div>'+
       (n ? st.items.map(function(it,i){ return card(it,i,n); }).join('') :
-           '<div class="card" style="text-align:center"><div class="muted">아직 문제가 없어요. 위 버튼으로 PDF를 넣어 주세요.</div></div>')+
+           '<div class="card" style="text-align:center"><div class="muted">아직 문제가 없어요. 위 버튼으로 PDF나 그림을 넣어 주세요.</div></div>')+
       '<div class="ogbar ogsavebar"><div class="ogsum" id="ogsum"></div><button class="btn primary" id="save">💾 저장하기</button></div>'+
       (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 원서 지우기</button>' : '')+
       '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">그림은 서버(구글 드라이브)에 저장돼서 다른 기기에서도 보여요. 한 번에 '+ORIG_PDF_MAX_PAGES+'쪽(장)까지 넣어요.</div>';
@@ -4962,6 +5105,13 @@ function screenOrigEdit(set){
       if(!confirm((i+1)+'번 문제를 지울까요?')) return;
       var r = st.items.splice(i,1)[0]; if(r && editing) st.removed.push(r.id);
       st.changed = true; draw();
+    });
+    Array.prototype.forEach.call(app.querySelectorAll('.ogpos'), function(sel){
+      sel.onchange = function(){
+        var from = +sel.dataset.i, to = +sel.value; if(from === to) return;
+        collect(); var mv = st.items.splice(from, 1)[0]; st.items.splice(to, 0, mv); st.changed = true; draw(); saveDraft();
+        var el = document.getElementById('ogc'+to); if(el) el.scrollIntoView({block:'center'});
+      };
     });
     on('[data-crop]', function(){ var it = st.items[+this.dataset.crop]; collect(); if(it && it.src) origCropModal(it, function(){ st.changed = true; draw(); }); });
     function addScanned(kind){
@@ -4992,11 +5142,25 @@ function screenOrigEdit(set){
       var ok = st.items.filter(function(it){ return String(it.en||'').trim(); });
       if(!ok.length){ noSound(); alert('영어 문장이 있는 문제가 하나는 있어야 해요.\n✍️ 칸에 영어 문장을 써 주세요.'); return; }
       var loose = ok.filter(function(it){ return it.how === 'whole' || it.how === 'page'; });
-      if(loose.length && !confirm('⚠️ 그림 '+loose.length+'개는 사진 전체가 그림으로 들어가 있어요.\n사진에 정답 문장이 보이면 하준이가 보고 따라 쓰게 돼요.\n\n확인 = 그대로 저장\n취소 = 돌아가서 ✂️로 그림만 남기기')){
-        var el = document.getElementById('ogc'+st.items.indexOf(loose[0])); if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+      var blankN = st.items.length - ok.length;
+      if(loose.length || blankN){
+        var issues = [];
+        if(blankN) issues.push('<li>✍️ 영어 문장이 빈 그림 <b>'+blankN+'개</b>는 저장할 때 빠져요.</li>');
+        if(loose.length) issues.push('<li>⚠️ 사진 전체가 그림인 것 <b>'+loose.length+'개</b> — 사진에 정답 문장이 보이면 하준이가 보고 따라 쓰게 돼요.</li>');
+        var mv = openMod('<div style="font-size:42px">🔎</div><h2>저장하기 전에 확인해요</h2>'+
+          '<ul class="ogchk">'+issues.join('')+'</ul>'+
+          '<button class="btn primary wide" id="sfix" style="font-size:18px;padding:15px;margin-bottom:10px">✏️ 고치러 가기</button>'+
+          '<button class="btn wide" id="sgo">💾 이대로 저장</button>');
+        mv.querySelector('#sfix').onclick = function(){
+          mv.remove();
+          var first = st.items.filter(function(it){ return !String(it.en||'').trim() || it.how === 'whole' || it.how === 'page'; })[0];
+          var el = first && document.getElementById('ogc'+st.items.indexOf(first)); if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+        };
+        mv.querySelector('#sgo').onclick = function(){ mv.remove(); doSave(); };
         return;
       }
-      if(ok.length < st.items.length && !confirm('영어 문장이 빈 문제 '+(st.items.length-ok.length)+'개는 빼고 저장할까요?\n(취소를 누르면 돌아가서 문장을 쓸 수 있어요)')) return;
+      doSave();
+      function doSave(){
       var sid = editing ? set.id : 'o'+Date.now();
       var busy = origBusy('그림을 저장하는 중…');
       var localFail = false, srvErr = null;
@@ -5045,6 +5209,7 @@ function screenOrigEdit(set){
         if(msgs.length) alert(msgs.join('\n\n'));
         screenOrigList();
       }
+      }
     };
     if(document.getElementById('del')) document.getElementById('del').onclick = function(){
       if(!confirm('이 원서와 그림을 지울까요? (받은 별은 그대로 남아요)')) return;
@@ -5069,24 +5234,30 @@ function screenOrigEdit(set){
   }
   st.loading = true; draw();
   origDraftGet(DKEY, function(d){
-    if(d && d.items.length && confirm('저장하지 않은 원서 초안이 있어요 (그림 '+d.items.length+'개).\n이어서 할까요?')){
+    if(!(d && d.items.length)){ startFresh(); return; }
+    var dv = openMod('<div style="font-size:46px">📝</div><h2>쓰던 원서가 있어요</h2>'+
+      '<p>저장하지 않은 초안이 남아 있어요.<br>'+(d.t ? '<b>'+esc(d.t)+'</b> · ' : '')+'그림 <b>'+d.items.length+'개</b></p>'+
+      '<button class="btn primary wide" id="dgo" style="font-size:18px;padding:15px;margin-bottom:10px">▶ 이어서 하기</button>'+
+      '<button class="btn wide" id="dnew">🗑 버리고 새로 시작</button>');
+    dv.querySelector('#dgo').onclick = function(){
+      dv.remove();
       st.t = d.t; st.e = d.e; st.items = d.items; st.removed = d.removed || []; st.next = d.next || 1;
       st.changed = true; st.loading = false; draw();
-    } else {
-      if(d) origDraftDel(DKEY);
-      startFresh();
-    }
+    };
+    dv.querySelector('#dnew').onclick = function(){ dv.remove(); origDraftDel(DKEY); startFresh(); };
   });
 }
 
 /* ── 시험 진행 — 스페셜 테스트와 같은 규칙 ── */
 /* ids: 고른 그림의 id 목록(없으면 전부) / preImgs: 이미 불러온 그림 {id: dataURL}
    전부 고르면 '시험'(별 뽑기 있음), 일부만 고르면 '연습'(별 뽑기 없음 — 한 장만 골라 별만 뽑는 것을 막으려고) */
-function startOrig(set, ids, preImgs){
+function startOrig(set, ids, preImgs, startAt){
   clearConfetti();
   var all = set.items || [];
   var items = ids ? all.filter(function(it){ return ids.indexOf(it.id) >= 0; }) : all.slice();
-  var full = items.length === all.length, i = 0, tries = 0, imgs = preImgs || {};
+  var full = items.length === all.length, i = Math.max(0, Math.min(items.length - 1, startAt || 0)), tries = 0, imgs = preImgs || {};
+  if(!items.length){ origRunClear(); screenOrigList(); return; }
+  ogHistEnter(function(){ stopAll(); screenOrigList(); });
   var wasBefore = full && !!set.done;      /* 이미 통과한 적 있으면 다시 도전 */
   function head(){
     return '<div class="topbar">'+
@@ -5097,9 +5268,8 @@ function startOrig(set, ids, preImgs){
       '<div class="stz">'+ items.map(function(_,k){ return '<div class="sz '+(k<i?'ok':(k===i?'on':''))+'"></div>'; }).join('') +'</div>';
   }
   function bindB(){
-    document.getElementById('oback').onclick = function(){
-      if((i > 0 || tries > 0) && !confirm('시험을 그만할까요? 지금까지 한 건 저장되지 않아요.')) return;
-      stopAll(); screenOrigList();
+    document.getElementById('oback').onclick = function(){   /* 진행은 저장돼 있어서 목록에서 이어서 할 수 있다 */
+      stopAll(); ogHistLeave(); screenOrigList();
     };
   }
   function ansHtml(cur){
@@ -5109,6 +5279,7 @@ function startOrig(set, ids, preImgs){
   }
   /* ① 하준이가 쓰기 → ✋ 다 썼어요! → ② 아빠가 쓴 글씨와 정답을 보고 채점 (❌ 다시 = 같은 그림 처음부터) */
   function ask(){
+    PROG.origRun = {sid: set.id, ids: items.map(function(it){ return it.id; }), i: i, at: Date.now()}; saveProgress();
     var cur = items[i], url = imgs[cur.id] || '', shown = false;
     var words = cur.en.split(/\s+/);
     app.innerHTML = head() +
@@ -5118,13 +5289,13 @@ function startOrig(set, ids, preImgs){
           '<div class="ogpic">'+
             (url ? '<img src="'+url+'" alt="'+esc(set.t)+' '+(i+1)+'번 그림">'
                  : '<div class="ogpic-miss">🖼️ 그림을 불러오지 못했어요'+(cur.ko?'<br><b>🇰🇷 '+esc(cur.ko)+'</b>':'')+'</div>')+
-            '<div class="ogans" id="ans" hidden>'+ansHtml(cur)+'</div>'+
+            (full ? '' : '<div class="ogans" id="ans" hidden>'+ansHtml(cur)+'</div>')+
           '</div>'+
-          '<div class="drawTip" id="tip">✏️ 아래 칸에 손가락으로 <b>영어 문장</b>을 써요</div>'+
+          '<div class="drawTip kidtip" id="tip">✏️ 아래 칸에 손가락으로 <b>영어 문장</b>을 써요</div>'+
           '<div class="drawWrap big"><canvas id="cv" role="img" aria-label="영어 문장을 쓰는 칸"></canvas></div>'+
           '<div class="drawBtns">'+
             '<button class="btn" id="clr">↺ 지우고 다시</button>'+
-            '<button class="btn" id="peek" aria-pressed="false">👁 정답 보기</button>'+
+            (full ? '' : '<button class="btn" id="peek" aria-pressed="false">👁 정답 보기</button>')+
           '</div>'+
         '</div>'+
         '<div class="ogbar"><button class="btn primary wide ogdone" id="done">✋ 다 썼어요! 아빠 불러요</button></div>'+
@@ -5150,7 +5321,7 @@ function startOrig(set, ids, preImgs){
       b.onclick = function(){ speakWords(words, +b.dataset.say === 1 ? RATE : 0.6, function(){}); };
     });
     document.getElementById('clr').onclick = function(){ pad.clear(); inkBase = inkCount(); };
-    document.getElementById('peek').onclick = function(){
+    if(!full) document.getElementById('peek').onclick = function(){
       shown = !shown;                               /* 그림 위에 겹쳐 보여줘서 화면이 밀리지 않고, 쓴 글씨도 그대로 */
       document.getElementById('ans').hidden = !shown;
       this.textContent = shown ? '🙈 정답 숨기기' : '👁 정답 보기';
@@ -5185,7 +5356,17 @@ function startOrig(set, ids, preImgs){
       document.getElementById('stG').hidden = true;
       document.getElementById('stW').hidden = false;
     };
-    document.getElementById('bad').onclick = function(){ beep([300],.1); tries++; stopAll(); ask(); window.scrollTo(0, 0); };   /* ❌ = 같은 그림 처음부터 */
+    /* ❌ = 하준이 글씨와 정답을 나란히 본 다음, 같은 그림을 처음부터 다시 */
+    document.getElementById('bad').onclick = function(){
+      beep([300],.1); stopAll();
+      var hd = document.querySelector('#stG .oggrade-h');
+      hd.textContent = '😅 아쉬워요! 정답이랑 비교해 봐요'; hd.classList.add('ogmiss');
+      document.getElementById('more').hidden = true;
+      var bar = document.querySelector('#stG .ogjudge');
+      bar.innerHTML = '<button class="btn primary wide ogdone" id="retry">✏️ 다시 써 볼게요</button>';
+      document.getElementById('retry').onclick = function(){ tries++; ask(); window.scrollTo(0, 0); };
+      window.scrollTo(0, 0);
+    };
     document.getElementById('ok').onclick = function(){
       okSound(); toast('⭕'); stopAll(); tries = 0; i++;
       window.scrollTo(0, 0);
@@ -5195,6 +5376,7 @@ function startOrig(set, ids, preImgs){
 
   /* 통과! — 첫 통과는 별 1~STAR_ORIG개, 다시 도전은 STAR_ORIG_RE_LO~HI개를 뽑아 기존 별에 합산 */
   function practiceEnd(){
+    origRunClear(); ogHistLeave();
     clearConfetti(); confetti(30); starSound();
     app.innerHTML =
       '<div class="result">'+
@@ -5208,16 +5390,19 @@ function startOrig(set, ids, preImgs){
           }).join('')+
         '</div>'+
         '<button class="btn primary wide" id="lst" style="margin-bottom:10px">📘 목록으로</button>'+
-        '<div class="row"><button class="btn" id="again3" style="flex:1">🔁 같은 그림 다시</button><button class="btn" id="pickagain" style="flex:1">🖼️ 다시 고르기</button></div>'+
+        '<div class="row"><button class="btn" id="again3" style="flex:1">🔁 한 번 더</button><button class="btn" id="pickagain" style="flex:1">🖼️ 다른 그림</button></div>'+
       '</div>';
-    document.getElementById('again3').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
+    document.getElementById('again3').onclick = function(){ i = 0; tries = 0; stopAll(); ogHistEnter(function(){ stopAll(); screenOrigList(); }); ask(); };
     document.getElementById('pickagain').onclick = function(){ screenOrigPick(set); };
     document.getElementById('lst').onclick = screenOrigList;
   }
   function pass(){
     if(!full) return practiceEnd();
+    origRunClear(); ogHistLeave();
     var reMode = wasBefore, justGot = null, drawn = false, gotRe = false;   /* gotRe: 방금 뽑은 별이 '다시 도전' 별이었는지 */
     clearConfetti();
+    /* 통과하는 순간 '안 뽑은 별'로 저장 — 뽑기 전에 나가도 홈·목록에서 다시 뽑을 수 있다 */
+    pendAdd({key:'orig:'+set.id, k:'orig', id:set.id, re:reMode, lo:reMode?STAR_ORIG_RE_LO:1, hi:reMode?STAR_ORIG_RE_HI:STAR_ORIG, t:'📘 '+set.t});
     confetti(50); starSound();
     render();
     function render(){
@@ -5248,17 +5433,17 @@ function startOrig(set, ids, preImgs){
           '</div>'+
           (drawn ? '<button class="btn primary wide" id="lst" style="margin-bottom:10px">📘 목록으로</button>'+
                    '<button class="btn wide" id="again2">🔁 처음부터 다시 (별 '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)</button>'
-                 : '<button class="btn wide" id="lst">📘 목록으로</button>')+
+                 : '<button class="btn wide" id="lst">📘 나중에 뽑을래요 (별은 남아 있어요)</button>')+
         '</div>';
       if(document.getElementById('sdraw')) document.getElementById('sdraw').onclick = function(){
         modalStarDraw(function(got){
           var prev = (reMode && typeof set.stars==='number') ? set.stars : 0;
           set.done = true; set.at = Date.now(); set.stars = prev + got;
-          saveProgress();
+          pendDone('orig:'+set.id);
           gotRe = reMode; justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkFinal();
         }, lo, hi);
       };
-      if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){ i = 0; tries = 0; stopAll(); ask(); };
+      if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){ i = 0; tries = 0; stopAll(); ogHistEnter(function(){ stopAll(); screenOrigList(); }); ask(); };
       document.getElementById('lst').onclick = screenOrigList;
     }
   }
@@ -5296,7 +5481,7 @@ function screenOrigPick(set){
     app.innerHTML = head() +
       '<div class="card" style="margin-bottom:10px;text-align:center">'+
         '<div style="font-size:16px">🖼️ 시험 볼 그림을 골라요</div>'+
-        '<div class="muted" style="margin-top:4px">누르면 선택/해제돼요. 여러 개를 골라도 돼요.<br>다 고르면 <b>⭐ 별 뽑기</b>가 있는 시험, 일부만 고르면 <b>연습</b>이에요.</div>'+
+        '<div class="kidtxt" style="margin-top:4px">누르면 선택/해제돼요. 여러 개를 골라도 돼요.<br>다 고르면 <b>시험</b>(⭐ 별 뽑기, 정답 보기 없음),<br>일부만 고르면 <b>연습</b>(정답 보기 가능)이에요.</div>'+
       '</div>'+
       '<div class="row" style="margin-bottom:10px"><button class="btn" id="pall" style="flex:1">✅ 전체 선택</button><button class="btn" id="pnone" style="flex:1">⬜ 전체 해제</button></div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+tiles+'</div>'+
@@ -5326,7 +5511,7 @@ function screenOrigPick(set){
     var pc = document.getElementById('pcnt'); if(pc) pc.textContent = n+'/'+items.length;
     var go = document.getElementById('pgo');
     if(go){
-      go.textContent = !n ? '그림을 골라 주세요' : (all ? '▶ 전체 시험 보기 (⭐ 별 뽑기)' : '▶ 고른 '+n+'개 연습하기');
+      go.textContent = !n ? '그림을 골라 주세요' : (all ? '▶ 전체 시험 (⭐ 별 뽑기 · 정답 보기 없음)' : '▶ 고른 '+n+'개 연습 (정답 보기 가능)');
       go.disabled = !n;
     }
   }
@@ -5614,6 +5799,7 @@ function screenPaper(b){
   function finish(){
     var wasBefore = b.done;
     b.done = true; b.read = b.pages; saveProgress();
+    pendAdd({key:'paper:'+b.id, k:'paper', id:b.id, re:!!wasBefore, lo:1, hi:wasBefore?3:STAR_PAPER, t:'📕 '+b.t});
     starSound(); confetti(40);
     var justGot = null, drawn = false;
     render();
@@ -5648,7 +5834,7 @@ function screenPaper(b){
       if(document.getElementById('pdraw')) document.getElementById('pdraw').onclick = function(){
         modalStarDraw(function(got){
           var prev = (reMode && typeof b.stars==='number') ? b.stars : 0;
-          b.stars = prev + got; saveProgress();
+          b.stars = prev + got; pendDone('paper:'+b.id);
           justGot = got; drawn = true; wasBefore = true; render(); checkFinal();
         }, lo, hi);
       };
@@ -5948,6 +6134,7 @@ function screenSpecial(sp){
   function pass(){
     if(!PROG.spec) PROG.spec = {};
     var wasBefore = specPassed(sp.id);   /* 이번 통과 전에 이미 통과했었나 = 재테스트 */
+    pendAdd({key:'spec:'+sp.id, k:'spec', id:sp.id, re:wasBefore, lo:1, hi:wasBefore?3:STAR_SPEC, t:'🌟 '+sp.t});
     confetti(50); starSound();
     var justGot = null, drawn = false;
     render();
@@ -5988,7 +6175,7 @@ function screenSpecial(sp){
       if(document.getElementById('sdraw')) document.getElementById('sdraw').onclick = function(){
         modalStarDraw(function(got){
           var prev = (reMode && typeof rec.stars==='number') ? rec.stars : 0;
-          PROG.spec[sp.id] = {passed:true, at:Date.now(), stars: prev + got}; saveProgress();
+          PROG.spec[sp.id] = {passed:true, at:Date.now(), stars: prev + got}; pendDone('spec:'+sp.id);
           justGot = got; drawn = true; wasBefore = true; render(); checkFinal();
         }, lo, hi);
       };
@@ -6914,6 +7101,57 @@ function modalReward(rw, cb){
 }
 
 /* ⭐ 별 뽑기 — 단어/문장 테스트를 통과하면 별 1~5개를 뽑는다 */
+/* ── 아직 안 뽑은 별 ──
+   통과했는데 별 뽑기 전에 화면을 나가도 통과가 사라지지 않게, 통과하는 순간 PROG.pend 에 저장해 둔다.
+   화면 안에서 뽑으면 pendDone 으로 지우고, 나갔다면 홈·원서 목록에서 pendDraw 로 뽑는다.
+   p = {key, k:'quiz'|'sent'|'mm'|'orig'|'paper'|'spec', id, ids, re(다시 도전), lo, hi, t(제목)} */
+function pendList(){ if(!PROG.pend) PROG.pend = []; return PROG.pend; }
+function pendFind(key){ return pendList().filter(function(x){ return x.key === key; })[0]; }
+function pendAdd(p){ p.at = Date.now(); PROG.pend = pendList().filter(function(x){ return x.key !== p.key; }).concat([p]); saveProgress(); }
+function pendDone(key){ PROG.pend = pendList().filter(function(x){ return x.key !== key; }); saveProgress(); }
+function pendAlive(p){   /* 대상이 지워졌으면 더는 보여주지 않는다 */
+  if(p.k === 'quiz') return !!quizById(p.id);
+  if(p.k === 'sent') return !!sentById(p.id);
+  if(p.k === 'mm') return mimemal().some(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
+  if(p.k === 'orig') return !!origById(p.id);
+  if(p.k === 'paper') return papers().some(function(b){ return b.id === p.id; });
+  if(p.k === 'spec') return SPECIALS.some(function(x){ return x.id === p.id; });
+  return false;
+}
+function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 기록한다 */
+  var prev;
+  if(p.k === 'quiz'){ var q = quizById(p.id); if(q){ q.done = true; q.stars = got; } }
+  else if(p.k === 'sent'){ var se = sentById(p.id); if(se){ se.done = true; se.stars = got; } }
+  else if(p.k === 'mm'){
+    var list = mimemal().filter(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
+    var per = list.length ? Math.floor(got/list.length) : 0, rem = got - per*list.length;
+    list.forEach(function(m,i){ m.done = true; m.stars = per + (i<rem?1:0); });
+  }
+  else if(p.k === 'orig'){ var o = origById(p.id); if(o){ prev = (p.re && typeof o.stars==='number') ? o.stars : 0; o.done = true; o.at = Date.now(); o.stars = prev + got; } }
+  else if(p.k === 'paper'){ var b = papers().filter(function(x){ return x.id === p.id; })[0]; if(b){ prev = (p.re && typeof b.stars==='number') ? b.stars : 0; b.stars = prev + got; } }
+  else if(p.k === 'spec'){ if(!PROG.spec) PROG.spec = {}; var r = PROG.spec[p.id] || {}; prev = (p.re && typeof r.stars==='number') ? r.stars : 0; PROG.spec[p.id] = {passed:true, at:Date.now(), stars: prev + got}; }
+}
+function pendDraw(p, after){
+  modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkFinal(); }, p.lo, p.hi);
+}
+/* ── 홈 맨 위 '오늘 할 것' — 지금 해야 할 일만 모은다 (안 뽑은 별 · 원서 이어하기 · 다시 볼 단어 · 지금 단계) ── */
+var HOME_LV_OPEN = false;
+function todoRow(id, ico, title, sub, go, extra){
+  return '<button class="todo'+(extra&&extra.cls?' '+extra.cls:'')+'"'+(id?' id="'+id+'"':'')+(extra&&extra.attr?' '+extra.attr:'')+'>'+
+    '<span class="todo-i">'+ico+'</span><span class="todo-t"><b>'+title+'</b><small>'+sub+'</small></span><span class="todo-go">'+go+'</span></button>';
+}
+function todayHtml(){
+  PROG.pend = pendList().filter(pendAlive);
+  var rows = pendList().map(function(p){ return todoRow('', '🎁', '별 뽑기 남았어요!', esc(p.t), '🎰 뽑기', {cls:'pendgo', attr:'data-pk="'+esc(p.key)+'"'}); });
+  var r = PROG.origRun, o = r && origById(r.sid);
+  if(o) rows.push(todoRow('todorun', '📘', '원서 이어서 하기', esc(o.t)+' · '+(r.i+1)+'번째 그림부터', '▶'));
+  if(missList().length) rows.push(todoRow('miss', '🔁', '다시 볼 단어 '+missList().length+'개', '👨 아빠랑 5분 · 못 읽은 것만 모았어요', '▶'));
+  var cur = LEVELS.filter(function(L){ return unlocked(L) && !levelDone(L); })[0];
+  if(rows.length < 3 && cur) rows.push(todoRow('todolv', cur.icon, cur.id+'단계 이어서 하기', esc(cur.title)+' · ⭐ '+levelStars(cur)+'/'+levelMax(cur), '▶', {attr:'data-id="'+cur.id+'"'}));
+  if(!rows.length) return '';
+  return '<div class="today"><div class="today-h">📌 오늘 할 것</div>'+rows.join('')+'</div>';
+}
+function bindPendHome(){ on('.pendgo', function(){ var p = pendFind(this.dataset.pk); if(p) pendDraw(p, function(){ screenHome(); }); }); }
 function modalStarDraw(cb, min, max){
   min = min || STAR_PICK_MIN; max = max || STAR_PICK_MAX;
   function roll(){ return min + Math.floor(Math.random() * (max - min + 1)); }
