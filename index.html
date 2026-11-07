@@ -674,7 +674,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.07 11:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.07 11:35';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -3288,7 +3288,7 @@ function screenQuizEdit(q){
         '<div class="qlab">\ub2e8\uc5b4\uc7a5 \uc774\ub984</div>'+
         '<input id="qt" placeholder="\uc608: 3\ud559\ub144 1\ub2e8\uc6d0 \ub2e8\uc5b4" value="'+esc(title)+'">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력</button>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진·PDF로 자동 입력</button>'+
       '<div class="sechd">\ubb38\uc81c \ubaa9\ub85d <span style="font-size:12px">\u00b7 \ub73b\ud480\uc774(\uc601\uc5b4 \ubb38\uc7a5) + \uc815\ub2f5 \ub2e8\uc5b4 + \ud55c\uae00 \ub73b</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">\u2795 \ubb38\uc81c \ud55c \uc904 \ucd94\uac00</button>'+
@@ -3979,7 +3979,7 @@ function screenSentEdit(s){
         '<div class="qlab">이름</div>'+
         '<input id="st" placeholder="예: 3학년 1단원 문장" value="'+esc(title)+'">'+
       '</div>'+
-      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진으로 자동 입력</button>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진·PDF로 자동 입력</button>'+
       '<div class="sechd">문장 목록 <span style="font-size:12px">· 영어 문장 + 한글 뜻</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">➕ 문장 한 줄 추가</button>'+
@@ -4350,12 +4350,12 @@ function shrinkImage(file, maxSide, quality, cb){
 }
 
 /* ══════════════════════════════════════════════════════
-   📷 사진으로 자동 입력 (단어장 · 읽을 책 · 문장)
+   📷 사진·PDF로 자동 입력 (단어장 · 읽을 책 · 문장) — PDF는 쪽마다 그림으로 바꿔 같은 방식으로 읽는다
    사진 → (축소) → 앱스스크립트 ocr → AI가 읽은 결과를 입력칸에 채워준다.
    조절 상수: SCAN_MAX_IMAGES(AI 한 번에 보내는 장수) · SCAN_TOTAL_MAX(한 번에 고르는 최대 장수) · SCAN_SIDE(긴 변 픽셀) · SCAN_QUALITY(JPEG 품질) · SCAN_TIMEOUT(초)
    ══════════════════════════════════════════════════════ */
 var SCAN_MAX_IMAGES = 10;   /* AI에게 한 번에 보내는 장수 — 더 많이 고르면 10장씩 자동으로 나눠 읽는다 */
-var SCAN_TOTAL_MAX = 60;    /* 한 번에 고를 수 있는 최대 장수 (더 있으면 나눠서 다시 「사진 추가」) */
+var SCAN_TOTAL_MAX = 60;    /* 한 번에 읽는 최대 장수 — PDF는 1쪽 = 1장 (더 있으면 나눠서 다시 「사진·PDF 추가」) */
 var SCAN_SIDE = 1500, SCAN_QUALITY = 0.75, SCAN_TIMEOUT = 150;
 function scanErrMsg(j){
   if(!j) return '서버에 연결하지 못했어요. 인터넷과 앱스스크립트 배포(새 버전)를 확인해 주세요.';
@@ -4367,31 +4367,55 @@ function scanErrMsg(j){
   if(e === 'UNKNOWN_ACTION') return '서버에 이 기능이 아직 배포되지 않았어요.\nCode.gs를 새 버전으로 다시 배포해 주세요.';
   return '읽지 못했어요: '+(e||'알 수 없는 오류').slice(0,160);
 }
+/* 고른 파일 → 읽을 '장' 목록. 이미지는 1장, PDF는 쪽마다 1장으로 펼친다 */
+function scanExpand(files, onMsg, cb){
+  var out = [], i = 0;
+  (function next(){
+    if(out.length >= SCAN_TOTAL_MAX || i >= files.length) return cb(out.slice(0, SCAN_TOTAL_MAX), null);
+    var f = files[i++];
+    if(!/pdf$/i.test(f.type || '') && !/\.pdf$/i.test(f.name || '')){ out.push({file:f}); return next(); }
+    onMsg('PDF 여는 중… ('+(f.name||'PDF')+')');
+    loadPdfJs(function(lib, err){
+      if(!lib) return cb(out, err);
+      var rd = new FileReader();
+      rd.onerror = function(){ cb(out, 'PDF 파일을 열지 못했어요.'); };
+      rd.onload = function(){
+        lib.getDocument({data: new Uint8Array(rd.result)}).promise.then(function(pdf){
+          for(var n = 1; n <= pdf.numPages; n++) out.push({pdf:pdf, n:n, name:f.name});
+          next();
+        }, function(){ cb(out, 'PDF 파일을 열지 못했어요. (암호가 걸렸거나 깨진 파일일 수 있어요)'); });
+      };
+      rd.readAsArrayBuffer(f);
+    });
+  })();
+}
+/* 한 장 → JPEG base64 (사진은 줄이고, PDF 쪽은 그려서) */
+function scanPrep(src, cb){
+  if(src.file) return shrinkImage(src.file, SCAN_SIDE, SCAN_QUALITY, function(url){
+    var m = /^data:image\/jpeg;base64,(.+)$/.exec(url||''); cb(m ? m[1] : null);
+  });
+  origRenderPage(src.pdf, src.n, SCAN_SIDE, function(cv){
+    if(!cv) return cb(null);
+    try{ var m = /^data:image\/jpeg;base64,(.+)$/.exec(cv.toDataURL('image/jpeg', SCAN_QUALITY)); cb(m ? m[1] : null); }catch(e){ cb(null); }
+  });
+}
 function scanImages(kind, onResult){
   var inp = document.createElement('input');
-  inp.type='file'; inp.accept='image/*'; inp.multiple=true; inp.style.display='none';
+  inp.type='file'; inp.accept='image/*,application/pdf,.pdf'; inp.multiple=true; inp.style.display='none';
   document.body.appendChild(inp);
   inp.onchange = function(){
-    var files = Array.prototype.slice.call(inp.files||[]);
+    var picked = Array.prototype.slice.call(inp.files||[]);
     if(inp.parentNode) inp.parentNode.removeChild(inp);
-    if(!files.length) return;
-    if(files.length > SCAN_TOTAL_MAX){
-      alert('사진은 한 번에 '+SCAN_TOTAL_MAX+'장까지 고를 수 있어요. 앞의 '+SCAN_TOTAL_MAX+'장만 읽고,\n나머지는 다 끝난 뒤 「사진 추가」로 이어서 넣어 주세요.');
-      files = files.slice(0, SCAN_TOTAL_MAX);
-    }
-    /* 10장씩 묶음으로 나눈다 */
-    var batches = [];
-    for(var b0=0; b0<files.length; b0+=SCAN_MAX_IMAGES) batches.push(files.slice(b0, b0+SCAN_MAX_IMAGES));
-    var acc = {title:'', by:'', items:[], pages:[]}, doneN = 0;
+    if(!picked.length) return;
 
-    var cancelled = false, timer = null;
+    var cancelled = false, timer = null, files = [], batches = [];
+    var acc = {title:'', by:'', items:[], pages:[]}, doneN = 0;
     var ov = document.createElement('div');
     ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:20px';
     ov.innerHTML = '<div style="background:#fff;border-radius:22px;padding:26px 22px;max-width:340px;width:100%;text-align:center">'+
       '<div style="font-size:46px">🔍</div>'+
-      '<div id="scanMsg" style="font-size:18px;font-weight:800;margin:8px 0 4px">사진을 준비하고 있어요…</div>'+
-      '<div style="font-size:13px;color:#666;line-height:1.5">'+files.length+'장'+(batches.length>1?' · '+SCAN_MAX_IMAGES+'장씩 '+batches.length+'번에 나눠 읽어요':'')+
-        '<br>한 묶음에 10~40초 걸려요. 화면을 닫지 말고 기다려 주세요.</div>'+
+      '<div id="scanMsg" style="font-size:18px;font-weight:800;margin:8px 0 4px">파일을 준비하고 있어요…</div>'+
+      '<div id="scanSub" style="font-size:13px;color:#666;line-height:1.5">화면을 닫지 말고 기다려 주세요.</div>'+
       '<button class="btn" id="scanCancel" style="margin-top:16px">✖ 취소</button></div>';
     document.body.appendChild(ov);
     function close(){ cancelled = true; clearTimeout(timer); if(ov.parentNode) ov.parentNode.removeChild(ov); }
@@ -4406,12 +4430,25 @@ function scanImages(kind, onResult){
       if(cancelled) return;
       close(); noSound();
       if(doneN > 0){
-        /* 앞 묶음은 살리고, 실패한 사진 번호를 알려준다 */
+        /* 앞 묶음은 살리고, 실패한 장 번호를 알려준다 */
         onResult(acc);
         var from = bi*SCAN_MAX_IMAGES+1, to = files.length;
-        setTimeout(function(){ alert(msg+'\n\n앞의 '+(from-1)+'장은 입력됐어요. '+from+'~'+to+'번째 사진만 「사진 추가」로 다시 넣어 주세요.'); }, 80);
+        setTimeout(function(){ alert(msg+'\n\n앞의 '+(from-1)+'장은 입력됐어요. '+from+'~'+to+'번째 장만 「사진·PDF 추가」로 다시 넣어 주세요.'); }, 80);
       } else alert(msg);
     }
+
+    scanExpand(picked, setMsg, function(list, err){
+      if(cancelled) return;
+      if(!list.length) return fail(err || '읽을 사진이나 PDF가 없어요.', 0);
+      files = list;
+      for(var b0=0; b0<files.length; b0+=SCAN_MAX_IMAGES) batches.push(files.slice(b0, b0+SCAN_MAX_IMAGES));
+      var sub = document.getElementById('scanSub');
+      if(sub) sub.innerHTML = files.length+'장'+(batches.length>1?' · '+SCAN_MAX_IMAGES+'장씩 '+batches.length+'번에 나눠 읽어요':'')+
+        '<br>한 묶음에 10~40초 걸려요. 화면을 닫지 말고 기다려 주세요.'+
+        (files.length >= SCAN_TOTAL_MAX ? '<br><b>한 번에 '+SCAN_TOTAL_MAX+'장까지만 읽어요. 나머지는 끝난 뒤 이어서 넣어 주세요.</b>' : '')+
+        (err ? '<br><b>'+esc(err)+'</b>' : '');
+      runBatch(0);
+    });
 
     function runBatch(bi){
       if(cancelled) return;
@@ -4420,26 +4457,34 @@ function scanImages(kind, onResult){
       (function next(i){
         if(cancelled) return;
         if(i >= fs.length) return send();
-        setMsg('사진 준비 '+(bi*SCAN_MAX_IMAGES+i+1)+'/'+files.length);
-        shrinkImage(fs[i], SCAN_SIDE, SCAN_QUALITY, function(url){
-          var m = /^data:image\/jpeg;base64,(.+)$/.exec(url||'');
-          if(m) out.push(m[1]);   /* 못 여는 형식이면 건너뛴다 */
-          next(i+1);
-        });
+        setMsg((fs[i].pdf ? 'PDF 쪽 준비 ' : '사진 준비 ')+(bi*SCAN_MAX_IMAGES+i+1)+'/'+files.length);
+        scanPrep(fs[i], function(b64){ if(b64) out.push(b64); next(i+1); });   /* 못 여는 장은 건너뛴다 */
       })(0);
       function send(){
         if(!out.length){
-          if(batches.length===1) return fail('사진을 열 수 없어요. 다른 사진(JPG/PNG)으로 해보세요.', bi);
+          if(batches.length===1) return fail('파일을 열 수 없어요. 다른 사진(JPG/PNG)이나 PDF로 해보세요.', bi);
           return runBatch(bi+1);
         }
         setMsg('AI가 글자를 읽는 중…'+tag(bi));
         clearTimeout(timer);
-        timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 사진 장수를 줄여서 다시 해보세요.', bi); }, SCAN_TIMEOUT*1000);
+        timer = setTimeout(function(){ fail('시간이 너무 오래 걸려요. 장수를 줄여서 다시 해보세요.', bi); }, SCAN_TIMEOUT*1000);
         apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out}, function(j){
           if(cancelled) return;
           clearTimeout(timer);
           if(!j || j.error || !j.ok || !j.data) return fail(scanErrMsg(j), bi);
           var d = j.data;
+          /* AI가 가끔 쪽마다 {title, items/pages}를 따로 만들어 배열로 보내면 서버가 {items:[{…},{…}]}로 넘긴다 → 하나로 합친다 */
+          if(d.items && d.items.length && d.items.some(function(x){ return x && (Array.isArray(x.items) || Array.isArray(x.pages)); })){
+            var w = d.items; d = {title: d.title || '', by: d.by || '', pages: (d.pages || []).slice(), items: []};
+            w.forEach(function(x){
+              if(!x) return;
+              if(!d.title && x.title) d.title = x.title;
+              if(!d.by && x.by) d.by = x.by;
+              if(Array.isArray(x.items)) d.items = d.items.concat(x.items);
+              else if(Array.isArray(x.pages)) d.pages = d.pages.concat(x.pages);
+              else if(x.en || x.word) d.items.push(x);
+            });
+          }
           if(!acc.title && d.title) acc.title = d.title;
           if(!acc.by && d.by) acc.by = d.by;
           if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
@@ -4449,7 +4494,6 @@ function scanImages(kind, onResult){
         });
       }
     }
-    runBatch(0);
   };
   inp.click();
 }
@@ -4481,9 +4525,9 @@ function bindPageRows(lines, collect, rerender){
 function linesHaveText(lines){ return lines.some(function(x){ return String(x||'').trim(); }); }
 function scanBtnHtml(lines){
   return '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">'+
-    (linesHaveText(lines) ? '📷 사진 더 추가해서 이어 입력' : '📷 책 사진으로 자동 입력')+'</button>'+
+    (linesHaveText(lines) ? '📷 사진·PDF 더 추가해서 이어 입력' : '📷 책 사진·PDF로 자동 입력')+'</button>'+
     '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px;line-height:1.5">'+
-      '쪽 순서대로 사진을 고르세요. 10장이 넘으면 10장씩 나눠 자동으로 읽어요.<br>'+
+      '쪽 순서대로 사진을 고르거나 <b>책 PDF</b>를 넣으세요. 10장(쪽)이 넘으면 10장씩 나눠 자동으로 읽어요.<br>'+
       (linesHaveText(lines) ? '새로 읽은 쪽은 <b>지금 있는 쪽 뒤에</b> 붙어요. 순서는 ▲▼로 바꿀 수 있어요.' : '표지 사진을 맨 앞에 넣으면 제목도 읽어요. 순서는 ▲▼로 바꿀 수 있어요.')+
     '</div>';
 }
@@ -6030,7 +6074,7 @@ function screenAddPaper(){
         if(!String(meta.by||'').trim() && d.by) meta.by = String(d.by).trim();
         var at = got.length ? mergeScannedPages(lines, got) : 0;
         okSound(); draw(); if(got.length) scrollToPage(at);
-        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.\n더 남은 사진은 「사진 더 추가해서 이어 입력」으로 넣으세요.'); }, 200);
+        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.\n더 남은 사진은 「사진·PDF 더 추가해서 이어 입력」으로 넣으세요.'); }, 200);
       });
     };
     bindPageRows(lines, collect, draw);
