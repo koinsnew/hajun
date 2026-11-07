@@ -376,27 +376,28 @@
   .wpx{position:absolute;top:-11px;right:-11px;width:26px;height:26px;border-radius:50%;background:#fff;
     border:2px solid var(--grape);color:var(--grape);font-size:13px;font-weight:900;line-height:22px;padding:0;cursor:pointer;z-index:2}
   /* ⚽ 페널티킥 게임 */
-  .pkscore{text-align:center;font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:19px;
-    color:var(--grape);margin:4px 0 4px}
-  .pkresults{text-align:center;margin-bottom:8px;min-height:24px}
-  .pkfield{position:relative;border-radius:20px;overflow:hidden;margin-bottom:12px;
-    box-shadow:0 6px 18px rgba(0,0,0,.12)}
-  .pkstage{display:block;width:100%}
-  #pkball{transition:transform .5s cubic-bezier(.25,.6,.5,1)}
-  .pkgoalflash{position:absolute;top:34%;left:50%;transform:translate(-50%,-50%) scale(.4);
-    font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:46px;color:#FDE047;
-    text-shadow:0 3px 0 #B45309, 0 0 18px rgba(253,224,71,.9);opacity:0;pointer-events:none;
-    -webkit-text-stroke:2px #92400E}
-  .pkgoalflash.show{animation:goalpop 1.2s ease-out}
+  .pkboard{display:flex;align-items:center;gap:10px;background:#16263D;color:#fff;border:2px solid var(--ink);border-radius:16px;padding:8px 12px;margin:2px 0 10px;box-shadow:var(--shadow)}
+  .pkteam{display:flex;align-items:center;gap:8px;font-family:'Jua',sans-serif;font-size:15px}
+  .pkteam b{font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:30px;line-height:1;color:#FFD43B;min-width:22px;text-align:center}
+  .pkdots{flex:1;display:flex;justify-content:center;gap:5px}
+  .pkdot{width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.35);display:grid;place-items:center;font-size:13px;color:#fff}
+  .pkdot.g{background:#2F9E44;border-color:#8CE99A}.pkdot.m{background:#C92A2A;border-color:#FFA8A8}
+  .pkneed{font-family:'Jua',sans-serif;font-size:14px;color:#FFE066;white-space:nowrap}
+  .pkfield{position:relative;border-radius:18px;overflow:hidden;margin-bottom:10px;border:2px solid var(--ink);box-shadow:var(--shadow);background:#16263D}
+  .pkfield canvas{display:block;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+  .pkgoalflash{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) scale(.4);
+    font-family:'Patrick Hand',sans-serif;font-size:64px;color:#FFD43B;letter-spacing:2px;
+    text-shadow:3px 4px 0 #2B2A33;opacity:0;pointer-events:none;-webkit-text-stroke:2px #2B2A33}
+  .pkgoalflash.show{animation:goalpop 1.6s cubic-bezier(.16,1,.3,1)}
   @keyframes goalpop{
     0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}
-    25%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(4deg)}
-    55%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-2deg)}
-    100%{opacity:0;transform:translate(-50%,-70%) scale(1.1)}}
-  .pkmsg{text-align:center;font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:18px;
-    min-height:28px;margin-bottom:10px;color:var(--ink)}
-  .pkbtns{gap:6px}
-  .pkdir{font-size:15px;padding:14px 6px;font-weight:800}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1.25) rotate(4deg)}
+    60%{opacity:1;transform:translate(-50%,-50%) scale(1) rotate(-2deg)}
+    100%{opacity:0;transform:translate(-50%,-80%) scale(1.05)}}
+  @media (prefers-reduced-motion:reduce){ .pkgoalflash.show{animation-duration:.01s} }
+  .pkmsg{text-align:center;font-family:'Jua',sans-serif;font-size:17px;line-height:1.45;min-height:50px;margin:0 4px 6px;color:var(--ink)}
+  .pkmsg .pkg{color:#2F7D3A;font-size:20px;font-weight:400}.pkmsg .pkm{color:#C92A2A;font-weight:400}
+  .pktip{text-align:center;font-size:13.5px;color:var(--ink-soft);margin-bottom:6px}
   .delx{flex:none;width:34px;height:34px;border-radius:50%;border:none;background:#FFE4E6;color:#9F1239;
     font-size:16px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #FDA4AF}
   .delx:active{transform:translateY(2px);box-shadow:0 1px 0 #FDA4AF}
@@ -663,7 +664,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.07 10:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.07 10:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1211,7 +1212,7 @@ var DRAW_PRICE = 100;   /* 보상 뽑기 1회 = 별 100개 */
 var PK_PRICE = 50;      /* 도전 1회에 드는 별 */
 var PK_SHOTS = 5;       /* 총 슛 횟수 */
 var PK_WIN_NEED = 3;    /* 상품 받는 최소 골 수 */
-var PK_GOAL_RATE = 0.3; /* 골 성공 확률 (0~1) */
+var PK_KEEPER_SKILL = 0.6; /* 골키퍼가 공 방향을 맞혀 몸을 날릴 확률 (0~1) — 높을수록 어려움. 0.6이면 한 골 확률 약 40% */
 var PK_PRIZES = [
   {id:'ice',  e:'🍦', n:'아이스크림 1개'},
   {id:'ade',  e:'🍉', n:'수박에이드 1잔'},
@@ -2314,89 +2315,56 @@ function startPKGame(){
   };
 }
 
+/* ⚽ 페널티킥 — 진짜 축구처럼: 공을 손가락으로 쭉 밀어서(스와이프) 찬다.
+   · 방향: 밀어 올린 방향 = 공이 가는 쪽
+   · 세기: 길게 밀수록 세고 높게 (너무 길면 크로스바 위로!)
+   · 골대 안을 톡 눌러도 그쪽으로 찬다
+   골키퍼는 PK_KEEPER_SKILL 확률로 공 쪽을 맞혀 몸을 날린다. 맞혀도 구석 높은 공·빠른 공은 못 막는다. */
 function screenPKGame(){
-  var shot = 0, goals = 0, busy = false;
-  shotLog = [];
-  draw();
-
-  function draw(){
-    var results = '';
-    for(var s=0; s<PK_SHOTS; s++){
-      var r = shotLog[s];
-      results += '<span style="font-size:20px;margin:0 2px">'+(r===undefined?'⚪':(r?'⚽':'🧤'))+'</span>';
-    }
-    app.innerHTML =
-      '<div class="topbar">'+
-        '<button class="iconbtn" id="back">←</button>'+
-        '<h2>⚽ 페널티킥</h2>'+
-        '<div class="pill">'+(shot)+'/'+PK_SHOTS+'</div>'+
-      '</div>'+
-      '<div class="pkscore" id="score">🥅 '+goals+'골 · '+shot+'/'+PK_SHOTS+'번</div>'+
-      '<div class="pkresults">'+results+'</div>'+
-      '<div class="pkfield" id="field">'+ pkStageSVG() +
-        '<div class="pkgoalflash" id="flash">GOAL!</div>'+
-      '</div>'+
-      '<div class="pkmsg" id="msg">어디로 찰까? 골키퍼를 피해서 슛! ⚽</div>'+
-      '<div class="row pkbtns">'+
-        '<button class="btn pkdir" data-dir="L" style="flex:1">👈 왼쪽</button>'+
-        '<button class="btn pkdir" data-dir="C" style="flex:1">☝️ 가운데</button>'+
-        '<button class="btn pkdir" data-dir="R" style="flex:1">오른쪽 👉</button>'+
-      '</div>';
-    document.getElementById('back').onclick = function(){
-      if(confirm('게임을 그만둘까요? 낸 별 '+PK_PRICE+'개는 돌려받지 못해요.')){ screenHome(); }
-    };
-    on('.pkdir', function(){ if(!busy) kick(this.dataset.dir); });
-  }
-
-  function kick(dir){
-    busy = true;
-    var scored = Math.random() < PK_GOAL_RATE;
-    /* 골키퍼는 세 방향 중 하나로 슬라이딩.
-       못 넣으면 골키퍼가 내가 찬 쪽으로 몸을 날려 막고,
-       넣으면 다른 쪽으로 헛발질하게 해서 리얼하게 보인다. */
-    var keeperDir;
-    if(!scored) keeperDir = dir;
-    else { var others = ['L','C','R'].filter(function(x){ return x!==dir; }); keeperDir = others[Math.floor(Math.random()*others.length)]; }
-
-    var ball = document.getElementById('pkball');
-    var keeper = document.getElementById('pkkeeperG');
-    var msg = document.getElementById('msg');
-    var flash = document.getElementById('flash');
-    /* 골대 안 목표 지점 (SVG 좌표계 0~300 x, 0~150 y 기준) */
-    var tx = dir==='L' ? 70 : dir==='R' ? 230 : 150;
-    var ty = dir==='C' ? 66 : 58;
-    /* 골키퍼 슬라이딩 변환 */
-    var kx = keeperDir==='L' ? -78 : keeperDir==='R' ? 78 : 0;
-    var krot = keeperDir==='L' ? -55 : keeperDir==='R' ? 55 : 0;
-    keeper.style.transition = 'transform .38s cubic-bezier(.3,.8,.4,1)';
-    keeper.style.transform = 'translate('+kx+'px,'+(keeperDir==='C'?-6:14)+'px) rotate('+krot+'deg)';
-
-    /* 공: 점프대에서 목표 지점으로 포물선. CSS 좌표(px)로 변환해 이동 */
-    ball.setAttribute('data-fly','1');
-    ball.style.transition = 'transform .5s cubic-bezier(.25,.6,.5,1)';
-    /* 시작점(발밑 x=150,y=200) → 목표(tx,ty). scale로 원근(멀어지며 작아짐) */
-    var dx = tx-150, dy = ty-198;
-    ball.style.transform = 'translate('+dx+'px,'+dy+'px) scale(.45)';
-    beep([500,700],.06);
-
-    /* 살짝 뒤에 골키퍼 결과 판정 */
+  var shot = 0, goals = 0, game = null;
+  shotLog = []; var kinds = [];
+  app.innerHTML =
+    '<div class="topbar">'+
+      '<button class="iconbtn" id="back" aria-label="그만하기">←</button>'+
+      '<h2>⚽ 페널티킥</h2>'+
+      '<div class="pill" id="pkpill">0/'+PK_SHOTS+'</div>'+
+    '</div>'+
+    '<div class="pkboard" id="score"></div>'+
+    '<div class="pkfield" id="field"><canvas id="pkcv" role="img" aria-label="페널티킥 경기장. 공을 위로 쭉 밀거나 골대 안을 눌러서 슛!"></canvas>'+
+      '<div class="pkgoalflash" id="flash">GOAL!</div></div>'+
+    '<div class="pkmsg" id="msg" role="status">공을 손가락으로 <b>골대 쪽으로 쭉</b> 밀어서 슛! ⚽</div>'+
+    '<div class="pktip">👆 길게 밀수록 세고 높게 · 골대 안을 톡 눌러도 돼요</div>';
+  document.getElementById('back').onclick = function(){
+    if(confirm('게임을 그만둘까요? 낸 별 '+PK_PRICE+'개는 돌려받지 못해요.')){ if(game) game.stop(); screenHome(); }
+  };
+  board();
+  game = pkGame(document.getElementById('pkcv'), function(res){
+    shot++; shotLog[shot-1] = res.goal; kinds[shot-1] = res.kind;
+    if(res.goal) goals++;
+    var msg = document.getElementById('msg'), flash = document.getElementById('flash');
+    if(!msg) return;
+    msg.innerHTML = pkSay(res);
+    if(res.goal){ flash.classList.remove('show'); void flash.offsetWidth; flash.classList.add('show'); confetti(24); }
+    board();
     setTimeout(function(){
-      shot++; shotLog[shot-1] = scored;
-      if(scored){
-        goals++; okSound(); confetti(24);
-        flash.classList.add('show');
-        msg.innerHTML='<b style="color:#16A34A;font-size:22px">⚽ 골인!! 🎉</b>';
-        try{ beep([700,900,1100],.14); }catch(e){}
-      } else {
-        noSound();
-        msg.innerHTML='<b style="color:var(--berry-ink);font-size:20px">🧤 골키퍼가 막았다!</b>';
-      }
-      var sc=document.getElementById('score'); if(sc) sc.textContent='🥅 '+goals+'골 · '+shot+'/'+PK_SHOTS+'번';
-      setTimeout(function(){
-        if(shot >= PK_SHOTS) finish();
-        else { busy=false; draw(); }
-      }, scored ? 1250 : 950);
-    }, 520);
+      if(!document.getElementById('pkcv')) return;
+      if(shot >= PK_SHOTS){ game.stop(); finish(); }
+      else { game.reset(shot); msg.innerHTML = (PK_SHOTS-shot===1 ? '🔥 <b>마지막 슛!</b> ' : '')+'다음 슛! 공을 쭉 밀어요 ⚽'; }
+    }, res.goal ? 2300 : 1900);
+  });
+
+  function board(){
+    var dots = '';
+    for(var s=0; s<PK_SHOTS; s++){
+      var k = kinds[s];
+      dots += '<span class="pkdot '+(k===undefined?'':(shotLog[s]?'g':'m'))+'" aria-hidden="true">'+(k===undefined?'':(shotLog[s]?'⚽':'✕'))+'</span>';
+    }
+    var need = Math.max(0, PK_WIN_NEED-goals), left = PK_SHOTS-shot;
+    document.getElementById('score').innerHTML =
+      '<div class="pkteam"><span>하준 FC</span><b>'+goals+'</b></div>'+
+      '<div class="pkdots">'+dots+'</div>'+
+      '<div class="pkneed">'+(need===0 ? '🎁 상품 확정!' : (need>left ? '다음 판에 도전!' : '🎯 '+need+'골 더!'))+'</div>';
+    document.getElementById('pkpill').textContent = shot+'/'+PK_SHOTS;
   }
 
   function finish(){
@@ -2409,8 +2377,8 @@ function screenPKGame(){
         '<p>'+PK_SHOTS+'번 차서 <b>'+goals+'골</b>을 넣었어요!<br>'+
           (won ? '<b style="color:var(--melon-ink)">'+PK_WIN_NEED+'골 이상 성공! 상품을 뽑으세요! 🎁</b>'
                : PK_WIN_NEED+'골 이상 넣으면 상품을 받아요. 다시 도전해봐요!')+'</p>'+
-        '<div class="card" style="margin-bottom:12px;font-size:26px">'+
-          shotLog.map(function(r){ return r?'⚽':'🧤'; }).join(' ')+
+        '<div class="card" style="margin-bottom:12px;font-size:16px;line-height:1.9">'+
+          kinds.map(function(k, i){ return (i+1)+'번 '+PK_KIND_TXT[k]; }).join('<br>')+
         '</div>'+
         (won ? '<button class="drawbtn" id="pzdraw">'+
                  '<span class="spk" style="left:14px;top:10px">✨</span>'+
@@ -2437,58 +2405,336 @@ function screenPKGame(){
   }
 }
 var shotLog = [];
-
-/* 리얼한 축구 골대 + 골망 + 골키퍼 + 공 (SVG) */
-function pkStageSVG(){
-  return ''+
-  '<svg class="pkstage" viewBox="0 0 300 230" xmlns="http://www.w3.org/2000/svg">'+
-    /* 하늘/잔디 */
-    '<rect x="0" y="0" width="300" height="150" fill="#7EC8F0"/>'+
-    '<rect x="0" y="120" width="300" height="110" fill="#5FB865"/>'+
-    '<rect x="0" y="120" width="300" height="110" fill="url(#grass)" opacity=".25"/>'+
-    '<defs>'+
-      '<pattern id="grass" width="30" height="230" patternUnits="userSpaceOnUse">'+
-        '<rect x="0" y="0" width="15" height="230" fill="#4FA857"/></pattern>'+
-      '<pattern id="net" width="9" height="9" patternUnits="userSpaceOnUse">'+
-        '<path d="M0 0 L9 9 M9 0 L0 9" stroke="#fff" stroke-width="0.7" opacity=".8"/></pattern>'+
-    '</defs>'+
-    /* 골대 뒷그물 */
-    '<rect x="46" y="26" width="208" height="92" fill="url(#net)" opacity=".9"/>'+
-    /* 골포스트 (흰 기둥) */
-    '<rect x="44" y="24" width="8" height="96" rx="2" fill="#fff" stroke="#D0D0D0"/>'+
-    '<rect x="248" y="24" width="8" height="96" rx="2" fill="#fff" stroke="#D0D0D0"/>'+
-    '<rect x="44" y="20" width="212" height="8" rx="2" fill="#fff" stroke="#D0D0D0"/>'+
-    /* 페널티 아크 & 스팟 */
-    '<ellipse cx="150" cy="150" rx="120" ry="18" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>'+
-    '<circle cx="150" cy="196" r="4" fill="#fff"/>'+
-    /* 골키퍼 (SVG 그룹, 슬라이딩용 transform 대상) */
-    '<g id="pkkeeperG" style="transform-origin:150px 84px">'+ pkKeeperSVG() +'</g>'+
-    /* 공 */
-    '<g id="pkball" style="transform-origin:150px 198px">'+
-      '<circle cx="150" cy="198" r="11" fill="#fff" stroke="#111" stroke-width="1.2"/>'+
-      '<path d="M150 190 l6 4 -2.5 7 h-7 l-2.5 -7 z" fill="#111"/>'+
-    '</g>'+
-  '</svg>';
+var PK_KIND_TXT = {goal:'⚽ 골인!', top:'⚽ 구석 골인!', save:'🧤 선방', post:'🥅 골대', bar:'🥅 크로스바', over:'☁️ 위로', wide:'↔️ 옆으로'};
+/* 중계 멘트 — 결과마다 다음에 어떻게 차면 좋을지 힌트도 */
+function pkSay(r){
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  if(r.kind==='top') return '<b class="pkg">⚽ 구석에 꽂혔다!! 골키퍼 손이 안 닿아요! 🎉</b>';
+  if(r.kind==='goal') return '<b class="pkg">'+pick(['⚽ 골~~~인!! 하준 선수 최고! 🎉','⚽ 골인!! 키퍼가 반대로 날았어요! 🎉','⚽ 들어갔다~!! 관중들이 난리 났어요! 🎉'])+'</b>';
+  if(r.kind==='save') return '<b class="pkm">🧤 골키퍼 선방!</b> '+(r.guess ? '방향을 읽었어요. 다음엔 반대쪽이나 더 구석으로!' : '몸에 맞았어요. 가운데는 위험해요!');
+  if(r.kind==='post') return '<b class="pkm">🥅 땡! 골대 맞았다!</b> 아까워~ 조금만 안쪽으로!';
+  if(r.kind==='bar') return '<b class="pkm">🥅 쾅! 크로스바!</b> 조금만 살살 차 봐요!';
+  if(r.kind==='over') return '<b class="pkm">☁️ 공이 하늘로~</b> 너무 세게 찼어요. 조금 짧게 밀어 봐요!';
+  return '<b class="pkm">↔️ 골대 옆으로 나갔어요!</b> 방향을 조금 안쪽으로!';
 }
-function pkKeeperSVG(){
-  /* 유니폼 초록, 장갑, 팔 벌린 자세 */
-  return ''+
-  '<g stroke="#0F5132" stroke-width="1">'+
-    /* 팔(벌림) */
-    '<rect x="120" y="60" width="18" height="9" rx="4" fill="#22C55E" transform="rotate(-25 138 64)"/>'+
-    '<rect x="162" y="60" width="18" height="9" rx="4" fill="#22C55E" transform="rotate(25 162 64)"/>'+
-    /* 장갑 */
-    '<circle cx="120" cy="52" r="6" fill="#FDE047"/>'+
-    '<circle cx="180" cy="52" r="6" fill="#FDE047"/>'+
-    /* 몸통 */
-    '<rect x="138" y="58" width="24" height="30" rx="6" fill="#22C55E"/>'+
+
+/* ── 경기장 엔진: 원근 카메라로 그린 캔버스 (단위 m, 공 = 페널티 스폿 z=0, 골라인 z=11) ── */
+function pkGame(cv, onResult){
+  var DPR = Math.min(2, window.devicePixelRatio || 1);
+  var W = Math.max(280, cv.parentNode.clientWidth || 340), H = Math.round(W * 1.18);
+  cv.width = W*DPR; cv.height = H*DPR; cv.style.width = W+'px'; cv.style.height = H+'px';
+  var ctx = cv.getContext('2d'); ctx.scale(DPR, DPR);
+  var GW = 3.66, GH = 2.44, GZ = 11, ND = 1.9, BR = 0.11;   /* 골대 반폭·높이·거리·그물 깊이·공 반지름 */
+  var camZ = -3.4, camY = 1.5, F = W*1.55, HY = H*0.40;
+  function P(x, y, z){ var d = Math.max(0.3, z - camZ); return {x: W/2 + F*x/d, y: HY - F*(y-camY)/d, s: F/d}; }
+  /* 골대 면(z=GZ)의 화면 좌표 → 월드 (톡 눌러 조준) */
+  function unP(sx, sy){ var d = GZ - camZ; return {x: (sx - W/2)*d/F, y: camY - (sy - HY)*d/F}; }
+
+  /* 관중 — 미리 정해 둔 점들 */
+  var crowd = [], CC = ['#E03131','#1971C2','#F59F00','#FFFFFF','#2F9E44','#AE3EC9','#F76707','#FFD43B'];
+  for(var i=0;i<230;i++) crowd.push({x:Math.random(), y:Math.random(), c:CC[i%CC.length], p:Math.random()*6.28});
+
+  var st, raf = 0, alive = true, t0 = 0, last = 0, aimPts = null, hintT = 0;
+  function reset(n){
+    st = {phase:'aim', ball:{x:0,y:BR,z:0}, spin:0, kx:0, ky:0, ka:0, kArm:0,
+          shot:null, res:null, tShot:0, net:null, shake:0, cheer:0, trail:[], n:n||0};
+    aimPts = null;
+  }
+  reset(0);
+
+  /* ── 입력: 스와이프(방향·세기) 또는 골대 톡 ── */
+  var down = null;
+  function pt(e){ var r = cv.getBoundingClientRect(), t = e.touches ? (e.touches[0] || e.changedTouches[0]) : e; return {x:(t.clientX-r.left)*(W/r.width), y:(t.clientY-r.top)*(H/r.height), t:Date.now()}; }
+  function onDown(e){ if(st.phase!=='aim') return; e.preventDefault(); down = pt(e); aimPts = [down]; curlOf = 0; }
+  function onMove(e){ if(!down) return; e.preventDefault(); aimPts.push(pt(e)); if(aimPts.length > 40) aimPts.splice(1,1); trackCurl(); }
+  function onUp(e){
+    if(!down) return; e.preventDefault();
+    var u = aimPts[aimPts.length-1] || down, dx = u.x-down.x, dy = u.y-down.y, len = Math.sqrt(dx*dx+dy*dy);
+    var d0 = down; down = null; aimPts = null;
+    if(len < 14){   /* 톡 — 골대 근처를 누르면 그쪽으로 */
+      var g = unP(d0.x, d0.y);
+      if(g.y > -0.6 && g.y < GH + 1.2 && Math.abs(g.x) < GW + 1.6) kick(g.x, Math.max(0.15, g.y), 0.62, 0, true);
+      return;
+    }
+    if(dy > -18) return;   /* 위로 밀어야 슛 */
+    var pw = Math.max(0.15, Math.min(1.25, len / (W*0.52)));
+    var tx = (dx / -dy) * 7.2;
+    var ty = 0.12 + pw * 2.05;
+    var v = len / Math.max(60, (u.t - d0.t)) * (360 / W);   /* px/ms — 휙 튕길수록 빠른 공 */
+    var flick = Math.max(0, Math.min(1, (v - 0.6) / 1.2));
+    kick(tx, ty, pw, curlOf, false, flick);
+  }
+  /* 휘어짐 계산용으로 마지막 길을 따로 보관 */
+  var curlOf = 0;
+  function trackCurl(){
+    if(!aimPts || aimPts.length < 4) return;
+    var a = aimPts[0], b = aimPts[aimPts.length-1], m = aimPts[aimPts.length>>1];
+    var vx = b.x-a.x, vy = b.y-a.y, L = Math.sqrt(vx*vx+vy*vy) || 1;
+    curlOf = ((m.x-a.x)*vy - (m.y-a.y)*vx) / L / L * 3.2;   /* 왼쪽으로 휘면 + */
+    curlOf = Math.max(-1.2, Math.min(1.2, curlOf));
+  }
+  cv.addEventListener('mousedown', onDown); window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+  cv.addEventListener('touchstart', onDown, {passive:false}); cv.addEventListener('touchmove', onMove, {passive:false}); cv.addEventListener('touchend', onUp, {passive:false});
+
+  function gauss(){ return (Math.random()+Math.random()+Math.random()-1.5)/1.5; }
+  function kick(tx, ty, pw, curl, tap, flick){
+    var noise = 0.16 + Math.max(0, pw-0.8)*0.6;
+    tx += gauss()*noise; ty += gauss()*noise*0.7;
+    var T = 0.98 - 0.48*Math.min(1.1, pw) - 0.18*(flick || 0);   /* 셀수록·휙 찰수록 빨리 도착 → 골키퍼가 늦는다 */
+    /* 골키퍼: 공 쪽을 맞힐지 (PK_KEEPER_SKILL), 아니면 다른 쪽 */
+    var side = tx > 0.9 ? 1 : (tx < -0.9 ? -1 : 0), dir;
+    var guess = Math.random() < PK_KEEPER_SKILL;
+    if(guess) dir = side;
+    else { var o = [-1,0,1].filter(function(v){ return v !== side; }); dir = o[Math.floor(Math.random()*o.length)]; }
+    /* 다이빙 계획: 몸 가운데(가슴·팔)가 노린 곳으로 가게. 발은 한 걸음(±1.3m), 점프는 0.6m까지만 */
+    var KX = 0, KY = 0, KA = 0;
+    if(dir !== 0){
+      var gx = guess ? tx : dir*2.2, gy = guess ? ty : 0.9;
+      KA = dir * (1.35 - 0.35*Math.min(1, gy/2.2));
+      KX = Math.max(-1.3, Math.min(1.3, gx - Math.sin(KA)*1.55));
+      KY = Math.max(0, Math.min(0.6, gy - Math.cos(KA)*1.55));
+    }
+    st.shot = {tx:tx, ty:ty, T:T, curl:curl||0, dir:dir, KX:KX, KY:KY, KA:KA, guess:guess};
+    st.phase = 'fly'; st.tShot = now(); st.trail = [];
+    beep([180,120], .05); setTimeout(function(){ beep([520,740], .05); }, 30);
+  }
+
+  function now(){ return performance.now()/1000; }
+  function ease(u){ return 1 - Math.pow(1-u, 3); }
+
+  /* 골키퍼 몸통 선분(발→손끝)과 공 사이 거리로 막았는지 본다 */
+  function keeperSeg(){
+    var a = st.ka, base = {x: st.kx, y: st.ky + 0.05}, L = 2.25;
+    return {ax: base.x, ay: base.y, bx: base.x + Math.sin(a)*L, by: base.y + Math.cos(a)*L};
+  }
+  function segDist(px, py, s){
+    var vx = s.bx-s.ax, vy = s.by-s.ay, u = ((px-s.ax)*vx + (py-s.ay)*vy) / (vx*vx+vy*vy);
+    u = Math.max(0, Math.min(1, u)); var qx = s.ax+vx*u-px, qy = s.ay+vy*u-py; return {d: Math.sqrt(qx*qx+qy*qy), u:u};
+  }
+
+  function step(){
+    if(!alive) return;
+    var t = now(), dt = Math.min(0.05, t - (last || t)); last = t;
+    var S = st, sh = S.shot;
+    /* 골키퍼 기본 동작: 좌우로 살짝 흔들기 */
+    if(S.phase === 'aim'){
+      S.kx = Math.sin(t*2.1)*0.35; S.ky = 0; S.ka = Math.sin(t*2.1)*0.06; S.kArm = 0.5 + Math.sin(t*4)*0.1;
+    }
+    if(S.phase === 'fly' || S.phase === 'after'){
+      var e = t - S.tShot;
+      /* 골키퍼 다이빙 (0.1초 반응 뒤 0.5초 동안) */
+      var ku = Math.max(0, Math.min(1, (e - 0.12)/0.55)), k = ease(ku);
+      if(sh.dir === 0){ S.kx = 0; S.ky = Math.sin(ku*Math.PI)*0.45; S.ka = 0; S.kArm = 1; }
+      else {
+        S.kx = sh.KX*k; S.ka = sh.KA*k; S.kArm = 1;
+        S.ky = ku < 1 ? sh.KY*Math.sin(ku*Math.PI*0.85)/Math.sin(Math.PI*0.85) : Math.max(0, S.ky - dt*2.5);
+      }
+      if(S.phase === 'fly'){
+        var u = Math.min(1, e / sh.T);
+        var bow = Math.sin(u*Math.PI) * sh.curl;
+        S.ball = {x: sh.tx*u + bow, y: BR + (sh.ty-BR)*u + Math.sin(u*Math.PI)*(sh.T > 0.75 ? 0.35 : 0.1), z: GZ*u};
+        S.spin += dt*18; S.trail.push({x:S.ball.x,y:S.ball.y,z:S.ball.z}); if(S.trail.length>9) S.trail.shift();
+        /* 골라인 전에 키퍼에 닿았나 (공이 9.6m 넘으면 확인) */
+        if(S.ball.z > GZ - 1.2 && !S.res && Math.abs(sh.tx) < GW + 0.13 && sh.ty < GH + 0.13){   /* 어차피 밖으로 나갈 공은 키퍼가 손대지 않는다 */
+          var sg = keeperSeg(), sd = segDist(S.ball.x, S.ball.y, sg);
+          var rad = (sd.u > 0.75 ? 0.3 : (sh.dir === 0 ? 0.4 : 0.3)) + BR;
+          if(sh.dir === 0 && sd.u > 0.45 && sd.u < 0.85) rad = 0.75 + BR;   /* 가운데 서 있을 땐 팔을 벌려 넓게 막는다 */
+          if(sd.d < rad && S.ball.z > GZ - 0.5) { end('save'); }
+        }
+        if(u >= 1 && !S.res){
+          var ax = Math.abs(sh.tx), y = sh.ty;
+          if(y > GH + 0.13) end('over');
+          else if(ax > GW + 0.13) end('wide');
+          else if(ax > GW - 0.12) end('post');
+          else if(y > GH - 0.12) end('bar');
+          else end((ax > GW - 0.9 && y > GH - 0.8) ? 'top' : 'goal');
+        }
+      } else afterFly(dt, e);
+    }
+    if(S.shake > 0) S.shake = Math.max(0, S.shake - dt*2.2);
+    if(S.cheer > 0) S.cheer = Math.max(0, S.cheer - dt*0.45);
+    draw(t);
+    raf = requestAnimationFrame(step);
+  }
+
+  /* 결과 뒤 공 움직임: 골 → 그물 안으로 / 막힘·골대 → 튕겨 나옴 / 위·옆 → 날아감 */
+  function end(kind){
+    var S = st; S.res = kind; S.phase = 'after'; S.t2 = now();
+    var b = S.ball, goal = (kind === 'goal' || kind === 'top');
+    if(goal){ S.vel = {x:(S.shot.tx - 0)*0.1, y:-0.6, z:5.5}; S.net = {x:b.x, y:b.y, t:now()}; S.shake = 1; S.cheer = 1; pkCrowd(1.6); beep([700,900,1100,1400], .12); }
+    else if(kind === 'save'){ S.vel = {x:(Math.random()-.5)*5 + S.shot.dir*2, y:2.2, z:-6}; beep([140,100], .07); pkCrowd(0.5); }
+    else if(kind === 'post' || kind === 'bar'){ S.vel = {x:-Math.sign(b.x||1)*2, y: kind==='bar'?3:1.5, z:-7}; beep([1500,1400,1300], .08); pkCrowd(0.4); }
+    else { S.vel = {x:(S.shot.tx)*0.6, y:(kind==='over'?2.5:0.5), z:9}; noSound(); }
+    var r = {kind:kind, goal:goal, guess:S.shot.guess};
+    setTimeout(function(){ if(alive) onResult(r); }, 380);
+  }
+  function afterFly(dt, e){
+    var S = st, b = S.ball, v = S.vel; if(!v) return;
+    v.y -= 9.8*dt; b.x += v.x*dt; b.y += v.y*dt; b.z += v.z*dt;
+    if((S.res === 'goal' || S.res === 'top') && b.z > GZ + ND - 0.15){ b.z = GZ + ND - 0.15; v.z = -v.z*0.15; v.x *= 0.4; }
+    if(b.y < BR){ b.y = BR; v.y = -v.y*0.45; v.x *= 0.8; v.z *= 0.8; }
+    S.spin += dt*8;
+  }
+
+  /* ── 그리기 ── */
+  function draw(t){
+    var S = st;
+    ctx.save();
+    if(S.shake > 0){ ctx.translate((Math.random()-.5)*8*S.shake, (Math.random()-.5)*6*S.shake); }
+    /* 하늘 + 관중석 */
+    var standTop = 0, standBot = P(0, 0, 26).y - 4;
+    var sky = ctx.createLinearGradient(0,0,0,standBot);
+    sky.addColorStop(0, '#163A5F'); sky.addColorStop(1, '#2B5C8A');
+    ctx.fillStyle = sky; ctx.fillRect(-10, -10, W+20, standBot+10);
+    /* 조명 */
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    [[0.12,0.04],[0.88,0.04]].forEach(function(l){ var g = ctx.createRadialGradient(W*l[0], H*l[1], 2, W*l[0], H*l[1], W*0.35); g.addColorStop(0,'rgba(255,250,220,.55)'); g.addColorStop(1,'rgba(255,250,220,0)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,standBot); });
+    /* 관중 줄 */
+    var rows = 6, rh = (standBot - H*0.06) / rows;
+    for(var r=0;r<rows;r++){ ctx.fillStyle = r%2 ? '#22324A' : '#1B2A40'; ctx.fillRect(0, H*0.06 + r*rh, W, rh); }
+    crowd.forEach(function(c){
+      var bounce = S.cheer > 0 ? Math.abs(Math.sin(t*14 + c.p))*6*S.cheer : Math.sin(t*2 + c.p)*0.8;
+      var x = c.x*W, y = H*0.07 + c.y*(standBot - H*0.09) - bounce;
+      ctx.fillStyle = c.c; ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 6.29); ctx.fill();
+      if(S.cheer > 0.3 && c.p > 4.5){ ctx.fillRect(x-1, y-7, 2, 5); }   /* 손 번쩍 */
+    });
+    /* 광고판 */
+    var ad1 = P(-14, 0.8, 22), ad2 = P(14, 0, 22);
+    ctx.fillStyle = '#0B4F5C'; ctx.fillRect(0, ad1.y, W, ad2.y - ad1.y);
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = '400 '+Math.round((ad2.y-ad1.y)*0.62)+'px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('하준 FC  ⚽  영어랑 놀자!  ⚽  하준 FC', W/2, (ad1.y+ad2.y)/2 + 1);
+    /* 잔디 줄무늬 (z 방향 띠) */
+    var zs = [22, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1, -1, -3];
+    for(var i=0;i<zs.length-1;i++){
+      var a = P(0,0,zs[i]), b = P(0,0,zs[i+1]);
+      ctx.fillStyle = i%2 ? '#3E9B46' : '#47A94F'; ctx.fillRect(0, a.y, W, b.y - a.y + 1);
+    }
+    ctx.fillStyle = '#3E9B46'; ctx.fillRect(0, P(0,0,-3).y, W, H);
+    /* 선: 골라인 · 골 에어리어 · 페널티 박스 · 스폿 */
+    ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 2;
+    line3([-20,0,GZ],[20,0,GZ]); poly3([[-9.16,0,GZ],[-9.16,0,GZ-5.5],[9.16,0,GZ-5.5],[9.16,0,GZ]]);
+    poly3([[-20.16,0,GZ],[-20.16,0,-5.5]]); poly3([[20.16,0,GZ],[20.16,0,-5.5]]);
+    var spot = P(0,0,0); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(spot.x, spot.y, spot.s*0.14, spot.s*0.05, 0, 0, 6.29); ctx.fill();
+    /* 골망 (뒤 → 옆 → 위) */
+    drawNet(t);
+    var ballBehind = S.ball.z > GZ;
+    if(ballBehind) drawBall();
+    drawKeeper();
+    /* 골대 기둥 */
+    ctx.lineCap = 'round';
+    var pl = P(-GW,0,GZ), plt = P(-GW,GH,GZ), pr = P(GW,0,GZ), prt = P(GW,GH,GZ);
+    ctx.strokeStyle = '#C9CED6'; ctx.lineWidth = pl.s*0.14; ctx.beginPath(); ctx.moveTo(pl.x+1, pl.y); ctx.lineTo(plt.x+1, plt.y+1); ctx.lineTo(prt.x+1, prt.y+1); ctx.lineTo(pr.x+1, pr.y); ctx.stroke();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = pl.s*0.12; ctx.beginPath(); ctx.moveTo(pl.x, pl.y); ctx.lineTo(plt.x, plt.y); ctx.lineTo(prt.x, prt.y); ctx.lineTo(pr.x, pr.y); ctx.stroke();
+    if(!ballBehind) drawBall();
+    /* 조준 화살표 */
+    if(S.phase === 'aim') drawAim(t);
+    ctx.restore();
+  }
+  function line3(a, b){ var p = P(a[0],a[1],a[2]), q = P(b[0],b[1],b[2]); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); }
+  function poly3(arr){ ctx.beginPath(); arr.forEach(function(a,i){ var p = P(a[0],a[1],a[2]); if(i) ctx.lineTo(p.x,p.y); else ctx.moveTo(p.x,p.y); }); ctx.stroke(); }
+  function drawNet(t){
+    var S = st, n = S.net, amp = 0;
+    if(n){ var e = t - n.t; amp = Math.max(0, 1 - e/1.4) * 0.9 * (0.6 + 0.4*Math.cos(e*14)); }
+    function bz(x, y){ if(!n || amp <= 0) return GZ + ND; var d = (x-n.x)*(x-n.x) + (y-n.y)*(y-n.y); return GZ + ND + amp*Math.exp(-d/0.9); }
+    ctx.fillStyle = 'rgba(255,255,255,.08)';
+    var c1 = P(-GW,0,GZ+ND), c2 = P(GW,GH,GZ+ND); ctx.fillRect(c1.x, c2.y, c2.x-c1.x, c1.y-c2.y);
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 0.8;
+    var X, Y, k;
+    for(X = -GW; X <= GW + 0.01; X += 0.35){ ctx.beginPath(); for(k=0; k<=10; k++){ Y = GH*k/10; var p = P(X, Y, bz(X,Y)); if(k) ctx.lineTo(p.x,p.y); else ctx.moveTo(p.x,p.y); } ctx.stroke(); }
+    for(Y = 0; Y <= GH + 0.01; Y += 0.3){ ctx.beginPath(); for(k=0; k<=20; k++){ X = -GW + 2*GW*k/20; var q = P(X, Y, bz(X,Y)); if(k) ctx.lineTo(q.x,q.y); else ctx.moveTo(q.x,q.y); } ctx.stroke(); }
+    /* 옆·위 그물 */
+    ctx.strokeStyle = 'rgba(255,255,255,.35)';
+    for(var z = GZ; z <= GZ+ND+0.01; z += 0.38){ line3([-GW,0,z],[-GW,GH,z]); line3([GW,0,z],[GW,GH,z]); line3([-GW,GH,z],[GW,GH,z]); }
+    for(Y = 0; Y <= GH; Y += 0.4){ line3([-GW,Y,GZ],[-GW,Y,GZ+ND]); line3([GW,Y,GZ],[GW,Y,GZ+ND]); }
+  }
+  function drawBall(){
+    var S = st, b = S.ball, p = P(b.x, b.y, b.z), sh = P(b.x, 0, b.z), r = Math.max(2, p.s*BR);
+    /* 꼬리 */
+    S.trail.forEach(function(q, i){ var pp = P(q.x,q.y,q.z); ctx.fillStyle = 'rgba(255,255,255,'+(0.05+i*0.03)+')'; ctx.beginPath(); ctx.arc(pp.x, pp.y, Math.max(1.5, pp.s*BR*0.8), 0, 6.29); ctx.fill(); });
+    ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(sh.x, sh.y, r*1.1, r*0.35, 0, 0, 6.29); ctx.fill();
+    ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(S.spin);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#222'; ctx.lineWidth = Math.max(1, r*0.08);
+    ctx.beginPath(); ctx.arc(0,0,r,0,6.29); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#222';
+    pent(0, 0, r*0.38);
+    for(var i=0;i<5;i++){ var a = i*1.2566 - 1.57; pent(Math.cos(a)*r*0.82, Math.sin(a)*r*0.82, r*0.22); }
+    ctx.restore();
+    function pent(cx, cy, rr){ ctx.beginPath(); for(var k=0;k<5;k++){ var a = k*1.2566 - 1.57; ctx.lineTo(cx+Math.cos(a)*rr, cy+Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); }
+  }
+  /* 골키퍼: 주황 유니폼, 노란 장갑. 발 위치(kx,ky)에서 각도 ka로 몸을 날린다 */
+  function drawKeeper(){
+    var S = st, f = P(S.kx, S.ky, GZ), s = f.s;
+    ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(S.ka); ctx.scale(s, s);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    /* 그림자 */
+    ctx.restore(); var g = P(S.kx, 0, GZ); ctx.fillStyle = 'rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(g.x, g.y, s*0.55, s*0.1, 0, 0, 6.29); ctx.fill();
+    ctx.save(); ctx.translate(f.x, f.y); ctx.rotate(S.ka); ctx.scale(s, s);
+    function limb(x1,y1,x2,y2,w,c){ ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x1,-y1); ctx.lineTo(x2,-y2); ctx.stroke(); }
+    var spread = S.kArm;
     /* 다리 */
-    '<rect x="140" y="84" width="8" height="20" rx="3" fill="#166534"/>'+
-    '<rect x="152" y="84" width="8" height="20" rx="3" fill="#166534"/>'+
+    limb(-0.12,0.05,-0.18,0.85,0.17,'#1F2937'); limb(0.12,0.05,0.18,0.85,0.17,'#1F2937');
+    limb(-0.14,0.0,-0.13,0.32,0.15,'#F8F9FA'); limb(0.14,0.0,0.13,0.32,0.15,'#F8F9FA');   /* 양말 */
+    /* 몸통 */
+    ctx.fillStyle = '#F76707'; ctx.strokeStyle = '#B34700'; ctx.lineWidth = 0.03;
+    ctx.beginPath(); ctx.moveTo(-0.27,-0.82); ctx.lineTo(0.27,-0.82); ctx.lineTo(0.3,-1.5); ctx.lineTo(-0.3,-1.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1F2937'; ctx.font = '400 0.34px "Patrick Hand", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('1', 0, -1.15);
+    /* 팔: 기다릴 땐 옆으로, 다이빙 땐 머리 위로 쭉 */
+    var ax = 0.3 + 0.45*spread, ay = 1.35 + 0.75*spread;
+    limb(-0.27,1.42,-ax,ay,0.13,'#F76707'); limb(0.27,1.42,ax,ay,0.13,'#F76707');
+    ctx.fillStyle = '#FFD43B'; ctx.strokeStyle = '#B08900'; ctx.lineWidth = 0.025;
+    [[-ax,ay],[ax,ay]].forEach(function(h){ ctx.beginPath(); ctx.arc(h[0], -h[1]-0.05, 0.13, 0, 6.29); ctx.fill(); ctx.stroke(); });
     /* 머리 */
-    '<circle cx="150" cy="50" r="9" fill="#F7C99A"/>'+
-    '<path d="M141 47 a9 9 0 0 1 18 0 z" fill="#2B2018"/>'+
-  '</g>';
+    ctx.fillStyle = '#F2C8A0'; ctx.beginPath(); ctx.arc(0,-1.68,0.17,0,6.29); ctx.fill();
+    ctx.fillStyle = '#3B2A20'; ctx.beginPath(); ctx.arc(0,-1.72,0.17,Math.PI*1.05,Math.PI*1.95); ctx.fill();
+    ctx.restore();
+  }
+  function drawAim(t){
+    var b = P(0, BR, 0);
+    if(aimPts && aimPts.length > 1){
+      var a = aimPts[0], z = aimPts[aimPts.length-1], dx = z.x-a.x, dy = z.y-a.y, L = Math.sqrt(dx*dx+dy*dy);
+      var pw = Math.min(1.25, L/(W*0.52)), col = pw < 0.75 ? '#51CF66' : (pw < 1.0 ? '#FCC419' : '#FF6B6B');
+      if(dy < -6){
+        var ex = b.x + dx/L*Math.min(L*1.4, W*0.55), ey = b.y + dy/L*Math.min(L*1.4, W*0.55);
+        ctx.strokeStyle = col; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.setLineDash([2, 12]);
+        ctx.beginPath(); ctx.moveTo(b.x, b.y - 10); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+      }
+      /* 세기 막대 */
+      var mx = W - 26, my = H*0.62, mh = H*0.28;
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; rr(mx-9, my, 18, mh, 9); ctx.fill();
+      var fh = mh*Math.min(1, pw/1.25); ctx.fillStyle = col; rr(mx-6, my+mh-fh+3, 12, Math.max(0, fh-6), 6); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; var lim = my + mh - mh*(1.0/1.25); ctx.beginPath(); ctx.moveTo(mx-12, lim); ctx.lineTo(mx+12, lim); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '400 13px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('세기', mx, my - 10);
+    } else {
+      /* 손가락 안내: 공 위로 쭉 올라가는 화살 */
+      var k = (t*0.9) % 1, y = b.y - 18 - k*W*0.32;
+      ctx.globalAlpha = Math.sin(k*Math.PI) * 0.9;
+      ctx.font = '400 30px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('👆', b.x + 10 + k*14, y + 30);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(b.x, b.y, P(0,BR,0).s*BR + 8 + Math.sin(t*5)*3, 0, 6.29); ctx.stroke();
+    }
+  }
+  function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+  raf = requestAnimationFrame(step);
+  return {
+    reset: function(n){ reset(n); },
+    stop: function(){ alive = false; cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); },
+    kick: kick,   /* 테스트용: kick(x, 높이, 세기) */
+    state: function(){ return st; }
+  };
+}
+/* 관중 함성 — 잡음(노이즈)을 걸러 '와아~' 소리 */
+function pkCrowd(sec){
+  try{
+    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+    var n = Math.floor(actx.sampleRate*sec), buf = actx.createBuffer(1, n, actx.sampleRate), d = buf.getChannelData(0);
+    for(var i=0;i<n;i++) d[i] = (Math.random()*2-1);
+    var src = actx.createBufferSource(); src.buffer = buf;
+    var bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.7;
+    var g = actx.createGain(), t = actx.currentTime;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t+0.15); g.gain.exponentialRampToValueAtTime(0.0001, t+sec);
+    src.connect(bp); bp.connect(g); g.connect(actx.destination); src.start(t); src.stop(t+sec);
+  }catch(e){}
 }
 
 /* 🎁 상품 뽑기 릴 — 전체 상품(KINDS) 중에서 하나 */
