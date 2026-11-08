@@ -643,9 +643,41 @@
   .testbtn{border:2px solid var(--ink);border-radius:18px;box-shadow:var(--shadow)}
   .testbtn:active{transform:translate(2px,3px);box-shadow:1px 1px 0 rgba(43,42,51,.16)}
   #qzbig{background:#1971C2} #stbig{background:#C2255C} #ogbig{background:#2457C5} #mmbig,#play{background:#6741D9}
-  #spbig{background:#C92A2A} #libbig{background:#2F7D3A} #pkbig{background:#0B7285} #dadbtn{background:#6B4E2E}
+  #ntbig{background:#C2410C} #spbig{background:#C92A2A} #libbig{background:#2F7D3A} #pkbig{background:#0B7285} #dadbtn{background:#6B4E2E}
   .testbtn.lock{background:#F6F0E2;color:var(--ink-soft);border-style:dashed}
   ::selection{background:#FFE08A;color:var(--ink)}
+  /* ── 📒 테스트 노트 ── */
+  .nthow{margin-bottom:6px}.nthow ol{margin:6px 0 0 18px;padding:0;line-height:1.7;font-size:15px}
+  .ntrec{padding:6px 14px}.ntrecrow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+  .ntrecrow:last-child{border-bottom:0}.ntrecrow b{color:var(--ink-soft)}.ntrecrow b.hi{color:#2F7D3A}
+  .ntbook{position:relative;border:2px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;background:#FFFDF7}
+  .ntbook canvas{display:block;touch-action:none;-webkit-user-select:none;user-select:none}
+  #ntmark{position:absolute;left:0;top:0}
+  .ntbook.locked #ntmark{cursor:pointer}
+  .ntsay{position:absolute;left:0;width:44px;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;z-index:2}
+  .ntsay b{font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:22px;color:#2457C5;line-height:1}
+  .ntsay i{font-style:normal;font-size:13px;line-height:1}
+  .ntbook.grading .ntsay{pointer-events:none;opacity:.55}
+  .ntbtns{gap:10px;margin-bottom:10px}.ntbtns .btn{flex:1}
+  .ntfree{text-align:center;margin:0 0 10px}
+  .nthead{text-align:center;font-family:'Jua',sans-serif;font-size:16px;margin:2px 0 8px;line-height:1.45}
+  .nthead small{display:block;font-family:'Gowun Dodum',sans-serif;font-size:13px;color:var(--ink-soft)}
+  .ntkeys{padding:4px 10px;margin-bottom:10px}
+  .ntkey{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}
+  .ntkey:last-child{border-bottom:0}
+  .ntkey .ntno{width:22px;text-align:center;font-family:'Patrick Hand',sans-serif;font-size:20px;color:var(--ink-soft)}
+  .ntans{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+  .ntans .en{font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:21px}
+  .ntans small{color:var(--ink-soft);font-size:13.5px}
+  .ntok,.ntno2{width:46px;height:44px;border-radius:12px;border:2px solid var(--ink);background:#fff;font-size:20px;cursor:pointer;color:#D6336C;font-weight:700}
+  .ntkey.ok .ntok{background:#FFE3EC;box-shadow:inset 0 0 0 2px #D6336C}
+  .ntkey.bad .ntno2{background:#FFE3EC;box-shadow:inset 0 0 0 2px #D6336C}
+  .ntkey.ok{background:#F4FBF2}.ntkey.bad{background:#FFF5F5}
+  #fin:disabled{background:#F6F0E2;color:var(--ink-soft);border-style:dashed;box-shadow:none;cursor:default}
+  .ntres{text-align:center;margin-bottom:12px}
+  .ntbig{font-family:'Patrick Hand',sans-serif;font-size:72px;line-height:1;color:#D6336C}
+  .ntbig small{font-family:'Jua',sans-serif;font-size:22px;margin-left:2px}
+  .ntmsg{font-family:'Jua',sans-serif;font-size:18px;margin-top:6px}
   /* 목록 줄(놀이·책·시험 세트·시): 색 막대 대신 같은 연필 테두리, 끝낸 건 노란 종이 */
   .actbtn,.qzbk,.pbk,.spbtn,.qzedit{border:2px solid var(--ink) !important;box-shadow:var(--shadow)}
   .qzbk.done,.pbk.done,.spbtn.done{background:#FFF8E6}
@@ -674,7 +706,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.07 11:35';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.08 23:55';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2179,6 +2211,11 @@ function screenHome(){
       '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="ntbig" style="margin:0 0 12px">'+
+      '<div class="ico">📒</div>'+
+      '<div class="t"><b>테스트 노트</b><small>1~8번 영어·뜻 쓰고 아빠 채점'+(notes().length ? ' · 최근 '+Math.round(notes()[notes().length-1].ok*100/notes()[notes().length-1].n)+'점' : '')+'</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
     '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
       '<div class="ico">🌟</div>'+
       '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
@@ -2237,6 +2274,7 @@ function screenHome(){
   document.getElementById('pkbig').onclick = startPKGame;
   document.getElementById('mmbig').onclick = screenMimemal;
   document.getElementById('ogbig').onclick = screenOrigList;
+  document.getElementById('ntbig').onclick = screenNoteHome;
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
@@ -2322,6 +2360,287 @@ function startPKGame(){
     /* 별 차감 */
     PROG.spent = spentStars() + PK_PRICE; saveProgress();
     ov.remove(); screenPKGame();
+  };
+}
+
+/* =========================================================
+   📒 테스트 노트 — 큰 공책에 1~8번: 왼쪽 칸 영어, 오른쪽 칸 한글 뜻을 손으로 쓰고
+   아빠가 줄마다 ⭕(동그라미) / ❌(빗금)으로 채점 → 점수.
+   단어장을 고르면 그 단어 중 NOTE_ROWS개를 섞어서 🔊로 불러 주고, 채점할 때 정답을 보여 준다.
+   '자유 노트'는 아빠가 직접 불러 주는 받아쓰기.
+   ========================================================= */
+var NOTE_ROWS = 8;        /* 공책 줄 수 */
+var NOTE_ROW_H = 70;      /* 한 줄 높이(px) — 손가락으로 쓰기 편하게 */
+var NOTE_EN_RATIO = 0.56; /* 왼쪽(영어) 칸이 차지하는 비율 */
+var NOTE_KEEP = 30;       /* 기록을 몇 개까지 남길지 */
+function notes(){ return PROG.notes || []; }
+
+function screenNoteHome(){
+  var qs = quizzes().filter(function(q){ return q.items && q.items.length; });
+  var rec = notes().slice(-5).reverse();
+  app.innerHTML =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button>'+
+      '<h2>📒 테스트 노트</h2><div style="width:44px"></div></div>'+
+    '<div class="card nthow">'+
+      '<b>✏️ 이렇게 해요</b>'+
+      '<ol><li>번호마다 🔊 소리를 듣고</li><li><b>왼쪽 칸</b>에 영어, <b>오른쪽 칸</b>에 한글 뜻을 써요</li>'+
+      '<li>다 쓰면 아빠가 ⭕ / 빗금으로 채점!</li></ol>'+
+    '</div>'+
+    '<div class="homehd">📘 단어장으로 시험 보기</div>'+
+    (qs.length ? qs.map(function(q){
+      return '<button class="qzbk ntpick" data-id="'+esc(q.id)+'">'+
+        '<div class="ico">📘</div><div class="t"><b>'+esc(q.title)+'</b><small>'+q.items.length+'단어 중 '+Math.min(NOTE_ROWS, q.items.length)+'개 · 🔊 불러 줘요</small></div>'+
+        '<div class="ogarrow" aria-hidden="true">▶</div></button>';
+    }).join('') : '<div class="card muted" style="text-align:center">아직 단어장이 없어요. 「단어 테스트」에서 아빠가 만들 수 있어요.</div>')+
+    '<div class="homehd">✍️ 아빠가 불러 주기</div>'+
+    '<button class="qzbk" id="free"><div class="ico">🗣️</div><div class="t"><b>자유 노트</b><small>아빠가 단어를 말해 주면 1번부터 8번까지 받아쓰기</small></div><div class="ogarrow" aria-hidden="true">▶</div></button>'+
+    (rec.length ? '<div class="homehd">🗂️ 최근 점수</div><div class="card ntrec">'+
+      rec.map(function(r){
+        var d = new Date(r.at), sc = Math.round(r.ok*100/r.n);
+        return '<div class="ntrecrow"><span>'+(d.getMonth()+1)+'/'+d.getDate()+' · '+esc(r.t)+'</span><b class="'+(sc>=80?'hi':'')+'">'+r.ok+'/'+r.n+' · '+sc+'점</b></div>';
+      }).join('')+'</div>' : '');
+  document.getElementById('back').onclick = screenHome;
+  document.getElementById('free').onclick = function(){ startNote(null, null); };
+  on('.ntpick', function(){ var q = quizById(this.dataset.id); if(q) startNote(q, null); });
+}
+
+/* set: 단어장(없으면 자유 노트) · only: 이 단어들로만 (틀린 것 다시) */
+function startNote(set, only){
+  var words = only ? only.slice() : (set ? shuffle(set.items).slice(0, NOTE_ROWS) : []);
+  var n = set ? Math.max(1, words.length) : NOTE_ROWS;
+  var title = set ? set.title : '자유 노트';
+  var marks = [];             /* 줄마다 1=⭕ / 0=빗금 / undefined=아직 */
+  var phase = 'write';
+  var pad = null;
+
+  app.innerHTML =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="그만하기">←</button>'+
+      '<h2>📒 '+esc(title)+(only?' · 다시':'')+'</h2><div class="pill" id="ntscore" aria-live="polite">'+n+'문제</div></div>'+
+    '<div class="ntbook" id="book">'+
+      '<canvas id="ntink" role="img" aria-label="공책. 번호마다 왼쪽에 영어, 오른쪽에 한글 뜻을 써요"></canvas>'+
+      '<canvas id="ntmark" aria-hidden="true"></canvas>'+
+      '<div id="ntsay"></div>'+
+    '</div>'+
+    '<div id="ntctl"></div>';
+  document.getElementById('back').onclick = function(){
+    if(pad && pad.count() && phase !== 'done' && !confirm('쓴 것이 지워져요. 그만할까요?')) return;
+    stopAll(); screenNoteHome();
+  };
+
+  var book = document.getElementById('book'), W = Math.max(300, book.clientWidth || 340);
+  var HEAD = 40, RH = NOTE_ROW_H, H = HEAD + n*RH + 8, NUMW = 44, SPLIT = NUMW + Math.round((W-NUMW-6)*NOTE_EN_RATIO);
+  pad = notePad(document.getElementById('ntink'), document.getElementById('ntmark'), W, H, {head:HEAD, rh:RH, n:n, numw:NUMW, split:SPLIT, nums:!set});   /* 단어장이면 번호는 🔊 버튼이 대신 보여 준다 */
+
+  /* 번호 옆 🔊 (단어장일 때) */
+  if(set){
+    document.getElementById('ntsay').innerHTML = words.map(function(w, i){
+      return '<button class="ntsay" data-i="'+i+'" style="top:'+(HEAD + i*RH + 4)+'px;height:'+(RH-8)+'px" aria-label="'+(i+1)+'번 듣기"><b>'+(i+1)+'</b><i>🔊</i></button>';
+    }).join('');
+    Array.prototype.forEach.call(book.querySelectorAll('.ntsay'), function(b){
+      b.onclick = function(){ var w = words[+b.dataset.i]; if(w) speakWords(String(w.w).split(/\s+/), RATE, function(){}); };
+    });
+  }
+
+  writeCtl();
+  function writeCtl(){
+    phase = 'write'; pad.enable(true); book.classList.remove('grading');
+    document.getElementById('ntctl').innerHTML =
+      '<div class="row ntbtns"><button class="btn" id="undo">↶ 한 획</button><button class="btn" id="clr">↺ 다 지우기</button></div>'+
+      (set ? '<button class="btn wide" id="sayall" style="margin-bottom:10px">🔊 1번부터 차례로 듣기</button>' : '<div class="muted ntfree">👨 아빠가 1번부터 단어를 불러 주세요.</div>')+
+      '<button class="btn primary wide" id="done">✋ 다 썼어요! 아빠 채점</button>';
+    document.getElementById('undo').onclick = function(){ pad.undo(); };
+    document.getElementById('clr').onclick = function(){ if(!pad.count() || confirm('다 지울까요?')) pad.clear(); };
+    if(set) document.getElementById('sayall').onclick = function(){
+      var i = 0;
+      (function next(){
+        if(i >= words.length || phase !== 'write') return;
+        var w = words[i++];
+        speakWords([String(i)+'.'].concat(String(w.w).split(/\s+/)), RATE, function(){}, function(){ setTimeout(next, 2600); });
+      })();
+    };
+    document.getElementById('done').onclick = function(){
+      if(!pad.count()){ noSound(); toast('먼저 공책에 써 주세요 ✏️'); return; }
+      stopAll(); gradeCtl();
+    };
+  }
+
+  function gradeCtl(){
+    phase = 'grade'; pad.enable(false); book.classList.add('grading');
+    beep([600,800], .06);
+    var keyHtml = '';
+    for(var i=0;i<n;i++){
+      var w = words[i];
+      keyHtml += '<div class="ntkey" data-row="'+i+'">'+
+        '<span class="ntno">'+(i+1)+'</span>'+
+        '<span class="ntans">'+(w ? '<b class="en">'+esc(w.w)+'</b><small>'+esc(w.k || w.def || '')+'</small>' : '<small class="muted">(아빠가 부른 단어)</small>')+'</span>'+
+        '<button class="ntok" data-i="'+i+'" aria-label="'+(i+1)+'번 맞음">⭕</button>'+
+        '<button class="ntno2" data-i="'+i+'" aria-label="'+(i+1)+'번 틀림">╱</button>'+
+      '</div>';
+    }
+    document.getElementById('ntctl').innerHTML =
+      '<div class="nthead">👨 아빠 차례! 줄마다 <b>⭕ 맞음</b> / <b>╱ 틀림</b>을 눌러 주세요 <small>(공책 줄을 눌러도 바뀌어요)</small></div>'+
+      '<div class="card ntkeys">'+keyHtml+'</div>'+
+      '<div class="row ntbtns"><button class="btn" id="allok">⭕ 모두 맞음</button><button class="btn" id="more">✏️ 더 쓸래요</button></div>'+
+      '<button class="btn go wide" id="fin" disabled>채점 끝! 점수 보기</button>';
+    on('.ntok', function(){ setMark(+this.dataset.i, 1); });
+    on('.ntno2', function(){ setMark(+this.dataset.i, 0); });
+    document.getElementById('allok').onclick = function(){ for(var i=0;i<n;i++) if(marks[i] === undefined) setMark(i, 1); };
+    document.getElementById('more').onclick = function(){ marks = []; pad.marks(marks); score(); writeCtl(); };
+    document.getElementById('fin').onclick = finish;
+    pad.onRowTap(function(i){ if(phase !== 'grade') return; setMark(i, marks[i] === 1 ? 0 : (marks[i] === 0 ? undefined : 1)); });
+    score();
+  }
+  function setMark(i, v){
+    if(phase !== 'grade') return;
+    marks[i] = v;
+    if(v === 1) beep([880,1175], .05); else if(v === 0) beep([300,220], .05);
+    pad.marks(marks, i);
+    var row = app.querySelector('.ntkey[data-row="'+i+'"]');
+    if(row){ row.classList.toggle('ok', v === 1); row.classList.toggle('bad', v === 0); }
+    score();
+  }
+  function score(){
+    var done = 0, ok = 0;
+    for(var i=0;i<n;i++){ if(marks[i] !== undefined) done++; if(marks[i] === 1) ok++; }
+    var p = document.getElementById('ntscore');
+    if(p) p.textContent = phase === 'write' ? n+'문제' : ok+' / '+n;
+    var f = document.getElementById('fin');
+    if(f){ f.disabled = done < n; f.textContent = done < n ? '채점 '+done+' / '+n+' — 남은 줄을 채점해 주세요' : '채점 끝! 점수 보기 ('+ok+' / '+n+')'; }
+    return ok;
+  }
+
+  function finish(){
+    var ok = score(), sc = Math.round(ok*100/n);
+    phase = 'done'; pad.enable(false);
+    pad.stamp(sc);
+    var wrong = []; for(var i=0;i<n;i++) if(marks[i] === 0 && words[i]) wrong.push(words[i]);
+    if(!PROG.notes) PROG.notes = [];
+    PROG.notes.push({id:'n'+Date.now(), at:Date.now(), t:title, n:n, ok:ok, w:wrong.map(function(x){ return x.w; })});
+    if(PROG.notes.length > NOTE_KEEP) PROG.notes = PROG.notes.slice(-NOTE_KEEP);
+    saveProgress();
+    if(sc === 100){ starSound(); confetti(60); } else if(sc >= 80){ okSound(); confetti(26); } else okSound();
+    var msg = sc === 100 ? '🏆 백 점! 완벽해요!' : sc >= 80 ? '🎉 아주 잘했어요!' : sc >= 50 ? '👍 좋아요! 틀린 것만 다시 해 봐요' : '💪 괜찮아요! 틀린 것만 다시 연습해요';
+    document.getElementById('ntctl').innerHTML =
+      '<div class="card ntres" role="status"><div class="ntbig">'+sc+'<small>점</small></div>'+
+        '<div>'+n+'문제 중 <b>'+ok+'개</b> 맞았어요</div><div class="ntmsg">'+msg+'</div></div>'+
+      (wrong.length ? '<button class="btn primary wide" id="again" style="margin-bottom:10px">🔁 틀린 '+wrong.length+'개만 다시 쓰기</button>' : '')+
+      '<button class="btn wide" id="new" style="margin-bottom:10px">📒 새 노트</button>'+
+      '<button class="btn go wide" id="home">🏠 홈으로</button>';
+    if(document.getElementById('again')) document.getElementById('again').onclick = function(){ startNote(set, wrong); };
+    document.getElementById('new').onclick = screenNoteHome;
+    document.getElementById('home').onclick = screenHome;
+    var s = document.getElementById('ntscore'); if(s) s.textContent = sc+'점';
+    setTimeout(function(){ var r = app.querySelector('.ntres'); if(r && r.scrollIntoView) r.scrollIntoView({behavior:'smooth', block:'center'}); }, 250);
+  }
+}
+
+/* ── 공책 캔버스: 바탕(줄·칸) + 손글씨 + 위 캔버스에 채점 표시 ── */
+function notePad(cv, mk, W, H, g){
+  var DPR = Math.min(2, window.devicePixelRatio || 1);
+  [cv, mk].forEach(function(c){ c.width = W*DPR; c.height = H*DPR; c.style.width = W+'px'; c.style.height = H+'px'; });
+  var ctx = cv.getContext('2d'), mx = mk.getContext('2d');
+  ctx.scale(DPR, DPR); mx.scale(DPR, DPR);
+  var strokes = [], cur = null, enabled = true, rowTap = null, mk0 = [], stampSc = null, anim = null;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function paper(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#FFFDF7'; ctx.fillRect(0, 0, W, H);
+    /* 머리줄 */
+    ctx.fillStyle = '#EEF3FC'; ctx.fillRect(0, 0, W, g.head);
+    ctx.fillStyle = '#1E4AA8'; ctx.font = '400 16px Jua, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    ctx.fillText('영어 English', (g.numw + g.split)/2, g.head/2);
+    ctx.textAlign = 'left'; ctx.fillText('한글 뜻', g.split + 12, g.head/2);   /* 오른쪽은 점수 도장 자리 */
+    for(var i=0;i<g.n;i++){
+      var y0 = g.head + i*g.rh;
+      /* 영어 칸 4선 (옅게) */
+      var t = y0 + g.rh*0.16, band = g.rh*0.22;
+      hl(g.numw+6, g.split-6, t, '#DDE3F0', 1);
+      hl(g.numw+6, g.split-6, t+band, '#E4E8F2', 1, [5,5]);
+      hl(g.numw+6, g.split-6, t+band*2, '#F4B4B4', 1.4);
+      hl(g.numw+6, g.split-6, t+band*3, '#DDE3F0', 1);
+      /* 한글 칸 밑줄 */
+      hl(g.split+8, W-8, t+band*2.6, '#D9CDB3', 1.2, [3,4]);
+      /* 줄 구분선 */
+      hl(0, W, y0 + g.rh, '#C9BFA6', 1.2);
+      /* 번호 */
+      if(g.nums){ ctx.fillStyle = '#6B6559'; ctx.font = '400 22px "Patrick Hand", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(String(i+1), g.numw/2, y0 + g.rh/2); }
+    }
+    hl(0, W, g.head, '#2457C5', 1.6);
+    /* 세로선: 빨간 여백선 · 칸 나누기 */
+    vl(g.numw, '#E8A0A0', 1.6); vl(g.split, '#2457C5', 1.4);
+  }
+  function hl(x1, x2, y, c, w, dash){ ctx.save(); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke(); ctx.restore(); }
+  function vl(x, c, w){ ctx.save(); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); ctx.restore(); }
+  function ink(s){
+    ctx.save(); ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath(); s.forEach(function(p, i){ if(i) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y); });
+    if(s.length === 1) ctx.lineTo(s[0].x+0.1, s[0].y+0.1);
+    ctx.stroke(); ctx.restore();
+  }
+  function redraw(){ paper(); strokes.forEach(ink); }
+  redraw();
+
+  function pos(e){ var r = cv.getBoundingClientRect(), t = e.touches ? (e.touches[0] || e.changedTouches[0]) : e; return {x:(t.clientX - r.left)*W/r.width, y:(t.clientY - r.top)*H/r.height}; }
+  function down(e){
+    if(!enabled){ if(rowTap){ var p = pos(e), r = Math.floor((p.y - g.head)/g.rh); if(r >= 0 && r < g.n) rowTap(r); } return; }
+    e.preventDefault(); cur = [pos(e)]; strokes.push(cur); ink(cur);
+  }
+  function move(e){ if(!cur) return; e.preventDefault(); var p = pos(e), l = cur[cur.length-1]; if(Math.abs(p.x-l.x) + Math.abs(p.y-l.y) < 1.2) return; cur.push(p);
+    ctx.save(); ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 3.2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(l.x, l.y); ctx.lineTo(p.x, p.y); ctx.stroke(); ctx.restore(); }
+  function up(){ cur = null; }
+  /* 위 캔버스(채점 표시)가 맨 위라서 입력은 위 캔버스에서 받는다 */
+  mk.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+  mk.addEventListener('touchstart', down, {passive:false}); mk.addEventListener('touchmove', move, {passive:false}); mk.addEventListener('touchend', up);
+
+  /* ── 채점 표시: ⭕ 줄 전체를 감싸는 빨간 동그라미 / 빗금 ╱ ── */
+  function drawMarks(prog, row){
+    mx.clearRect(0, 0, W, H);
+    mx.save(); mx.strokeStyle = '#D6336C'; mx.lineCap = 'round'; mx.lineJoin = 'round';
+    for(var i=0;i<g.n;i++){
+      var v = mk0[i]; if(v === undefined) continue;
+      var k = (i === row) ? prog : 1, y0 = g.head + i*g.rh, cy = y0 + g.rh/2;
+      if(v === 1){
+        /* 손으로 그린 듯 살짝 기운 타원, 시작점이 조금 겹치게 */
+        mx.lineWidth = 3.6; mx.beginPath();
+        var rx = (W - 16)/2, ry = g.rh*0.44, cx = W/2 + 2, end = -2.4 + (Math.PI*2 + 0.35)*k;
+        for(var a = -2.4; a <= end; a += 0.06){
+          var wob = 1 + Math.sin(a*3 + i)*0.025;
+          var x = cx + Math.cos(a)*rx*wob, y = cy + Math.sin(a)*ry*wob + Math.cos(a)*2;
+          if(a === -2.4) mx.moveTo(x, y); else mx.lineTo(x, y);
+        }
+        mx.stroke();
+      } else {
+        mx.lineWidth = 5; mx.beginPath();
+        var x1 = g.numw + 10, y1 = y0 + g.rh - 8, x2 = W - 14, y2 = y0 + 8;
+        mx.moveTo(x1, y1); mx.lineTo(x1 + (x2-x1)*k, y1 + (y2-y1)*k); mx.stroke();
+      }
+    }
+    if(stampSc !== null){
+      /* 선생님 점수 도장: 오른쪽 위에 큰 빨간 숫자 + 두 줄 밑줄 */
+      mx.fillStyle = '#D6336C'; mx.font = '400 46px "Patrick Hand", sans-serif'; mx.textAlign = 'right'; mx.textBaseline = 'alphabetic';
+      mx.save(); mx.translate(W - 14, g.head - 2); mx.rotate(-0.12);
+      mx.fillText(String(stampSc), 0, 0);
+      var tw = mx.measureText(String(stampSc)).width;
+      mx.lineWidth = 3; mx.beginPath(); mx.moveTo(-tw-4, 8); mx.lineTo(4, 6); mx.moveTo(-tw, 15); mx.lineTo(8, 13); mx.stroke();
+      mx.restore();
+    }
+    mx.restore();
+  }
+  return {
+    count: function(){ return strokes.length; },
+    undo: function(){ strokes.pop(); redraw(); },
+    clear: function(){ strokes = []; redraw(); },
+    enable: function(b){ enabled = b; cv.parentNode.classList.toggle('locked', !b); },
+    onRowTap: function(fn){ rowTap = fn; },
+    marks: function(m, row){
+      mk0 = m.slice();
+      if(anim) cancelAnimationFrame(anim);
+      if(row === undefined || reduce){ drawMarks(1); return; }
+      var t0 = performance.now();
+      (function f(){ var k = Math.min(1, (performance.now()-t0)/260); drawMarks(1 - Math.pow(1-k, 3), row); if(k < 1) anim = requestAnimationFrame(f); })();
+    },
+    stamp: function(sc){ stampSc = sc; drawMarks(1); }
   };
 }
 
