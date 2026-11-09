@@ -50,6 +50,7 @@ function doPost(e) {
   else if (action === 'hangul') out = hangulPron(body);
   else if (action === 'word')   out = wordInfo(body);
   else if (action === 'trans')  out = transSentence(body);
+  else if (action === 'hand')   out = handRead(body);
   else if (action === 'imgPut') out = origPutImg(body);
   else if (action === 'imgGet') out = origGetImgs(body);
   else if (action === 'imgDel') out = origDelImgs(body);
@@ -526,4 +527,40 @@ function origDelImgs(req) {
     });
     return { ok: true, n: n };
   } catch (e) { return { error: 'DRIVE ' + String(e).slice(0, 200) }; }
+}
+
+/* ===== ✏️ 손글씨 읽기 (단어 테스트 펜 입력) =====
+   req.images = [{lang:'en'|'ko', b64:'JPEG base64'}, …] (최대 2장) → { ok, en, ko }
+   아이가 쓴 그대로 읽는다 — 철자를 고치지 않는다(채점이 정확해야 하니까). */
+var HAND_DAILY_MAX = 500;   // 하루 손글씨 읽기 상한
+var HAND_PROMPT =
+  '위 이미지는 초등학생이 손가락이나 펜으로 화면에 쓴 손글씨다.\n' +
+  '각 이미지 앞의 표시대로 [영어]는 영어 단어나 짧은 문장, [한글]은 한국어 낱말이나 짧은 말이다.\n' +
+  '규칙:\n' +
+  '1) 보이는 글자를 그대로 읽는다. 철자가 틀렸어도 절대 고치거나 추측해서 바꾸지 않는다.\n' +
+  '2) 영어는 알파벳(대소문자 구분 없이 소문자로)·띄어쓰기·아포스트로피만, 한글은 한글·띄어쓰기만 적는다.\n' +
+  '3) 글자가 없거나 전혀 못 읽겠으면 빈 문자열.\n' +
+  '4) 반드시 JSON 하나만: {"en":"영어 이미지에서 읽은 글자","ko":"한글 이미지에서 읽은 글자"} (해당 이미지가 없으면 빈 문자열)';
+function handRead(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var imgs = (req.images || []).filter(function (x) { return x && x.b64; }).slice(0, 2);
+  if (!imgs.length) return { error: 'NO_IMAGE' };
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'HD_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= HAND_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+  var parts = [];
+  imgs.forEach(function (x) {
+    parts.push({ text: x.lang === 'ko' ? '[한글]' : '[영어]' });
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: String(x.b64) } });
+  });
+  parts.push({ text: HAND_PROMPT });
+  var g = _geminiJSON(parts, 400);
+  if (!g.ok) return { error: g.error };
+  var d = g.data || {};
+  if (d.items && d.items.length) d = d.items[0] || {};
+  return { ok: true, en: String(d.en || '').trim(), ko: String(d.ko || '').trim(), model: g.model };
 }
