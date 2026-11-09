@@ -718,7 +718,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.09 00:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.09 22:05';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2393,6 +2393,11 @@ function noteScore(r){ return typeof r.sc === 'number' ? r.sc : Math.round((r.ok
 
 function screenNoteHome(){
   var src = [];
+  /* 단어장: 단어(w)를 불러 주고 영어 단어 + 한글 뜻(k)을 쓴다 */
+  quizzes().forEach(function(q){
+    var it = (q.items || []).filter(function(x){ return x && x.w; }).map(function(x){ return {en:x.w, ko:x.k || ''}; });
+    if(it.length) src.push({k:'q', id:q.id, title:q.title, items:it, ico:'🔤'});
+  });
   sents().forEach(function(s){ if(s.items && s.items.length) src.push({k:'s', id:s.id, title:s.title, items:s.items, ico:'📖'}); });
   origList().forEach(function(o){ if(o.items && o.items.length) src.push({k:'o', id:o.id, title:o.t || o.title || '원서', items:o.items, ico:'📘'}); });
   var rec = notes().slice(-5).reverse();
@@ -2404,12 +2409,12 @@ function screenNoteHome(){
       '<ol><li>번호마다 문장을 듣고 (🔊 또는 아빠가 불러 줘요)</li><li><b>위 줄</b>에 영어 문장, <b>아래 줄</b>에 한글 뜻을 써요</li>'+
       '<li>아빠가 영어 따로, 뜻 따로 ⭕ / ╱ 채점!</li></ol>'+
     '</div>'+
-    '<div class="homehd">📖 문장으로 시험 보기</div>'+
+    '<div class="homehd">📚 단어장 · 문장으로 시험 보기</div>'+
     (src.length ? src.map(function(x, i){
       return '<button class="qzbk ntpick" data-i="'+i+'">'+
-        '<div class="ico">'+x.ico+'</div><div class="t"><b>'+esc(x.title)+'</b><small>'+(x.k==='s'?'문장 암기':'원서')+' · '+x.items.length+'문장 중 '+Math.min(NOTE_ROWS, x.items.length)+'개 · 🔊 불러 줘요</small></div>'+
+        '<div class="ico">'+x.ico+'</div><div class="t"><b>'+esc(x.title)+'</b><small>'+(x.k==='q'?'단어 테스트':(x.k==='s'?'문장 암기':'원서'))+' · '+x.items.length+(x.k==='q'?'단어':'문장')+' 중 '+Math.min(NOTE_ROWS, x.items.length)+'개 · 🔊 불러 줘요</small></div>'+
         '<div class="ogarrow" aria-hidden="true">▶</div></button>';
-    }).join('') : '<div class="card muted" style="text-align:center">아직 문장이 없어요. 「문장 암기」나 「원서 테스트」에서 아빠가 넣을 수 있어요.</div>')+
+    }).join('') : '<div class="card muted" style="text-align:center">아직 단어장·문장이 없어요. 「단어 테스트」 「문장 암기」 「원서 테스트」에서 아빠가 넣을 수 있어요.</div>')+
     '<div class="homehd">🗣️ 아빠가 불러 주기</div>'+
     '<button class="qzbk" id="free"><div class="ico">🗣️</div><div class="t"><b>자유 노트</b><small>아빠가 문장을 말해 주면 1번부터 '+NOTE_ROWS+'번까지 받아쓰기</small></div><div class="ogarrow" aria-hidden="true">▶</div></button>'+
     (rec.length ? '<div class="homehd">🗂️ 최근 점수</div><div class="card ntrec">'+
