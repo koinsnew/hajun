@@ -33,6 +33,7 @@ function doGet(e) {
   else if (action === 'voices')    out = ttsVoices();
   else if (action === 'ocrStatus') out = { enabled: _hasOcrKey() };
   else if (action === 'ppMap')     out = { ok: true, map: _ppMap() };
+  else if (action === 'hw')        out = { ok: true, hw: _hw() };
   else if (action === 'ping')      out = { ok: true };
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, p.callback);
@@ -53,6 +54,8 @@ function doPost(e) {
   else if (action === 'trans')  out = transSentence(body);
   else if (action === 'hand')   out = handRead(body);
   else if (action === 'ppSet')  out = ppSet(body);
+  else if (action === 'hwSet')  out = hwSet(body);
+  else if (action === 'hwCheck') out = hwCheck(body);
   else if (action === 'imgPut') out = origPutImg(body);
   else if (action === 'imgGet') out = origGetImgs(body);
   else if (action === 'imgDel') out = origDelImgs(body);
@@ -243,6 +246,15 @@ function _ocrKey() { return PropertiesService.getScriptProperties().getProperty(
 function _hasOcrKey() { var k = _ocrKey(); return !!(k && k !== 'YOUR_KEY'); }
 
 var OCR_PROMPTS = {
+  hw:
+    '이미지는 영어 학원 선생님이 올린 숙제 안내 글(메신저/밴드 화면)입니다. 숙제 항목을 읽어 JSON으로만 답하세요.\n' +
+    '형식: {"title":"글 제목(예: 11/12 숙제)","items":[{"t":"숙제 내용","due":"11/17","how":"내는 방법","note":"딸린 설명"}],"notice":["번호 없는 안내 문장"]}\n' +
+    '규칙: ① 번호가 붙은 줄 하나가 항목 하나. t는 번호와 화살표(=>) 앞의 숙제 내용만 그대로. ' +
+    '② due는 화살표 뒤의 날짜를 월/일(예: 11/17)로. 날짜가 없으면 빈 문자열. ' +
+    '③ how는 날짜 뒤의 내는 방법(예: 다음 시간까지, 밴드에 영상 업로드, 개인 카톡으로 영상 전송). 없으면 빈 문자열. ' +
+    '④ note는 그 항목 바로 아래에 딸린 보충 설명 줄(책 이름, 쓰는 조건 등)을 한 줄로. 없으면 빈 문자열. ' +
+    '⑤ notice에는 번호가 없는 안내 문장(준비물, 시험 예고, 주의 사항)을 문장별로. 인사말·작성자·시간·읽음 수·댓글 칸은 넣지 마세요. ' +
+    '⑥ 글자는 이미지 그대로 옮기고 지어내지 마세요. 여러 이미지는 순서대로 이어서 하나의 items에 담으세요.',
   quiz:
     '이미지는 영어 단어 학습지/단어장 사진입니다. 각 문제 항목을 읽어 JSON으로만 답하세요.\n' +
     '형식: {"title":"단어장 이름 추정(없으면 빈 문자열)","items":[{"def":"English definition(영어 뜻풀이 문장)","w":"정답 영어 단어","k":"한글 뜻"}]}\n' +
@@ -698,4 +710,45 @@ function gemTts(req) {
     }
     return { error: 'BUSY ' + lastErr };
   } catch (e) { return { error: String(e) }; }
+}
+
+/* ===== 📌 오늘 할 것(숙제) =====
+ * 아빠가 넣은 숙제 목록. 진도와 따로 둔다(다른 기기가 진도를 저장해도 지워지지 않게).
+ * hw = { ts, items:[{id,t,due,how,note,done,doneAt}], notice:[글] }
+ * 고치기(hwSet)는 아빠 비밀번호, 다 했다고 표시(hwCheck)는 하준이도 할 수 있다. */
+var HW_PROP = 'HOMEWORK';
+var HW_MAX_ITEMS = 40;
+function _hw() {
+  var raw = PropertiesService.getScriptProperties().getProperty(HW_PROP);
+  if (raw) { try { var o = JSON.parse(raw); if (o && o.items) return o; } catch (e) {} }
+  return { ts: 0, items: [], notice: [] };
+}
+function _hwSave(o) {
+  o.ts = Date.now();
+  var s = JSON.stringify(o);
+  if (s.length > 8800) return false;   // 스크립트 속성 한 칸은 9KB까지
+  PropertiesService.getScriptProperties().setProperty(HW_PROP, s);
+  return true;
+}
+function hwSet(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var d = req.hw || {}, items = [], S = function (v, n) { return String(v == null ? '' : v).slice(0, n); };
+  (d.items || []).slice(0, HW_MAX_ITEMS).forEach(function (x) {
+    if (!x || !String(x.t || '').trim()) return;
+    items.push({ id: S(x.id, 24) || ('h' + Date.now().toString(36) + items.length), t: S(x.t, 120).trim(), due: S(x.due, 12).trim(), how: S(x.how, 60).trim(), note: S(x.note, 200).trim(), done: !!x.done, doneAt: x.done ? (Number(x.doneAt) || Date.now()) : 0 });
+  });
+  var o = { items: items, notice: (d.notice || []).slice(0, 8).map(function (t) { return S(t, 200).trim(); }).filter(function (t) { return t; }) };
+  if (!_hwSave(o)) return { error: 'TOO_BIG' };
+  return { ok: true, hw: o };
+}
+function hwCheck(req) {
+  var lock = null;
+  try { lock = LockService.getScriptLock(); lock.waitLock(5000); } catch (e) { lock = null; }
+  var o = _hw(), hit = false, list = req.list || [{ id: req.id, done: req.done }];
+  list.forEach(function (c) {
+    o.items.forEach(function (x) { if (x.id === String(c.id)) { x.done = !!c.done; x.doneAt = x.done ? Date.now() : 0; hit = true; } });
+  });
+  if (hit) _hwSave(o);
+  try { if (lock) lock.releaseLock(); } catch (e) {}
+  return { ok: true, hw: o };
 }

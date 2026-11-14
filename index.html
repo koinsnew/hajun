@@ -445,6 +445,47 @@
   .todo-t b{display:block;font-size:17px}
   .todo-t small{display:block;font-size:13.5px;color:var(--ink-soft);margin-top:2px}
   .todo-go{flex:none;font-size:15px;color:var(--mango-ink)}
+  /* ── 오늘 할 것 = 숙제 체크리스트 (크게) ── */
+  .today-h{display:flex;align-items:center;gap:8px;font-size:22px !important}
+  .today-h span{flex:1}
+  .today-h .iconbtn{flex:none;width:48px;height:48px;font-size:22px}
+  .hw-prog{display:flex;align-items:center;gap:10px;margin:2px 2px 12px}
+  .hw-prog b{flex:none;font-family:'Jua',sans-serif;font-weight:400;font-size:19px;color:#2F7D3A}
+  .hw-bar{flex:1;height:16px;border-radius:999px;background:#EFE7D2;border:2px solid #2B2A33;overflow:hidden}
+  .hw-bar i{display:block;height:100%;background:#2F9E44;transition:width .3s}
+  .hw-note{background:#EEF3FF;border:2px solid #2457C5;border-radius:14px;padding:10px 12px;margin:0 0 9px;font-size:17px;line-height:1.5;color:#1B3C8C}
+  .hw{display:flex;align-items:center;gap:13px;width:100%;min-height:76px;margin:0 0 10px;padding:12px 13px;border:2.5px solid #2B2A33;border-radius:18px;
+    background:#fff;font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:3px 4px 0 rgba(43,42,51,.16)}
+  .hw:active{transform:translateY(2px);box-shadow:1px 2px 0 rgba(43,42,51,.16)}
+  .hw-box{flex:none;width:46px;height:46px;border:3px solid #2B2A33;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;line-height:1;color:#fff}
+  .hw-t{flex:1;min-width:0}
+  .hw-t b{display:block;font-family:'Jua',sans-serif;font-weight:400;font-size:22px;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
+  .hw-t small{display:block;font-size:16px;line-height:1.45;color:var(--ink-soft);margin-top:3px;word-break:keep-all;overflow-wrap:anywhere}
+  .hw-t small.hw-n{color:#2F7D3A}
+  .hw-d{flex:none;font-family:'Jua',sans-serif;font-size:16px;padding:6px 10px;border-radius:999px;background:#F1ECDD;color:#4A463C;white-space:nowrap}
+  .hw-d.soon{background:#FFE9B8;color:#7A4B00}
+  .hw-d.now{background:#C92A2A;color:#fff}
+  .hw-d.late{background:#2B2A33;color:#fff}
+  .hw.now{background:#FFF1F1;border-color:#C92A2A}
+  .hw.late{background:#F4F1EA}
+  .hw.done{background:#EEF9F1;border-color:#2F7D3A;box-shadow:none;min-height:60px}
+  .hw.done .hw-box{background:#2F9E44;border-color:#2F7D3A}
+  .hw.done .hw-t b{text-decoration:line-through;color:#5B6B5E;font-size:19px}
+  .hw-more{width:100%;min-height:48px;margin:0 0 10px;border:2px dashed #9A937F;border-radius:14px;background:transparent;font-family:'Jua',sans-serif;font-size:17px;color:var(--ink-soft);cursor:pointer}
+  .hw-all{text-align:center;font-family:'Jua',sans-serif;font-size:21px;color:#2F7D3A;padding:10px 4px 14px}
+  .hwsay{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:calc(100vw - 32px);padding:13px 20px;border-radius:999px;background:#2B2A33;color:#fff;
+    font-family:'Jua',sans-serif;font-size:18px;text-align:center;box-shadow:0 6px 18px rgba(0,0,0,.25);pointer-events:none}
+  .hw-empty{font-size:16px;color:var(--ink-soft);padding:2px 4px 12px;line-height:1.5}
+  .today-sub{font-family:'Jua',sans-serif;font-size:16px;color:var(--ink-soft);margin:6px 2px 8px}
+  .hwe{margin-bottom:12px}
+  .hwe label{display:block;font-size:14px;color:var(--ink-soft);margin-top:8px}
+  .hwe input[type=text]{display:block;width:100%;margin-top:4px;padding:11px 12px;border-radius:12px;border:2px solid var(--line);font:inherit;font-size:17px;color:var(--ink);background:#fff}
+  .hwe-h{display:flex;align-items:center;gap:10px}
+  .hwe-h b{font-family:'Jua',sans-serif;font-weight:400;font-size:18px;flex:1}
+  .hwe-c{display:flex !important;align-items:center;gap:6px;margin:0 !important;font-size:15px !important;color:var(--ink) !important}
+  .hwe-c input{width:22px;height:22px}
+  .hwe-x{min-width:44px;min-height:44px;padding:6px 10px}
+  .hwe-2{display:grid;grid-template-columns:1fr 1.5fr;gap:8px}
   .homehd{font-size:17px;margin:4px 2px 10px;color:var(--ink)}
   .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px}
   .tgrid .testbtn{margin:0 !important;flex-direction:column;align-items:flex-start;gap:6px;padding:14px 13px 15px;min-height:128px}
@@ -842,7 +883,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 00:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 08:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -6004,6 +6045,7 @@ function scanImages(kind, onResult){
           if(!acc.by && d.by) acc.by = d.by;
           if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
           if(d.pages && d.pages.length) acc.pages = acc.pages.concat(d.pages);
+          if(d.notice && d.notice.length) acc.notice = (acc.notice || []).concat(d.notice);
           doneN++;
           runBatch(bi+1);
         });
@@ -9075,6 +9117,186 @@ function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 �
 function pendDraw(p, after){
   modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkLevelUp(); }, p.lo, p.hi);
 }
+/* =========================================================
+   📌 오늘 할 것 = 숙제 체크리스트
+   · 아빠가 ✏️(연필)로 들어가 숙제 안내 사진을 넣거나 직접 써 넣는다
+   · 하준이는 홈 맨 위에서 크게 보고, 다 한 것을 눌러 ✅ 체크한다
+   · 목록은 서버가 진도와 따로 지킨다(hw / hwSet / hwCheck) → 어느 기기에서나 같은 목록
+   ========================================================= */
+var HW = {ts:0, items:[], notice:[]};
+var HW_KEY = 'hajun_hw', HW_SYNC_AT = 0, HW_SYNC_MS = 30000, HW_PEND = [], HW_DONE_OPEN = false;
+try{ var _hw0 = JSON.parse(localStorage.getItem(HW_KEY) || 'null'); if(_hw0 && _hw0.items) HW = _hw0; }catch(e){}
+function hwKeep(){ try{ localStorage.setItem(HW_KEY, JSON.stringify(HW)); }catch(e){} }
+/* '11/17' → 날짜. 해가 넘어가는 숙제(12월에 받은 1월 숙제)도 맞춘다 */
+function hwDate(due){
+  var m = /(\d{1,2})\s*[\/.월]\s*(\d{1,2})/.exec(String(due || '')); if(!m) return null;
+  var now = new Date(), y = now.getFullYear(), mo = +m[1], d = +m[2];
+  if(mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  if(mo - (now.getMonth()+1) > 6) y--; else if((now.getMonth()+1) - mo > 6) y++;
+  return new Date(y, mo-1, d);
+}
+function hwDday(due){
+  var dt = hwDate(due); if(!dt) return null;
+  var t = new Date(); t = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  return Math.round((dt - t)/86400000);
+}
+function hwDueTxt(due){
+  var dt = hwDate(due); if(!dt) return '';
+  return (dt.getMonth()+1)+'/'+dt.getDate()+'('+'일월화수목금토'.charAt(dt.getDay())+')까지';
+}
+function hwSorted(){
+  return HW.items.map(function(x, i){ return {x:x, i:i, d:hwDday(x.due)}; }).sort(function(a, b){
+    var da = a.d === null ? 9999 : a.d, db = b.d === null ? 9999 : b.d; return da - db || a.i - b.i;
+  });
+}
+function hwSync(force){
+  if(!hasServer || OFFLINE || (!force && Date.now() - HW_SYNC_AT < HW_SYNC_MS)) return;
+  HW_SYNC_AT = Date.now();
+  function got(j){
+    if(!j || !j.ok || !j.hw) return;
+    if(j.hw.ts === HW.ts) return;
+    HW = j.hw; hwKeep(); hwRedraw();
+  }
+  if(HW_PEND.length){   /* 연결이 안 됐을 때 체크해 둔 것부터 보낸다 */
+    var list = HW_PEND.slice();
+    apiPost({action:'hwCheck', list:list}, function(j){ if(j && j.ok){ HW_PEND = HW_PEND.filter(function(p){ return list.indexOf(p) < 0; }); got(j); } });
+  } else apiGet('hw', got);
+}
+function hwRedraw(){
+  var el = document.querySelector('.today');
+  if(!el || !document.getElementById('fkbig')) return;
+  var y = window.scrollY; screenHome(); try{ window.scrollTo(0, y); }catch(e){}
+}
+function hwToggle(id){
+  var it = HW.items.filter(function(x){ return x.id === id; })[0]; if(!it) return;
+  it.done = !it.done; it.doneAt = it.done ? Date.now() : 0; hwKeep();
+  var left = HW.items.filter(function(x){ return !x.done; }).length;
+  if(it.done){
+    if(!left){ starSound(); confetti(70); hwSay('🎉 숙제를 모두 끝냈어요! 최고!'); }
+    else { okSound(); confetti(14); hwSay('✅ 잘했어요! 이제 '+left+'개 남았어요'); }
+  } else { beep([500],.06); hwSay('다시 할 것으로 돌렸어요'); }
+  var p = {id:id, done:it.done};
+  HW_SYNC_AT = Date.now();
+  apiPost({action:'hwCheck', id:id, done:it.done}, function(j){
+    if(j && j.ok && j.hw){ HW.ts = j.hw.ts; hwKeep(); }
+    else HW_PEND.push(p);
+  });
+  hwRedraw();
+}
+function hwRow(o){
+  var x = o.x, d = o.d, badge = '', cls = '';
+  if(!x.done && d !== null){
+    if(d < 0){ badge = '<span class="hw-d late">'+(-d)+'일 지남</span>'; cls = ' late'; }
+    else if(d === 0){ badge = '<span class="hw-d now">오늘까지!</span>'; cls = ' now'; }
+    else if(d === 1){ badge = '<span class="hw-d soon">내일까지</span>'; cls = ' soon'; }
+    else badge = '<span class="hw-d">D-'+d+'</span>';
+  }
+  var sub = [hwDueTxt(x.due), x.how].filter(function(s){ return s; }).join(' · ');
+  return '<button class="hw'+(x.done ? ' done' : cls)+'" data-hw="'+esc(x.id)+'" role="checkbox" aria-checked="'+(x.done ? 'true' : 'false')+'">'+
+    '<span class="hw-box" aria-hidden="true">'+(x.done ? '✔' : '')+'</span>'+
+    '<span class="hw-t"><b>'+esc(x.t)+'</b>'+
+      (sub ? '<small>📅 '+esc(sub)+'</small>' : '')+
+      (x.note ? '<small class="hw-n">💡 '+esc(x.note)+'</small>' : '')+
+    '</span>'+badge+'</button>';
+}
+/* 홈 맨 위 숙제 묶음 — 숙제가 없으면 빈 문자열 */
+function hwHtml(){
+  if(!HW.items.length && !(HW.notice || []).length) return '';
+  var all = hwSorted(), todo = all.filter(function(o){ return !o.x.done; }), done = all.filter(function(o){ return o.x.done; }), n = HW.items.length;
+  var h = '';
+  if(n){
+    h += '<div class="hw-prog" role="img" aria-label="숙제 '+n+'개 가운데 '+done.length+'개 끝냄"><div class="hw-bar"><i style="width:'+Math.round(done.length*100/n)+'%"></i></div>'+
+      '<b>'+(todo.length ? done.length+' / '+n+' 끝!' : '🎉 모두 끝!')+'</b></div>';
+  }
+  h += todo.map(hwRow).join('');
+  if(n && !todo.length) h += '<div class="hw-all">🏆 숙제를 다 했어요! 정말 멋져요!</div>';
+  (HW.notice || []).forEach(function(t){ h += '<div class="hw-note">📢 '+esc(t)+'</div>'; });
+  if(done.length){
+    h += '<button class="hw-more" id="hwmore" aria-expanded="'+(HW_DONE_OPEN ? 'true' : 'false')+'">✅ 다 한 것 '+done.length+'개 '+(HW_DONE_OPEN ? '▲ 접기' : '▼ 보기')+'</button>';
+    if(HW_DONE_OPEN) h += done.map(hwRow).join('');
+  }
+  return h;
+}
+function hwBind(){
+  on('.hw', function(){ hwToggle(this.dataset.hw); });
+  var m = document.getElementById('hwmore'); if(m) m.onclick = function(){ HW_DONE_OPEN = !HW_DONE_OPEN; beep([600],.05); hwRedraw(); };
+  var e = document.getElementById('hwedit'); if(e) e.onclick = function(){ beep([700],.06); needDad(screenHwEdit, screenHome, '숙제를 고치려면 아빠 비밀번호가 필요해요'); };
+  hwSync();
+}
+/* AI·손으로 넣은 글 다듬기 */
+function hwClean(s){ return String(s == null ? '' : s).replace(/^\s*[-*•·]+\s*/, '').replace(/^\((.*)\)$/, '$1').replace(/\s+/g, ' ').trim(); }
+/* 작은 알림 줄 (화면 아래) */
+function hwSay(txt){
+  var o = document.getElementById('hwsay'); if(o) o.remove();
+  var d = document.createElement('div'); d.id = 'hwsay'; d.className = 'hwsay'; d.setAttribute('role', 'status'); d.textContent = txt;
+  document.body.appendChild(d); setTimeout(function(){ if(d.parentNode) d.remove(); }, 2600);
+}
+function hwNewId(){ return 'h'+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36); }
+
+/* ── ✏️ 아빠: 숙제 고치기 ── */
+function screenHwEdit(){
+  var W = {items: HW.items.map(function(x){ return {id:x.id, t:x.t, due:x.due, how:x.how, note:x.note, done:!!x.done, doneAt:x.doneAt || 0}; }), notice: (HW.notice || []).slice()};
+  function read(){
+    Array.prototype.forEach.call(app.querySelectorAll('.hwe'), function(c){
+      var it = W.items[+c.dataset.i]; if(!it) return;
+      it.t = c.querySelector('.f-t').value; it.due = c.querySelector('.f-due').value; it.how = c.querySelector('.f-how').value; it.note = c.querySelector('.f-note').value;
+      it.done = c.querySelector('.f-done').checked; if(!it.done) it.doneAt = 0; else if(!it.doneAt) it.doneAt = Date.now();
+    });
+    var n = document.getElementById('hwnotice'); if(n) W.notice = n.value.split('\n').map(function(s){ return s.trim(); }).filter(function(s){ return s; });
+  }
+  function draw(focusLast){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>✏️ 숙제 고치기</h2><div class="pill">'+W.items.length+'개</div></div>'+
+      '<div class="card" style="margin-bottom:12px;line-height:1.6"><b>숙제 안내 사진</b>(밴드·카톡 화면 캡처)을 넣으면 AI가 읽어서 아래에 채워요. 틀린 곳은 고친 뒤 <b>저장</b>을 눌러 주세요.</div>'+
+      '<div class="row" style="gap:8px;margin-bottom:14px"><button class="btn primary" id="hwscan" style="flex:1;min-height:52px">📷 사진으로 넣기</button><button class="btn" id="hwadd" style="flex:1;min-height:52px">➕ 직접 쓰기</button></div>'+
+      W.items.map(function(x, i){
+        return '<div class="card hwe" data-i="'+i+'">'+
+          '<div class="hwe-h"><b>'+(i+1)+'번</b><label class="hwe-c"><input type="checkbox" class="f-done"'+(x.done ? ' checked' : '')+'> 다 했음</label>'+
+            '<button class="btn hwe-x" data-del="'+i+'" aria-label="'+(i+1)+'번 지우기">🗑</button></div>'+
+          '<label>숙제<input class="f-t" type="text" maxlength="120" value="'+esc(x.t)+'" placeholder="예: 브릭스 Unit 14 WB"></label>'+
+          '<div class="hwe-2"><label>언제까지<input class="f-due" type="text" inputmode="numeric" maxlength="12" value="'+esc(x.due)+'" placeholder="11/17"></label>'+
+            '<label>내는 방법<input class="f-how" type="text" maxlength="60" value="'+esc(x.how)+'" placeholder="밴드에 영상 업로드"></label></div>'+
+          '<label>설명 (없으면 비워 두기)<input class="f-note" type="text" maxlength="200" value="'+esc(x.note)+'" placeholder=""></label>'+
+          (x.done && x.doneAt ? '<div class="muted" style="margin-top:6px">✅ '+new Date(x.doneAt).toLocaleString('ko-KR', {month:'numeric', day:'numeric', hour:'numeric', minute:'2-digit'})+' 에 체크함</div>' : '')+
+        '</div>';
+      }).join('')+
+      (W.items.length ? '' : '<div class="card muted" style="text-align:center;margin-bottom:12px">아직 숙제가 없어요. 위 버튼으로 넣어 주세요.</div>')+
+      '<div class="card" style="margin-bottom:12px"><label><b>📢 알림</b> <span class="muted">(준비물·시험 예고 — 한 줄에 하나)</span>'+
+        '<textarea id="hwnotice" rows="3" style="width:100%;margin-top:6px;padding:10px;border-radius:12px;border:2px solid var(--line);font:inherit;font-size:16px">'+esc(W.notice.join('\n'))+'</textarea></label></div>'+
+      '<button class="btn primary wide" id="hwsave" style="font-size:20px;padding:16px;margin-bottom:10px">💾 저장</button>'+
+      '<div class="row" style="gap:8px"><button class="btn" id="hwclr" style="flex:1">✅ 다 한 것 지우기</button><button class="btn" id="hwall" style="flex:1">🗑 모두 지우기</button></div>';
+    document.getElementById('back').onclick = function(){ read(); if(!dirty() || confirm('저장하지 않고 나갈까요?')) screenHome(); };
+    document.getElementById('hwadd').onclick = function(){ read(); W.items.push({id:hwNewId(), t:'', due:'', how:'', note:'', done:false, doneAt:0}); draw(true); };
+    document.getElementById('hwscan').onclick = function(){
+      read();
+      scanImages('hw', function(r){
+        var add = (r.items || []).map(function(x){ return {id:hwNewId(), t:hwClean(x.t), due:hwClean(x.due), how:hwClean(x.how), note:hwClean(x.note), done:false, doneAt:0}; }).filter(function(x){ return x.t; });
+        var nn = (r.notice || []).map(hwClean).filter(function(s){ return s && W.notice.indexOf(s) < 0; });
+        W.items = W.items.concat(add).slice(0, 40); W.notice = W.notice.concat(nn).slice(0, 8);
+        draw(); hwSay(add.length ? '📷 숙제 '+add.length+'개를 넣었어요. 확인하고 저장!' : '숙제를 찾지 못했어요. 직접 써 주세요.');
+      });
+    };
+    on('[data-del]', function(){ read(); W.items.splice(+this.dataset.del, 1); draw(); });
+    document.getElementById('hwclr').onclick = function(){ read(); var n = W.items.filter(function(x){ return x.done; }).length; if(!n){ hwSay('다 한 것이 없어요'); return; } if(confirm('다 한 숙제 '+n+'개를 목록에서 지울까요?')){ W.items = W.items.filter(function(x){ return !x.done; }); draw(); } };
+    document.getElementById('hwall').onclick = function(){ if(confirm('숙제와 알림을 모두 지울까요?')){ W.items = []; W.notice = []; draw(); } };
+    document.getElementById('hwsave').onclick = save;
+    if(focusLast){ var f = app.querySelectorAll('.f-t'); if(f.length){ f[f.length-1].focus(); f[f.length-1].scrollIntoView({block:'center'}); } }
+  }
+  function clean(){ return {items: W.items.filter(function(x){ return String(x.t).trim(); }).map(function(x){ return {id:x.id, t:String(x.t).trim(), due:String(x.due).trim(), how:String(x.how).trim(), note:String(x.note).trim(), done:!!x.done, doneAt:x.done ? (x.doneAt || Date.now()) : 0}; }), notice: W.notice.slice()}; }
+  function dirty(){ var c = clean(); return JSON.stringify(c.items) !== JSON.stringify(HW.items.map(function(x){ return {id:x.id, t:x.t, due:x.due, how:x.how, note:x.note, done:!!x.done, doneAt:x.done ? (x.doneAt || 0) : 0}; })) || JSON.stringify(c.notice) !== JSON.stringify(HW.notice || []); }
+  function save(){
+    read(); var c = clean();
+    HW = {ts: Date.now(), items: c.items, notice: c.notice}; hwKeep(); HW_PEND = [];
+    okSound(); hwSay('💾 저장했어요');
+    HW_SYNC_AT = Date.now();
+    apiPost({action:'hwSet', pin:DAD_PIN, hw:c}, function(j){
+      if(j && j.ok && j.hw){ HW = j.hw; hwKeep(); }
+      else hwSay(j && j.error === 'UNKNOWN_ACTION' ? '⚠️ 서버가 예전 버전이라 이 기기에만 저장됐어요' : j && j.error === 'TOO_BIG' ? '⚠️ 숙제가 너무 많아요. 다 한 것을 지워 주세요' : '⚠️ 서버에 저장하지 못했어요. 이 기기에만 저장됐어요');
+    });
+    screenHome();
+  }
+  draw();
+}
 /* ── 홈 맨 위 '오늘 할 것' — 지금 해야 할 일만 모은다 (안 뽑은 별 · 원서 이어하기 · 다시 볼 단어 · 지금 단계) ── */
 var HOME_LV_OPEN = false;
 function todoRow(id, ico, title, sub, go, extra){
@@ -9089,10 +9311,12 @@ function todayHtml(){
   if(missList().length) rows.push(todoRow('miss', '🔁', '다시 볼 단어 '+missList().length+'개', '👨 아빠랑 5분 · 못 읽은 것만 모았어요', '▶'));
   var cur = LEVELS.filter(function(L){ return unlocked(L) && !levelDone(L); })[0];
   if(rows.length < 3 && cur) rows.push(todoRow('todolv', cur.icon, cur.id+'단계 이어서 하기', esc(cur.title)+' · ⭐ '+levelStars(cur)+'/'+levelMax(cur), '▶', {attr:'data-id="'+cur.id+'"'}));
-  if(!rows.length) return '';
-  return '<div class="today"><div class="today-h">📌 오늘 할 것</div>'+rows.join('')+'</div>';
+  var hw = hwHtml();
+  return '<div class="today"><div class="today-h"><span>📌 오늘 할 것</span><button class="iconbtn" id="hwedit" aria-label="아빠: 숙제 고치기">✏️</button></div>'+
+    (hw || '<div class="hw-empty">아직 넣은 숙제가 없어요. 아빠가 ✏️ 를 눌러 숙제를 넣어 주세요.</div>')+
+    (rows.length ? (hw ? '<div class="today-sub">📱 앱에서 할 것</div>' : '')+rows.join('') : '')+'</div>';
 }
-function bindPendHome(){ on('.pendgo', function(){ var p = pendFind(this.dataset.pk); if(p) pendDraw(p, function(){ screenHome(); }); }); }
+function bindPendHome(){ hwBind(); on('.pendgo', function(){ var p = pendFind(this.dataset.pk); if(p) pendDraw(p, function(){ screenHome(); }); }); }
 function modalStarDraw(cb, min, max){
   min = min || STAR_PICK_MIN; max = max || STAR_PICK_MAX;
   function roll(){ return min + Math.floor(Math.random() * (max - min + 1)); }
