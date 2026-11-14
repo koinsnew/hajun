@@ -93,8 +93,7 @@
   .hero .face{font-size:44px}
   .hero b{display:block;font-size:20px}
   .hero small{opacity:.9;font-size:14px}
-  .hsvg{width:104px;height:137px;flex:none;display:block}
-  .hsvg.lg{width:180px;height:237px;margin:0 auto}
+  .hsvg{flex:none;display:block}
   .hinfo{flex:1;min-width:0}
   .hinfo .nm{font-size:22px;line-height:1.2}
   .hinfo .ti{font-size:15px;opacity:.95;margin-bottom:8px}
@@ -645,7 +644,77 @@
   #qzbig{background:#1971C2} #stbig{background:#C2255C} #ogbig{background:#2457C5} #mmbig,#play{background:#6741D9}
   #ntbig{background:#C2410C} #spbig{background:#C92A2A} #libbig{background:#2F7D3A} #pkbig{background:#0B7285} #dadbtn{background:#6B4E2E}
   .testbtn.lock{background:#F6F0E2;color:var(--ink-soft);border-style:dashed}
-  ::selection{background:#FFE08A;color:var(--ink)}
+  ::selection{background:#FFE08A;color:var(--ink)}
+  /* ================= ⚽ 선수 카드 · 게임 HUD · 레벨 업 ================= */
+  .pcard{--w:112px;width:var(--w);flex:none;border-radius:calc(var(--w)*.13);padding:calc(var(--w)*.05);position:relative;overflow:hidden;
+    background:linear-gradient(155deg,var(--c1),var(--c2));border:2.5px solid #2B2A33;box-shadow:3px 4px 0 rgba(0,0,0,.28);text-align:center;color:var(--ci)}
+  .pcard.sm{--w:74px;border-width:2px;box-shadow:2px 3px 0 rgba(0,0,0,.2)}
+  .pcard.lg{--w:196px;border-width:3px}
+  .pcard:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.55) 0 12%,transparent 13% 40%,rgba(255,255,255,.22) 41% 47%,transparent 48%);pointer-events:none}
+  .pc-top{display:flex;justify-content:space-between;align-items:center;font-family:'Jua',sans-serif;font-size:calc(var(--w)*.105);line-height:1.1;padding:0 calc(var(--w)*.02) calc(var(--w)*.03);position:relative}
+  .pc-lv b{font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:calc(var(--w)*.19);line-height:.9}
+  .pc-tier{font-size:calc(var(--w)*.095);opacity:.95;white-space:nowrap}
+  .pcard.sm .pc-tier{display:none}
+  .pc-art{border-radius:calc(var(--w)*.09);overflow:hidden;position:relative;border:1.5px solid rgba(0,0,0,.35);
+    background:radial-gradient(90% 70% at 50% 18%,#3B5BDB 0,#1B2B52 60%,#101A36 100%)}
+  .psvg{display:block;width:100%;height:auto}
+  .pc-name{font-family:'Jua',sans-serif;font-size:calc(var(--w)*.135);line-height:1.15;padding-top:calc(var(--w)*.045);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+  .pcard.lock{background:linear-gradient(155deg,#5B6475,#2F3645);color:#C5CCDA}
+  .pcard.lock:before{display:none}
+  .pcard.lock .pc-art{background:#1A2030}
+  .pcard.t-leg:after,.pcard.t-son:after{content:'';position:absolute;top:0;bottom:0;left:-70%;width:45%;pointer-events:none;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);animation:pcshine 3.2s ease-in-out infinite}
+  .pcard.lock:after{display:none}
+  @keyframes pcshine{0%,55%{left:-70%}100%{left:130%}}
+
+  .hud{display:flex;gap:14px;align-items:center;border:2px solid #2B2A33;border-radius:20px;padding:14px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden;
+    background:radial-gradient(120% 90% at 0% 0%,#2F4AA8 0,#182650 55%,#0F1833 100%);box-shadow:var(--shadow)}
+  .hud:before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 14px,transparent 14px 28px)}
+  .hud-card{border:0;background:none;padding:0;cursor:pointer;flex:none;position:relative;font:inherit}
+  .hud-card:active{transform:scale(.96)}
+  .hud-info{flex:1;min-width:0;position:relative}
+  .hud-name{font-family:'Jua',sans-serif;font-size:23px;line-height:1.15}
+  .hud-title{font-size:15px;color:#DCE6F9;margin:1px 0 9px}
+  .hud-title b{color:#FFE066;font-size:17px}
+  .hud-xp{height:14px;border-radius:999px;background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.35);overflow:hidden}
+  .hud-xp i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#FCC419,#FFE066 60%,#FFF3BF);transition:width .6s cubic-bezier(.16,1,.3,1)}
+  .hud-cnt{font-size:13.5px;color:#DCE6F9;margin:5px 0 9px;line-height:1.35}
+  .hud-cnt b{color:#FFE066;font-family:'Jua',sans-serif;font-size:15px}
+  .hud-btns{display:flex;gap:7px;flex-wrap:wrap}
+  .hud-btn{font-family:'Jua',sans-serif;font-size:14.5px;color:#fff;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.45);border-radius:12px;padding:8px 10px;min-height:44px;cursor:pointer}
+  .hud-btn:active{background:rgba(255,255,255,.26)}
+  .hud-btn span{background:#FCC419;color:#3B2208;border-radius:999px;padding:1px 7px;margin-left:3px;font-size:13px}
+  .hud-btn span.hot{animation:bagpop 1.6s ease-in-out infinite}
+  .hud button:focus-visible{outline:3px solid #FFE066;outline-offset:2px}
+
+  .lvov{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;background:rgba(9,14,32,.94);color:#fff;text-align:center}
+  .lv-rays{position:absolute;left:50%;top:44%;width:150vmax;height:150vmax;margin:-75vmax 0 0 -75vmax;pointer-events:none;opacity:.5;
+    background:repeating-conic-gradient(from 0deg,var(--c1) 0 7deg,transparent 7deg 20deg);
+    -webkit-mask-image:radial-gradient(circle,#000 0,transparent 46%);mask-image:radial-gradient(circle,#000 0,transparent 46%);animation:lvspin 26s linear infinite}
+  @keyframes lvspin{to{transform:rotate(360deg)}}
+  .lv-box{position:relative;width:100%;max-width:360px}
+  .lv-up{font-family:'Patrick Hand',sans-serif;font-size:58px;line-height:1;letter-spacing:2px;color:#FFE066;-webkit-text-stroke:2px #2B2A33;text-shadow:3px 4px 0 #2B2A33;animation:lvpop .7s cubic-bezier(.16,1,.3,1) both}
+  .lv-num{font-family:'Jua',sans-serif;font-size:22px;margin:8px 0 4px;display:flex;justify-content:center;align-items:center;gap:10px}
+  .lv-num span{opacity:.65}.lv-num i{font-style:normal;color:#FFE066;font-size:16px}.lv-num b{font-size:32px;color:#fff;font-weight:400}
+  .lv-tier{display:inline-block;font-family:'Jua',sans-serif;font-size:15px;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;border:2px solid #fff;border-radius:999px;padding:4px 14px;margin:2px 0 4px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .lv-card{display:flex;justify-content:center;margin:12px 0 10px;animation:lvcard .9s cubic-bezier(.16,1,.3,1) .15s both}
+  @keyframes lvpop{0%{transform:scale(.3);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes lvcard{0%{transform:translateY(40px) rotate(-8deg) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+  .lv-who{font-family:'Jua',sans-serif;font-size:24px;margin-bottom:4px}.lv-who b{color:#FFE066;font-weight:400}
+  .lv-sub{font-size:15px;color:#DCE6F9;margin-bottom:4px}.lv-sub b{color:#FFE066}
+  .lvov .btn{margin-top:12px;font-size:20px;padding:15px}
+  .lvov > .conf{z-index:0}
+  @media (prefers-reduced-motion:reduce){ .lv-rays,.pcard:after{animation:none} .lv-up,.lv-card{animation-duration:.01s} }
+
+  .dexnow{border:2px solid #2B2A33;border-radius:16px;padding:12px 14px;margin-bottom:14px;color:#fff;background:linear-gradient(135deg,#2F4AA8,#0F1833);box-shadow:var(--shadow);font-size:15px;display:grid;gap:7px}
+  .dexnow b{font-family:'Jua',sans-serif;font-size:19px;color:#FFE066;font-weight:400}
+  .dexhd{display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px;padding:7px 12px;border-radius:12px;border:2px solid #2B2A33;background:linear-gradient(135deg,var(--c1),var(--c2));color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+  .dexhd b{font-family:'Jua',sans-serif;font-size:17px;font-weight:400}.dexhd span{font-size:13.5px}
+  .dexgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:10px 6px;justify-items:center}
+  .dexcell{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .dexcell small{font-size:12.5px;color:var(--ink-soft)}
+  .dexcell.now .pcard{outline:3px solid #F59F00;outline-offset:2px}
+  .dexcell.now small{color:#C2410C;font-family:'Jua',sans-serif}
   /* ── 단어 테스트 답 칸: 펜/자판 ── */
   .qzmode{display:flex;gap:8px;margin:4px 0 10px}
   .qzmode .btn{flex:1;padding:11px 6px;font-size:16px}
@@ -744,7 +813,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.09 23:45';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 15:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1280,7 +1349,6 @@ var KINDS = [
    부담 적은 6가지(게임/유튜브/축구카드/아빠랑축구/마트1개/친구랑놀기)만 두 번 나온다.
    바꾸시려면 이 줄의 숫자만 고치면 됩니다. */
 var SLOTS = [1,2,3,4,5,6,7,8,9,10, 1,2,3,4,8,10];
-var FINAL = {e:'🕹️', n:'닌텐도 게임 칩'};
 var PICK_COUNT = SLOTS.length;
 function kindOf(i){ var id=SLOTS[i]; return KINDS.filter(function(k){ return k.id===id; })[0]; }
 function kindById(id){ return KINDS.filter(function(k){ return k.id===id; })[0]; }
@@ -1310,138 +1378,247 @@ function pkPrizeById(pid){
   return null;
 }
 
-var HERO = [
-  {t:'축구 꿈나무',   j:'#E5E7EB', m:'#9CA3AF', s:'#6B7280'},
-  {t:'동네 축구왕',   j:'#93C5FD', m:'#3B82F6', s:'#1E3A8A'},
-  {t:'학교 대표',     j:'#60A5FA', m:'#1D4ED8', s:'#1E3A8A'},
-  {t:'유소년 선수',   j:'#5EEAD4', m:'#0D9488', s:'#134E4A'},
-  {t:'주전 공격수',   j:'#34D399', m:'#059669', s:'#064E3B'},
-  {t:'팀의 에이스',   j:'#A3E635', m:'#65A30D', s:'#365314'},
-  {t:'캡틴 하준',     j:'#FB7185', m:'#E11D48', s:'#881337'},
-  {t:'리그 득점왕',   j:'#F472B6', m:'#DB2777', s:'#831843'},
-  {t:'유럽 진출',     j:'#C084FC', m:'#9333EA', s:'#3B0764'},
-  {t:'리그 MVP',      j:'#7C9BE0', m:'#2457C5', s:'#2E1065'},
-  {t:'국가대표',      j:'#EF4444', m:'#B91C1C', s:'#1F2937'},
-  {t:'아시아 최고',   j:'#FB923C', m:'#EA580C', s:'#7C2D12'},
-  {t:'월드컵 스타',   j:'#38BDF8', m:'#0284C7', s:'#0C4A6E'},
-  {t:'발롱도르 수상', j:'#FBBF24', m:'#D97706', s:'#78350F'},
-  {t:'세계 최고 선수', j:'#FCD34D', m:'#B45309', s:'#451A03'},
-  {t:'살아있는 전설', j:'#FDE047', m:'#CA8A04', s:'#422006'},
-  {t:'메시처럼! 🐐',  j:'#8DC3EE', m:'#4A90D9', s:'#111827'}
-];
-var HERO_MAX = HERO.length - 1;   /* 16 */
 var SKIN='#F7C99A', SKIN2='#E8AF7C', HAIR='#2B2018', LINE='#2B2A33';
 
-function heroSVG(lv, bag){
-  lv = Math.max(0, Math.min(HERO_MAX, lv));
-  var h = HERO[lv], o = [], goat = (lv===HERO_MAX);
-  o.push('<svg viewBox="0 0 220 290" xmlns="http://www.w3.org/2000/svg" class="hsvg" aria-label="하준이 캐릭터">');
-  o.push('<defs>'+
-    '<radialGradient id="aura"><stop offset="0" stop-color="#FDE68A" stop-opacity=".85"/><stop offset="1" stop-color="#FDE68A" stop-opacity="0"/></radialGradient>'+
-    '<linearGradient id="jg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+h.j+'"/><stop offset="1" stop-color="'+h.m+'"/></linearGradient>'+
-    '<clipPath id="jclip"><path d="M80 102 q30 -11 60 0 l6 60 q-36 9 -72 0 z"/></clipPath>'+
-  '</defs>');
+/* =========================================================
+   ⭐ 별 레벨 + ⚽ 선수 카드
+   · 레벨 = 지금까지 모은 별(누적, totalStars)로 정해진다. 별을 써도 레벨은 안 내려간다.
+   · Lv.0 하준 → Lv.1~10 유망주 → 11~23 한국의 별 → 24~30 현역 스타 → 31~41 베테랑 → 42~49 전설 → Lv.50 손흥민
+   · 레벨마다 필요한 별: 10개에서 시작해 조금씩 늘어 마지막엔 90개 (합계 LV_TOTAL)
+   · 선수 그림은 사진이 아니라 앱 그림체 캐릭터 (머리·등번호·유니폼 색으로 구분, 엠블럼 없음)
+   ========================================================= */
+var LV_MAX = 50;          /* 최고 레벨 */
+var LV_FIRST = 10;        /* Lv.1에 필요한 별 */
+var LV_LAST = 90;         /* 마지막 레벨(Lv.50) 하나에 필요한 별 — 이 둘을 바꾸면 전체 속도가 바뀐다 (지금 합계 2,500) */
+function lvNeed(L){ L = Math.max(0, Math.min(LV_MAX, L)); return Math.round(LV_FIRST*L + (LV_LAST-LV_FIRST)/(LV_MAX-1) * L*(L-1)/2); }   /* Lv.L이 되려면 필요한 누적 별 */
+function lvOf(stars){ var L = 0; while(L < LV_MAX && stars >= lvNeed(L+1)) L++; return L; }
 
-  if(lv>=14) o.push('<circle cx="110" cy="145" r="112" fill="url(#aura)"/>');
-  o.push('<ellipse cx="110" cy="272" rx="56" ry="8" fill="'+LINE+'" opacity=".13"/>');
+/* 등급(구간): 카드 테두리 색이 달라진다 */
+var TIERS = [
+  {k:'me',   n:'나',         from:0,  c1:'#5C7CFA', c2:'#3B5BDB', ink:'#fff'},
+  {k:'rook', n:'유망주',     from:1,  c1:'#D9A066', c2:'#A8642A', ink:'#3B2208'},
+  {k:'kor',  n:'한국의 별',  from:11, c1:'#E03131', c2:'#1C3FAA', ink:'#fff'},
+  {k:'star', n:'현역 스타',  from:24, c1:'#DEE2E6', c2:'#868E96', ink:'#212529'},
+  {k:'vet',  n:'베테랑',     from:31, c1:'#FFD43B', c2:'#E67700', ink:'#3B2208'},
+  {k:'leg',  n:'전설',       from:42, c1:'#B197FC', c2:'#5F3DC4', ink:'#fff'},
+  {k:'son',  n:'월드클래스', from:50, c1:'#FFE066', c2:'#F03E3E', ink:'#3B0A0A'}
+];
+function tierOf(lv){ var t = TIERS[0]; TIERS.forEach(function(x){ if(lv >= x.from) t = x; }); return t; }
 
-  // 망토
-  if(lv>=11) o.push('<path d="M80 106 Q110 94 140 106 L154 206 Q110 186 66 206 Z" fill="'+h.m+'" opacity=".9"/>'+
-                   '<path d="M80 106 Q110 94 140 106 L136 118 Q110 108 84 118 Z" fill="#fff" opacity=".25"/>');
+/* 유니폼 색 (나라 색에서 따온 단순한 색 조합 — 엠블럼·실제 디자인 아님)  [몸통, 포인트, 무늬] */
+var KITS = {
+  KOR:['#E03131','#1C3FAA',''],      BRA:['#FCC419','#2B8A3E',''],     ARG:['#A5D8FF','#FFFFFF','stripe'],
+  FRA:['#1C2C5B','#FFFFFF',''],      ENG:['#F8F9FA','#1C2C5B',''],     ESP:['#C92A2A','#FCC419',''],
+  GER:['#F8F9FA','#212529','band'],  POR:['#A51E36','#2B8A3E',''],     NED:['#F76707','#212529',''],
+  BEL:['#C92A2A','#212529',''],      NOR:['#C92A2A','#1C2C5B',''],     EGY:['#C92A2A','#F8F9FA',''],
+  CRO:['#F8F9FA','#E03131','check'], POL:['#F8F9FA','#E03131','band'], URU:['#74C0FC','#212529',''],
+  GK:['#51CF66','#212529',''],       ME:['#2457C5','#FCC419','']
+};
+var SKINS = ['#F7C99A','#E9B98C','#B97A56','#7A4B2E'];
+/* [이름, 등번호, 유니폼, 피부(0~3), 머리 모양, 머리 색, 수염(0 없음·1 짧은·2 덥수룩)] */
+var PLAYERS = [
+  ['하준',10,'ME',0,'mop','#2B2018',0],
+  /* 1~10 유망주 */
+  ['양민혁',18,'KOR',0,'mop','#1B1B1B',0], ['배준호',10,'KOR',0,'short','#1B1B1B',0], ['엔드릭',9,'BRA',2,'fade','#1B1B1B',0],
+  ['가르나초',17,'ARG',1,'spiky','#C9A227',0], ['가비',6,'ESP',0,'short','#3A2A1E',0], ['무시알라',10,'GER',2,'curly','#1B1B1B',0],
+  ['파머',20,'ENG',0,'short','#8A5A2B',0], ['비르츠',17,'GER',0,'wavy','#5B3A22',0], ['야말',19,'ESP',2,'curly','#1B1B1B',0],
+  ['벨링엄',5,'ENG',2,'fade','#1B1B1B',0],
+  /* 11~23 한국의 별 */
+  ['조규성',9,'KOR',0,'wavy','#1B1B1B',0], ['설영우',22,'KOR',0,'short','#1B1B1B',0], ['황인범',6,'KOR',0,'mop','#1B1B1B',0],
+  ['이재성',10,'KOR',0,'short','#2B2018',0], ['조현우',21,'GK',0,'spiky','#C9A227',0], ['황희찬',11,'KOR',1,'fade','#1B1B1B',0],
+  ['기성용',16,'KOR',0,'wavy','#2B2018',0], ['이영표',12,'KOR',0,'short','#1B1B1B',0], ['안정환',19,'KOR',0,'long','#3A2A1E',0],
+  ['김민재',4,'KOR',1,'fade','#1B1B1B',0], ['이강인',18,'KOR',0,'mop','#2B2018',0], ['차범근',11,'KOR',0,'wavy','#1B1B1B',0],
+  ['박지성',13,'KOR',0,'mop','#1B1B1B',0],
+  /* 24~30 현역 스타 */
+  ['포든',47,'ENG',0,'fade','#D9B45A',0], ['로드리',16,'ESP',0,'short','#2B2018',1], ['사카',7,'ENG',3,'fade','#1B1B1B',0],
+  ['비니시우스',7,'BRA',3,'fade','#1B1B1B',0], ['살라',11,'EGY',1,'afro','#1B1B1B',2], ['홀란',9,'NOR',0,'bun','#E8C96A',0],
+  ['음바페',10,'FRA',3,'fade','#1B1B1B',0],
+  /* 31~41 베테랑 */
+  ['판다이크',4,'NED',2,'bun','#1B1B1B',1], ['케인',9,'ENG',0,'short','#8A5A2B',1], ['더브라위너',7,'BEL',0,'short','#D9773A',0],
+  ['그리즈만',7,'FRA',0,'wavy','#D9B45A',1], ['노이어',1,'GK',0,'short','#C9A227',0], ['레반도프스키',9,'POL',0,'short','#3A2A1E',0],
+  ['수아레스',9,'URU',1,'short','#1B1B1B',1], ['벤제마',9,'FRA',1,'fade','#1B1B1B',2], ['네이마르',10,'BRA',1,'spiky','#3A2A1E',0],
+  ['모드리치',10,'CRO',0,'long','#C9A227',0], ['호날두',7,'POR',1,'spiky','#1B1B1B',0],
+  /* 42~49 전설 */
+  ['베컴',7,'ENG',0,'wavy','#C9A227',1], ['앙리',14,'FRA',3,'bald','#1B1B1B',1], ['호나우지뉴',10,'BRA',2,'long','#1B1B1B',1],
+  ['지단',10,'FRA',1,'bald','#1B1B1B',0], ['호나우두',9,'BRA',2,'fade','#1B1B1B',0], ['마라도나',10,'ARG',1,'afro','#1B1B1B',0],
+  ['펠레',10,'BRA',3,'fade','#1B1B1B',0], ['메시',10,'ARG',0,'short','#5B3A22',2],
+  /* 50 */
+  ['손흥민',7,'KOR',0,'spiky','#1B1B1B',0]
+];
+function playerAt(lv){
+  var a = PLAYERS[Math.max(0, Math.min(LV_MAX, lv))];
+  return {n:a[0], no:a[1], kit:KITS[a[2]] || KITS.ME, skin:SKINS[a[3]] || SKINS[0], hair:a[4], hc:a[5], beard:a[6], lv:lv, tier:tierOf(lv)};
+}
+/* 예전 코드가 쓰는 이름들 (칭호 = "○○처럼!") */
+var HERO_MAX = LV_MAX;
+var HERO = PLAYERS.map(function(a, i){ return {t: i === 0 ? '축구 꿈나무' : a[0]+'처럼!'}; });
 
-  // 다리 + 양말 + 축구화
-  ['90','115'].forEach(function(x){
-    o.push('<rect x="'+x+'" y="174" width="15" height="52" rx="7" fill="'+SKIN+'"/>');
-    o.push('<rect x="'+x+'" y="204" width="15" height="32" rx="6" fill="'+h.m+'"/>');
-    o.push('<rect x="'+x+'" y="206" width="15" height="5" fill="#fff" opacity=".6"/>');
-  });
-  if(lv>=1){
-    o.push('<path d="M88 234 h19 v9 h11 q5 0 5 5 t-5 5 h-30 z" fill="'+(lv>=9?'#FBBF24':'#1F2937')+'"/>');
-    o.push('<path d="M132 234 h-19 v9 h-11 q-5 0 -5 5 t5 5 h30 z" fill="'+(lv>=9?'#FBBF24':'#1F2937')+'"/>');
+/* 선수 얼굴(가슴 위) — viewBox 0 0 200 220. lock=true면 실루엣 */
+function playerSVG(lv, lock){
+  var p = playerAt(lv), o = [], k = p.kit, sk = p.skin, hc = p.hc, id = 'pk'+lv+(lock?'l':'');
+  var dk = lock ? '#3A4252' : null;
+  function F(c){ return dk || c; }
+  o.push('<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" class="psvg" role="img" aria-label="'+(lock ? '아직 잠긴 선수' : esc(p.n)+' 캐릭터')+'">');
+  o.push('<defs><clipPath id="'+id+'"><path d="M22 220 V178 Q22 150 60 142 L82 136 Q100 148 118 136 L140 142 Q178 150 178 178 V220 Z"/></clipPath></defs>');
+  /* 유니폼 */
+  o.push('<g clip-path="url(#'+id+')"><rect x="0" y="120" width="200" height="110" fill="'+F(k[0])+'"/>');
+  if(!lock){
+    if(k[2] === 'stripe') for(var x=30; x<180; x+=28) o.push('<rect x="'+x+'" y="120" width="14" height="110" fill="'+k[1]+'"/>');
+    if(k[2] === 'band') o.push('<rect x="0" y="160" width="200" height="14" fill="'+k[1]+'"/>');
+    if(k[2] === 'check') for(var cy=128; cy<220; cy+=20) for(var cx=20+((cy-128)/20%2)*20; cx<190; cx+=40) o.push('<rect x="'+cx+'" y="'+cy+'" width="20" height="20" fill="'+k[1]+'"/>');
+    o.push('<path d="M22 178 Q22 150 60 142 L52 172 Z M178 178 Q178 150 140 142 L148 172 Z" fill="'+k[1]+'" opacity=".9"/>');
+  }
+  o.push('</g>');
+  /* 깃 + 목 */
+  o.push('<path d="M82 136 Q100 150 118 136 L112 128 H88 Z" fill="'+F(sk)+'"/>');
+  if(!lock) o.push('<path d="M80 136 Q100 154 120 136" fill="none" stroke="'+k[1]+'" stroke-width="6" stroke-linecap="round"/>');
+  /* 등번호 */
+  if(!lock){
+    var light = /^#(F8|FF|FC|A5|DE)/i.test(k[0]) || k[2] === 'stripe';
+    o.push('<text x="100" y="206" text-anchor="middle" font-size="46" font-family="Patrick Hand, sans-serif" fill="'+(light ? '#1C2C5B' : '#fff')+'" stroke="'+(light ? '#fff' : 'rgba(0,0,0,.35)')+'" stroke-width="'+(k[2] ? 3 : 1)+'" paint-order="stroke">'+p.no+'</text>');
+  }
+  /* 머리 뒤쪽(긴 머리·아프로) */
+  if(p.hair === 'long') o.push('<path d="M54 76 Q50 34 100 30 Q150 34 146 76 L150 134 Q138 142 128 132 L128 80 H72 L72 132 Q62 142 50 134 Z" fill="'+F(hc)+'"/>');
+  if(p.hair === 'afro') o.push('<path d="M46 80 Q34 44 62 26 Q80 8 104 14 Q134 6 148 32 Q168 52 154 82 Q150 60 100 56 Q52 60 46 80 Z" fill="'+F(hc)+'"/>');
+  /* 귀 + 얼굴 */
+  o.push('<circle cx="57" cy="86" r="9" fill="'+F(sk)+'"/><circle cx="143" cy="86" r="9" fill="'+F(sk)+'"/>');
+  o.push('<path d="M58 78 Q58 40 100 40 Q142 40 142 78 Q142 128 100 132 Q58 128 58 78 Z" fill="'+F(sk)+'"/>');
+  /* 수염 */
+  if(!lock && p.beard === 1) o.push('<path d="M64 98 Q70 130 100 132 Q130 130 136 98 Q128 118 100 120 Q72 118 64 98 Z" fill="'+hc+'" opacity=".38"/>');
+  if(!lock && p.beard === 2) o.push('<path d="M60 90 Q64 134 100 136 Q136 134 140 90 Q130 112 114 106 Q100 100 86 106 Q70 112 60 90 Z" fill="'+hc+'" opacity=".92"/>');
+  /* 머리 모양 */
+  var H = {
+    mop:   'M56 82 Q52 36 100 32 Q148 36 144 82 Q138 62 124 58 Q100 70 76 58 Q62 62 56 82 Z',
+    short: 'M57 76 Q54 34 100 32 Q146 34 143 76 Q136 54 100 52 Q64 54 57 76 Z',
+    fade:  'M62 62 Q62 36 100 34 Q138 36 138 62 Q128 48 100 48 Q72 48 62 62 Z',
+    spiky: 'M56 76 Q54 44 66 38 L70 24 L80 36 L88 18 L98 34 L108 16 L116 34 L128 22 L132 38 Q146 46 144 76 Q136 56 100 54 Q64 56 56 76 Z',
+    wavy:  'M54 88 Q46 40 84 30 Q112 20 134 36 Q154 50 146 88 Q142 66 128 60 Q112 50 96 58 Q78 66 66 60 Q58 70 54 88 Z',
+    curly: 'M58 70 Q52 50 66 42 Q66 28 82 30 Q92 20 104 28 Q118 20 126 32 Q142 32 138 48 Q150 58 142 72 Q136 56 100 54 Q64 56 58 70 Z',
+    bun:   'M57 74 Q56 36 100 34 Q144 36 143 74 Q134 52 100 50 Q66 52 57 74 Z',
+    long:  'M56 80 Q54 36 100 32 Q146 36 144 80 Q136 58 104 54 Q92 64 70 58 Q60 64 56 80 Z',
+    afro:  'M58 76 Q56 50 100 48 Q144 50 142 76 Q134 60 100 58 Q66 60 58 76 Z'
+  };
+  if(p.hair === 'bun') o.push('<circle cx="100" cy="24" r="13" fill="'+F(hc)+'"/>');
+  if(H[p.hair]) o.push('<path d="'+H[p.hair]+'" fill="'+F(hc)+'"/>');
+  if(p.hair === 'bald' && !lock) o.push('<path d="M70 50 Q100 38 130 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".35"/>');
+  if(lock){
+    o.push('<text x="100" y="104" text-anchor="middle" font-size="54" font-family="Jua, sans-serif" fill="#8792A8">?</text>');
   } else {
-    o.push('<ellipse cx="97" cy="240" rx="10" ry="7" fill="'+SKIN2+'"/><ellipse cx="123" cy="240" rx="10" ry="7" fill="'+SKIN2+'"/>');
-  }
-
-  // 반바지
-  o.push('<path d="M78 156 q32 8 64 0 l5 34 h-26 l-11 -15 -11 15 h-26 z" fill="'+h.s+'"/>');
-
-  // 소매 + 팔
-  o.push('<path d="M82 104 l-20 9 8 18 19 -9 z" fill="'+h.m+'"/>');
-  o.push('<path d="M138 104 l20 9 -8 18 -19 -9 z" fill="'+h.m+'"/>');
-  o.push('<rect x="52" y="126" width="13" height="32" rx="6.5" fill="'+SKIN+'" transform="rotate(-12 58 142)"/>');
-  o.push('<rect x="155" y="126" width="13" height="32" rx="6.5" fill="'+SKIN+'" transform="rotate(12 161 142)"/>');
-  o.push('<circle cx="53" cy="161" r="7.5" fill="'+SKIN+'"/><circle cx="167" cy="161" r="7.5" fill="'+SKIN+'"/>');
-
-  // 유니폼
-  if(bag){
-    o.push('<rect x="68" y="99" width="84" height="64" rx="15" fill="#173C8C"/>');
-    o.push('<rect x="68" y="112" width="84" height="7" fill="#2457C5"/>');
-  }
-  if(goat){
-    o.push('<g clip-path="url(#jclip)"><rect x="70" y="94" width="86" height="76" fill="#F4F8FC"/>');
-    for(var sx=72; sx<156; sx+=18) o.push('<rect x="'+sx+'" y="94" width="9" height="76" fill="'+h.j+'"/>');
-    o.push('</g>');
-    o.push('<path d="M80 102 q30 -11 60 0 l6 60 q-36 9 -72 0 z" fill="none" stroke="'+h.m+'" stroke-width="2"/>');
-  } else {
-    o.push('<path d="M80 102 q30 -11 60 0 l6 60 q-36 9 -72 0 z" fill="url(#jg)"/>');
-  }
-  o.push('<path d="M100 100 l10 12 10 -12" fill="none" stroke="'+h.m+'" stroke-width="4" stroke-linecap="round"/>');
-  if(bag){
-    o.push('<path d="M92 101 L86 163" stroke="#2457C5" stroke-width="7" stroke-linecap="round" fill="none"/>');
-    o.push('<path d="M128 101 L134 163" stroke="#2457C5" stroke-width="7" stroke-linecap="round" fill="none"/>');
-    o.push('<rect x="83" y="128" width="12" height="8" rx="2" fill="#FBBF24"/>');
-    o.push('<rect x="125" y="128" width="12" height="8" rx="2" fill="#FBBF24"/>');
-  }
-  var jt = goat ? '#12365C' : '#fff';
-  if(lv>=2) o.push('<text x="110" y="147" text-anchor="middle" font-size="27" font-weight="400" fill="'+jt+'" opacity=".95" font-family="Patrick Hand, sans-serif">10</text>');
-  if(lv>=4) o.push('<text x="110" y="122" text-anchor="middle" font-size="11" font-weight="400" fill="'+jt+'" opacity=".9" font-family="Patrick Hand, sans-serif">HAJUN</text>');
-
-  // 주장 완장
-  if(lv>=6) o.push('<rect x="150" y="122" width="16" height="11" rx="3" fill="#FBBF24" stroke="#B45309" stroke-width="1.5" transform="rotate(12 158 127)"/>'+
-                   '<text x="158" y="131" text-anchor="middle" font-size="8" font-weight="400" fill="#7C2D12" font-family="Patrick Hand, sans-serif" transform="rotate(12 158 127)">C</text>');
-
-  // 머리
-  o.push('<circle cx="82" cy="72" r="6" fill="'+SKIN2+'"/><circle cx="138" cy="72" r="6" fill="'+SKIN2+'"/>');
-  o.push('<circle cx="110" cy="70" r="29" fill="'+SKIN+'"/>');
-  if(goat){
-    o.push('<circle cx="110" cy="86" r="9" fill="#E8A88A" opacity=".5"/>');                    /* 턱 */
-    o.push('<path d="M84 70 q3 34 26 34 t26 -34 q-5 21 -26 21 t-26 -21 z" fill="#3A2A1E"/>');  /* 수염 */
-    o.push('<path d="M100 78 q10 -4 20 0 q-10 5 -20 0 z" fill="#3A2A1E"/>');                   /* 콧수염 */
-    o.push('<circle cx="141" cy="52" r="8" fill="#4A3527"/>');                                  /* 묶은 머리 */
-    o.push('<path d="M81 64 q1 -30 29 -30 t29 30 q-2 -13 -12 -17 q-8 12 -25 8 t-21 9 z" fill="#4A3527"/>');
-  } else {
-    o.push('<path d="M81 66 q1 -32 29 -32 t29 32 q-9 -14 -29 -12 t-29 12 z" fill="'+HAIR+'"/>');
-    o.push('<path d="M126 40 q10 4 12 16 q-9 -8 -14 -9 z" fill="'+HAIR+'"/>');
-  }
-  o.push('<circle cx="101" cy="72" r="3.4" fill="'+LINE+'"/><circle cx="121" cy="72" r="3.4" fill="'+LINE+'"/>');
-  o.push('<circle cx="102.2" cy="70.8" r="1.1" fill="#fff"/><circle cx="122.2" cy="70.8" r="1.1" fill="#fff"/>');
-  o.push('<path d="M101 83 q9 8 18 0" fill="none" stroke="'+(goat?'#5B3A22':LINE)+'" stroke-width="3" stroke-linecap="round"/>');
-  if(!goat) o.push('<circle cx="93" cy="80" r="4" fill="#FCA5A5" opacity=".55"/><circle cx="129" cy="80" r="4" fill="#FCA5A5" opacity=".55"/>');
-
-  // 헤드밴드
-  if(lv>=3) o.push('<path d="M83 58 q27 -12 54 0 l0 7 q-27 -11 -54 0 z" fill="'+h.m+'"/>');
-  // 왕관
-  if(goat) o.push('<text x="176" y="196" font-size="22">🐐</text>');
-
-  // 축구공
-  o.push('<circle cx="172" cy="252" r="17" fill="#fff" stroke="'+LINE+'" stroke-width="2.5"/>');
-  o.push('<path d="M172 242 l8 6 -3 10 h-10 l-3 -10 z" fill="'+LINE+'"/>');
-  o.push('<path d="M164 238 l-6 6 M180 238 l6 6 M166 262 l-3 6 M178 262 l3 6" stroke="'+LINE+'" stroke-width="2" stroke-linecap="round"/>');
-
-  // 트로피
-  if(lv>=13) o.push('<g transform="translate(24,222)">'+
-      '<path d="M6 0 h22 v10 a11 11 0 0 1 -22 0 z" fill="#FBBF24" stroke="#B45309" stroke-width="1.5"/>'+
-      '<path d="M6 1 h-5 a6 6 0 0 0 6 8 M28 1 h5 a6 6 0 0 1 -6 8" fill="none" stroke="#B45309" stroke-width="1.5"/>'+
-      '<rect x="14" y="20" width="6" height="8" fill="#B45309"/><rect x="8" y="28" width="18" height="5" rx="2" fill="#B45309"/>'+
-    '</g>');
-
-  // 반짝이
-  if(lv>=14){
-    o.push('<text x="30" y="70" font-size="20">✨</text><text x="176" y="46" font-size="16">✨</text><text x="188" y="150" font-size="13">✨</text>');
+    /* 눈 · 눈썹 · 입 · 볼 */
+    o.push('<circle cx="84" cy="88" r="5" fill="#2B2A33"/><circle cx="116" cy="88" r="5" fill="#2B2A33"/>');
+    o.push('<circle cx="85.8" cy="86.2" r="1.7" fill="#fff"/><circle cx="117.8" cy="86.2" r="1.7" fill="#fff"/>');
+    o.push('<path d="M74 76 Q84 71 93 75 M107 75 Q116 71 126 76" fill="none" stroke="'+hc+'" stroke-width="3.4" stroke-linecap="round"/>');
+    o.push('<path d="M86 106 Q100 118 114 106" fill="'+(p.beard === 2 ? '#fff' : 'none')+'" stroke="#2B2A33" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>');
+    if(!p.beard) o.push('<circle cx="72" cy="100" r="6" fill="#FF8787" opacity=".4"/><circle cx="128" cy="100" r="6" fill="#FF8787" opacity=".4"/>');
   }
   o.push('</svg>');
   return o.join('');
 }
+/* 선수 카드 (게임 카드 틀) — size: '' | 'lg' | 'sm' */
+function playerCard(lv, size, lock){
+  var p = playerAt(lv), t = p.tier;
+  return '<div class="pcard '+(size||'')+' t-'+t.k+(lock?' lock':'')+'" style="--c1:'+t.c1+';--c2:'+t.c2+';--ci:'+t.ink+'">'+
+      '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
+      '<div class="pc-art">'+playerSVG(lv, lock)+'</div>'+
+      '<div class="pc-name">'+(lock ? '???' : esc(p.n))+'</div>'+
+    '</div>';
+}
+/* 예전 이름으로도 그릴 수 있게 */
+function heroSVG(lv){ return '<div class="hsvg">'+playerCard(Math.max(0, Math.min(LV_MAX, lv)), 'sm')+'</div>'; }
+function bigHero(lv){ return '<div style="display:flex;justify-content:center;margin:8px 0">'+playerCard(Math.max(0, Math.min(LV_MAX, lv)), 'lg')+'</div>'; }
+
+/* 지금 레벨 · 다음 레벨까지 */
+function heroLv(){ return lvOf(totalStars()); }
+function heroTitle(){ return HERO[heroLv()].t; }
+function lvProg(){
+  var s = totalStars(), L = lvOf(s);
+  if(L >= LV_MAX) return {lv:L, max:true, have:s, pct:100, left:0, need:0, got:0};
+  var a = lvNeed(L), b = lvNeed(L+1);
+  return {lv:L, max:false, have:s, got:s-a, need:b-a, left:b-s, pct:Math.max(3, Math.round((s-a)*100/(b-a)))};
+}
+/* 별이 늘어 레벨이 오르면 어디서든 축하한다 (별을 주는 곳마다 불린다) */
+function checkLevelUp(cb){
+  cb = cb || function(){};
+  var now = heroLv(), seen = typeof PROG.lvSeen === 'number' ? PROG.lvSeen : 0;
+  if(now > seen){
+    if(document.querySelector('.lvov')){ cb(); return false; }   /* 이미 축하 중 */
+    PROG.lvSeen = now; saveProgress();
+    modalLevelUp(seen, now, cb); return true;
+  }
+  if(now < seen){ PROG.lvSeen = now; saveProgress(); }
+  cb(); return false;
+}
+
+/* ── 홈: 게임 HUD 같은 선수 패널 ── */
+function heroCard(){
+  var g = lvProg(), lv = g.lv, p = playerAt(lv);
+  var its = bagItems(), un = its.filter(function(x){ return !x.used; }).length;
+  var nx = g.max ? null : playerAt(lv+1);
+  return '<div class="hud">'+
+      '<button class="hud-card" id="dex" aria-label="선수 도감 열기">'+playerCard(lv, '')+'</button>'+
+      '<div class="hud-info">'+
+        '<div class="hud-name">'+esc(PROG.name)+'</div>'+
+        '<div class="hud-title">'+(lv === 0 ? '축구 꿈나무' : '<b>'+esc(p.n)+'</b>처럼!')+'</div>'+
+        '<div class="hud-xp" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+g.pct+'" aria-label="다음 레벨까지"><i style="width:'+g.pct+'%"></i></div>'+
+        '<div class="hud-cnt">'+(g.max ? '🏆 최고 레벨! 모은 별 '+g.have
+            : '⭐ '+g.got+' / '+g.need+' · <b>'+g.left+'개</b> 더 모으면 Lv.'+(lv+1))+'</div>'+
+        '<div class="hud-btns">'+
+          '<button class="hud-btn" id="bag">🎒 가방 <span class="'+(un?'hot':'')+'">'+(its.length ? un+'/'+its.length : '0')+'</span></button>'+
+          '<button class="hud-btn" id="dex2">📖 선수 도감</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+}
+
+/* ── 레벨 업! ── */
+function modalLevelUp(prev, now, cb){
+  now = Math.min(LV_MAX, now);
+  var p = playerAt(now), t = p.tier, newTier = tierOf(prev).k !== t.k, g = lvProg();
+  starSound(); confetti(now >= LV_MAX ? 90 : 36);
+  var ov = document.createElement('div'); ov.className = 'lvov t-'+t.k;
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '레벨 업');
+  ov.style.setProperty('--c1', t.c1); ov.style.setProperty('--c2', t.c2);
+  ov.innerHTML =
+    '<div class="lv-rays" aria-hidden="true"></div>'+
+    '<div class="lv-box">'+
+      '<div class="lv-up">LEVEL UP!</div>'+
+      '<div class="lv-num"><span>Lv.'+prev+'</span><i>▶</i><b>Lv.'+now+'</b></div>'+
+      (newTier ? '<div class="lv-tier">🎖️ 새 등급 <b>'+esc(t.n)+'</b></div>' : '')+
+      '<div class="lv-card">'+playerCard(now, 'lg')+'</div>'+
+      '<div class="lv-who">'+(now >= LV_MAX ? '🏆 드디어 <b>손흥민</b>!! 월드클래스!' : '이제 <b>'+esc(p.n)+'</b>처럼!')+'</div>'+
+      (now - prev > 1 ? '<div class="lv-sub">한 번에 '+(now-prev)+'레벨이나 올랐어요!</div>' : '')+
+      '<div class="lv-sub">'+(g.max ? '모든 선수를 모았어요!' : '다음 선수까지 ⭐ <b>'+g.left+'개</b>')+'</div>'+
+      '<button class="btn primary wide" id="lvok">야호! 🎉</button>'+
+    '</div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#lvok').onclick = function(){ ov.remove(); cb(); };
+  setTimeout(function(){ var b = ov.querySelector('#lvok'); if(b) b.focus(); }, 60);
+}
+
+/* ── 선수 도감 ── */
+function screenDex(){
+  var g = lvProg(), lv = g.lv;
+  var html = '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>📖 선수 도감</h2><div class="pill">'+lv+' / '+LV_MAX+'</div></div>'+
+    '<div class="dexnow">'+
+      '<div><b>Lv.'+lv+'</b> · 모은 별 ⭐ '+g.have+'</div>'+
+      '<div class="hud-xp"><i style="width:'+g.pct+'%"></i></div>'+
+      '<div class="muted" style="color:#DCE6F9">'+(g.max ? '모든 선수를 모았어요! 🏆' : '⭐ '+g.left+'개 더 모으면 다음 선수가 열려요')+'</div>'+
+    '</div>';
+  TIERS.forEach(function(t, ti){
+    var to = ti+1 < TIERS.length ? TIERS[ti+1].from - 1 : LV_MAX;
+    html += '<div class="dexhd" style="--c1:'+t.c1+';--c2:'+t.c2+'"><b>'+esc(t.n)+'</b><span>Lv.'+t.from+(to > t.from ? '~'+to : '')+'</span></div><div class="dexgrid">';
+    for(var L = t.from; L <= to; L++){
+      var open = L <= lv;
+      html += '<div class="dexcell'+(L === lv ? ' now' : '')+'">'+playerCard(L, 'sm', !open)+
+        '<small>'+(open ? (L === lv ? '지금!' : '✓') : '⭐ '+lvNeed(L))+'</small></div>';
+    }
+    html += '</div>';
+  });
+  app.innerHTML = html;
+  document.getElementById('back').onclick = screenHome;
+  var cur = app.querySelector('.dexcell.now'); if(cur && cur.scrollIntoView) setTimeout(function(){ cur.scrollIntoView({block:'center'}); }, 60);
+}
+
 
 /* =========================================================
    2-C) 스페셜 테스트 — 시 한 편을 아빠 앞에서 끝까지 읽어내기
@@ -1857,14 +2034,13 @@ function normProg(){
   if(PROG.rewards.some(function(x){ return x.s===undefined; })){
     var taken=[], out=[];
     PROG.rewards.forEach(function(x){
-      if(x.r===11){ PROG.finalWon=true; return; }          /* 옛 닌텐도 */
+      if(x.r===11) return;   /* 옛 특별 보상 칸 — 이제 없음 */
       for(var i=0;i<SLOTS.length;i++){
         if(SLOTS[i]===x.r && taken.indexOf(i)<0){ taken.push(i); out.push({s:i, lv:x.lv||0, given:!!x.given}); return; }
       }
     });
     PROG.rewards = out;
   }
-  if(PROG.finalWon===undefined) PROG.finalWon=false;
 }
 function getStar(lv,act){ return (PROG.stars[lv] && PROG.stars[lv][act]) || 0; }
 function setStar(lv,act,n){
@@ -1880,11 +2056,7 @@ function unlocked(L){
   var prev = LEVELS.filter(function(x){return x.id===L.id-1;})[0];
   return levelDone(prev);
 }
-/* ★ 닌텐도 게임 칩은 '별 400개'로 열린다.
-   놀이만으로는 315개뿐이라 도달이 불가능하므로, 열심히 한 것에도 별을 준다.
-   놀이 315 + 테스트 통과 48 + 책 완독 45 + 스페셜 20 = 만점 428
-   목표를 바꾸려면 STAR_GOAL 숫자만 고치면 됩니다. */
-var STAR_GOAL = 400;
+/* 별을 주는 곳 — 레벨은 '지금까지 모은 별'로 오른다 (lvNeed 참고) */
 var STAR_TEST = 30;   /* 단계 테스트 90점 통과(레벨업) 1개당 */
 var STAR_BOOK = 3;    /* 이야기책 완독 1권당 */
 var STAR_SPEC = 10;   /* 스페셜 테스트 통과 1편당 */
@@ -1910,7 +2082,7 @@ function giveBonus(n, memo){
 function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
-   ★ 닌텐도도 카드도 모두 '이 별'을 쓴다. 카드를 사면 닌텐도가 그만큼 멀어진다. */
+   ★ 뽑기도 카드도 '이 별'을 쓴다. 레벨은 모은 별(누적)로 정해져서, 별을 써도 레벨은 안 내려간다. */
 function walletStars(){ return Math.max(0, totalStars() - spentStars()); }
 
 /* --- 축구카드 (별 100개로 교환) --- */
@@ -1969,7 +2141,6 @@ function bagItems(){
     var k = pkPrizeById(pz.pid) || {e:'🎁', n:'상품'};
     out.push({key:'z'+pz.id, e:k.e, n:k.n, sub:'⚽ 페널티킥 상품', used:!!pz.used, kind:'prize', zid:pz.id});
   });
-  if(hasFinal()) out.push({key:'final', e:FINAL.e, n:FINAL.n, sub:'별 '+STAR_GOAL+'개 달성!', used:!!PROG.finalUsed, kind:'final'});
   return out;
 }
 function useItem(it){
@@ -1977,7 +2148,6 @@ function useItem(it){
   else if(it.kind==='slot'){ var r=slotRec(it.si); if(r) r.given = !r.given; }
   else if(it.kind==='card'){ cards().forEach(function(c){ if(c.id===it.cid) c.used = !c.used; }); }
   else if(it.kind==='prize'){ pkPrizes().forEach(function(z){ if(z.id===it.zid) z.used = !z.used; }); }
-  else if(it.kind==='final'){ PROG.finalUsed = !PROG.finalUsed; }
   saveProgress();
 }
 function maxStars(){
@@ -1985,13 +2155,6 @@ function maxStars(){
   return a + LEVELS.length*STAR_TEST + books().length*STAR_BOOK + SPECIALS.length*STAR_SPEC
            + papers().length*STAR_PAPER + (quizzes().length + sents().length) * STAR_PICK_MAX + origList().length*STAR_ORIG;
 }
-/* 별이 목표에 닿는 순간 어디서든 특별 보상이 열린다 */
-function checkFinal(cb){
-  cb = cb || function(){};
-  if(!hasFinal() && walletStars() >= STAR_GOAL){ giveFinal(); modalFinal(cb); return true; }
-  cb(); return false;
-}
-
 /* --- 테스트 --- */
 function testInfo(id){ return PROG.tests[id] || {best:0, passed:false}; }
 function testOpen(L){ return levelDone(L); }
@@ -2024,8 +2187,6 @@ function drawReward(){
 function wonSlots(){ return (PROG.rewards||[]).map(function(r){ return r.s; }); }
 function hasSlot(i){ return wonSlots().indexOf(i)>=0; }
 function slotRec(i){ return (PROG.rewards||[]).filter(function(r){ return r.s===i; })[0]; }
-function hasFinal(){ return !!PROG.finalWon; }
-function giveFinal(){ PROG.finalWon = true; saveProgress(); }
 
 /* --- 못 읽은 단어 (아빠용 오답 노트) --- */
 function missList(){
@@ -2054,8 +2215,6 @@ function missItems(){
 function missLevelOf(w){ return (PROG.miss && PROG.miss[w]) ? PROG.miss[w].lv : 0; }
 
 /* --- 캐릭터 --- */
-function heroLv(){ return Math.min(passedCount(), HERO_MAX); }
-function heroTitle(){ return HERO[heroLv()].t; }
 
 /* --- 색종이 --- */
 function confetti(n){
@@ -2129,7 +2288,7 @@ function screenIntro(){
   STARTED = true;
   app.innerHTML =
     '<div class="intro">'+
-      heroSVG(heroLv()).replace('class="hsvg"','class="hsvg lg logo"')+
+      '<div style="display:flex;justify-content:center;margin:0 0 8px">'+playerCard(heroLv(), 'lg')+'</div>'+
       '<h1>하준아~<br>영어랑 놀자!</h1>'+
       '<p>영어는 글자가 아니라 <b>소리</b>부터!</p>'+
       '<button class="btn primary wide" id="start" style="font-size:22px;padding:18px">시작하기</button>'+
@@ -2145,35 +2304,18 @@ function screenIntro(){
 /* =========================================================
    7) 화면 - 홈
    ========================================================= */
-function heroCard(){
-  var lv = heroLv();
-  var its = bagItems(), un = its.filter(function(x){ return !x.used; }).length;
-  return '<div class="hero">'+
-      '<button class="heroBag" id="bag">'+ heroSVG(lv, its.length>0) +
-        '<span class="bagBadge '+(un?'hot':'')+'">🎒 '+(its.length ? un+'/'+its.length : '0')+'</span>'+
-      '</button>'+
-      '<div class="hinfo">'+
-        '<b class="nm">'+esc(PROG.name)+' <span style="opacity:.85">Lv.'+lv+'</span></b>'+
-        '<div class="ti">'+esc(heroTitle())+'</div>'+
-        '<div class="hbar"><i style="width:'+Math.round(passedCount()/LEVELS.length*100)+'%"></i></div>'+
-        '<div class="cnt">단계 테스트 '+passedCount()+'/'+LEVELS.length+' 통과 · 🎒 눌러보기</div>'+
-      '</div>'+
-    '</div>';
-}
-
 /* 90점 → 레벨업 → 별 획득 규칙을 항상 보여주는 띠 */
 function ruleStrip(){
   return '<div class="rule">'+
-      '<div class="rs hit"><b>🎯</b><span>단계 테스트<br><b style="display:inline;font-size:13px;color:var(--berry-ink)">90점 넘기!</b></span></div>'+
+      '<div class="rs hit"><b>⭐</b><span>별 모으기<br><b style="display:inline;font-size:13px;color:var(--berry-ink)">시험·놀이·책</b></span></div>'+
       '<div class="ra">➜</div>'+
-      '<div class="rs"><b>⬆️</b><span>하준이<br>레벨 업!</span></div>'+
+      '<div class="rs"><b>⬆️</b><span>레벨 업!</span></div>'+
       '<div class="ra">➜</div>'+
-      '<div class="rs"><b>⭐</b><span>별 '+STAR_TEST+'개<br>획득!</span></div>'+
+      '<div class="rs"><b>⚽</b><span>새 선수<br>카드!</span></div>'+
     '</div>';
 }
 
 function rewardPanel(){
-  var fw = hasFinal();
   var drew = draws().length, unused = draws().filter(function(r){ return !r.used; }).length;
   var html = '<div class="card rw">'+
     '<h3>🎁 보상 뽑기</h3>'+
@@ -2184,23 +2326,12 @@ function rewardPanel(){
     (walletStars()>=DRAW_PRICE
       ? '<button class="btn primary wide" id="rwdraw" style="font-size:17px">🎁 지금 뽑기! (별 '+DRAW_PRICE+')</button>'
       : '<div class="sub" style="text-align:center">별 <b>'+(DRAW_PRICE-walletStars())+'개</b> 더 모으면 뽑을 수 있어요!</div>')+
-    /* 닌텐도 진행 */
-    '<button class="rchip final '+(fw?'won':'')+'" data-s="-1" style="margin-top:12px;width:100%">'+
-      '<span class="ri">'+FINAL.e+'</span>'+
-      '<span class="rn"><b>★ '+esc(FINAL.n)+' ★</b>'+
-        (fw ? '' : '<span style="font-size:11.5px">지금 가진 별 <b style="display:inline;font-size:12.5px;color:#FDE047">'+walletStars()+' / '+STAR_GOAL+'</b></span>'+
-                   '<span style="display:block;height:6px;background:rgba(255,255,255,.25);border-radius:99px;margin-top:5px;overflow:hidden">'+
-                     '<span style="display:block;height:100%;width:'+Math.min(100,Math.round(walletStars()/STAR_GOAL*100))+'%;background:#FDE047;border-radius:99px"></span>'+
-                   '</span>'+
-                   '<span style="display:block;font-size:12.5px;margin-top:4px;opacity:.92">🎁 뽑기·🃏 카드를 사면 별이 줄어서 멀어져요!</span>')+
-      '</span></button>'+
     '</div>';
   return html;
 }
 
 function bindRewards(){
   if(document.getElementById('rwdraw')) document.getElementById('rwdraw').onclick = function(){ beep([700,900],.06); screenBag(); };
-  on('.rchip.final', function(){ noSound(); toast(hasFinal()?'🕹️':'🔒'); });
 }
 
 function screenHome(){
@@ -2219,9 +2350,7 @@ function screenHome(){
     heroCard()+
     '<div class="wallet">'+
       '<div class="wcard"><b>⭐ '+walletStars()+'</b><small>지금 가진 별</small></div>'+
-      '<div class="wcard"><b style="color:'+(hasFinal()?'var(--melon)':'var(--grape)')+'">'+
-        (hasFinal() ? '🕹️' : Math.max(0, STAR_GOAL-walletStars()))+'</b><small>'+
-        (hasFinal() ? '닌텐도 받음!' : '닌텐도까지')+'</small></div>'+
+      '<div class="wcard"><b style="color:var(--grape)">'+(lvProg().max ? '🏆' : lvProg().left)+'</b><small>'+(lvProg().max ? '최고 레벨!' : '다음 레벨까지')+'</small></div>'+
       '<div class="wcard"><b style="color:#16A34A">'+cards().length+'</b><small>축구카드</small></div>'+
     '</div>'+
     todayHtml()+
@@ -2316,6 +2445,8 @@ function screenHome(){
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
+  document.getElementById('dex').onclick = document.getElementById('dex2').onclick = function(){ beep([700,900],.06); screenDex(); };
+  setTimeout(function(){ if(document.getElementById('dex')) checkLevelUp(); }, 350);   /* 아빠 별·새 레벨 방식으로 오른 레벨도 축하 */
   document.getElementById('dadbtn').onclick = screenDad;
   bindPendHome();
   if(document.getElementById('miss')) document.getElementById('miss').onclick = startReview;
@@ -2364,7 +2495,7 @@ function screenLevel(L){
           : '위 놀이를 모두 끝내면 열려요')+
       '</small></div>'+
     '</button>'+
-    '<div class="muted" style="text-align:center;margin-top:10px">🎁 별 '+DRAW_PRICE+'개로 보상 뽑기 · ★ '+esc(FINAL.n)+'은 별 '+STAR_GOAL+'개!</div>';
+    '<div class="muted" style="text-align:center;margin-top:10px">🎁 별 '+DRAW_PRICE+'개로 보상 뽑기 · ⭐ 별을 모으면 레벨 업!</div>';
 
   app.innerHTML = html;
   document.getElementById('back').addEventListener('click', screenHome);
@@ -3323,9 +3454,7 @@ function screenBag(){
     '</div>'+
     '<div class="wallet">'+
       '<div class="wcard"><b>⭐ '+walletStars()+'</b><small>지금 가진 별</small></div>'+
-      '<div class="wcard"><b style="color:'+(hasFinal()?'var(--melon)':'var(--grape)')+'">'+
-        (hasFinal() ? '🕹️' : Math.max(0, STAR_GOAL-walletStars()))+'</b><small>'+
-        (hasFinal() ? '닌텐도 받음!' : '닌텐도까지')+'</small></div>'+
+      '<div class="wcard"><b style="color:var(--grape)">'+(lvProg().max ? '🏆' : lvProg().left)+'</b><small>'+(lvProg().max ? '최고 레벨!' : '다음 레벨까지')+'</small></div>'+
       '<div class="wcard"><b style="color:#16A34A">'+cards().length+'</b><small>축구카드</small></div>'+
     '</div>'+
     /* 보상 뽑기 (별 100개) */
@@ -3334,7 +3463,7 @@ function screenBag(){
         '<div style="font-size:38px">🎁</div>'+
         '<div style="flex:1"><b style="font-size:17px">보상 뽑기</b>'+
           '<div class="muted">별 <b style="color:var(--berry-ink)">'+DRAW_PRICE+'개</b> → 랜덤 보상 <b>1개</b>!'+
-          (hasFinal() ? '' : '<br><b style="color:var(--berry-ink)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
+          '<br>별을 써도 <b>레벨은 안 내려가요</b>.</div></div>'+
       '</div>'+
       '<div class="bar" style="margin:10px 0 6px"><i style="width:'+Math.min(100,Math.round(walletStars()/DRAW_PRICE*100))+'%"></i></div>'+
       (walletStars()>=DRAW_PRICE
@@ -3347,7 +3476,7 @@ function screenBag(){
         '<div style="font-size:38px">🃏</div>'+
         '<div style="flex:1"><b style="font-size:17px">축구카드 바꾸기</b>'+
           '<div class="muted">별 <b style="color:var(--berry-ink)">'+CARD_PRICE+'개</b> → 축구카드 1만원권 <b>1장</b>'+
-          (hasFinal() ? '' : '<br><b style="color:var(--berry-ink)">별을 쓰면 ★ 닌텐도가 멀어져요!</b>')+'</div></div>'+
+          '<br>별을 써도 <b>레벨은 안 내려가요</b>.</div></div>'+
       '</div>'+
       '<div class="bar" style="margin:10px 0 6px"><i style="width:'+Math.min(100,Math.round(walletStars()/CARD_PRICE*100))+'%"></i></div>'+
       (walletStars()>=CARD_PRICE
@@ -3384,31 +3513,27 @@ function screenBag(){
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
   if(document.getElementById('buy')) document.getElementById('buy').onclick = function(){
-    /* 닌텐도를 아직 못 받았으면, 얼마나 멀어지는지 보여주고 한 번 물어본다 */
-    if(!hasFinal()){
-      var after = walletStars() - CARD_PRICE;
-      var ask = openMod(
-        '<div style="font-size:54px">🤔</div>'+
-        '<h2>정말 바꿀까?</h2>'+
-        '<p>카드를 사면 별이 <b>'+CARD_PRICE+'개</b> 줄어요.</p>'+
-        '<div class="card" style="text-align:left;background:#FFF6DF;margin-bottom:14px;line-height:1.9">'+
-          '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry-ink)">'+after+'</b><br>'+
-          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry-ink)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
-        '</div>'+
-        '<button class="btn go wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🃏 그래도 카드 살래!</button>'+
-        '<button class="btn wide" id="no">🕹️ 아니야, 닌텐도 모을래</button>');
-      ask.querySelector('#no').onclick = function(){ beep([500],.06); ask.remove(); };
-      ask.querySelector('#yes').onclick = function(){ ask.remove(); doBuy(); };
-      return;
-    }
-    doBuy();
+    /* 별이 얼마나 줄어드는지 보여주고 한 번 물어본다 */
+    var after = walletStars() - CARD_PRICE;
+    var ask = openMod(
+      '<div style="font-size:54px">🤔</div>'+
+      '<h2>정말 바꿀까?</h2>'+
+      '<p>카드를 사면 별이 <b>'+CARD_PRICE+'개</b> 줄어요.</p>'+
+      '<div class="card" style="text-align:left;background:#FFF6DF;margin-bottom:14px;line-height:1.9">'+
+        '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry-ink)">'+after+'</b><br>'+
+        '⬆️ 레벨은 그대로예요 (Lv.'+heroLv()+')'+
+      '</div>'+
+      '<button class="btn go wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🃏 카드 살래!</button>'+
+      '<button class="btn wide" id="no">아니야, 별 모을래</button>');
+    ask.querySelector('#no').onclick = function(){ beep([500],.06); ask.remove(); };
+    ask.querySelector('#yes').onclick = function(){ ask.remove(); doBuy(); };
   };
   function doBuy(){
     if(!buyCard()){ noSound(); return; }
     starSound(); confetti(24);
     var ov = openMod('<div style="font-size:60px">🃏</div><h2>축구카드 획득!</h2>'+
       '<p>별 '+CARD_PRICE+'개를 썼어요.<br>남은 별 <b>⭐ '+walletStars()+'</b>'+
-      (hasFinal() ? '' : '<br>🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b>')+'</p>'+
+      '</p>'+
       '<div class="reel hit"><span class="e">🃏</span><b>축구카드 ×'+cards().length+'</b></div>'+
       '<button class="btn primary wide" id="ok" style="font-size:19px;padding:16px">야호! 🎉</button>');
     ov.querySelector('#ok').onclick = function(){ ov.remove(); screenBag(); };
@@ -3465,7 +3590,7 @@ function screenBag(){
 
   /* 🎁 보상 뽑기 (별 100개) */
   if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
-    if(!hasFinal()){
+    {
       var after = walletStars() - DRAW_PRICE;
       var ask = openMod(
         '<div style="font-size:54px">🤔</div>'+
@@ -3473,10 +3598,10 @@ function screenBag(){
         '<p>뽑기를 하면 별이 <b>'+DRAW_PRICE+'개</b> 줄어요.</p>'+
         '<div class="card" style="text-align:left;background:#FFF6DF;margin-bottom:14px;line-height:1.9">'+
           '⭐ 지금 가진 별 <b>'+walletStars()+'</b> → <b style="color:var(--berry-ink)">'+after+'</b><br>'+
-          '🕹️ 닌텐도까지 <b>'+Math.max(0,STAR_GOAL-walletStars())+'개</b> → <b style="color:var(--berry-ink)">'+Math.max(0,STAR_GOAL-after)+'개</b>'+
+          '⬆️ 레벨은 그대로예요 (Lv.'+heroLv()+')'+
         '</div>'+
-        '<button class="btn primary wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🎁 그래도 뽑을래!</button>'+
-        '<button class="btn wide" id="no">🕹️ 아니야, 닌텐도 모을래</button>');
+        '<button class="btn primary wide" id="yes" style="font-size:19px;padding:16px;margin-bottom:9px">🎁 뽑을래!</button>'+
+        '<button class="btn wide" id="no">아니야, 별 모을래</button>');
       ask.querySelector('#no').onclick = function(){ beep([500],.06); ask.remove(); };
       ask.querySelector('#yes').onclick = function(){ ask.remove(); doDraw(); };
       return;
@@ -3486,7 +3611,7 @@ function screenBag(){
   function doDraw(){
     var got = drawReward();
     if(!got){ noSound(); return; }
-    modalReward(got.kind, function(){ checkFinal(function(){ screenBag(); }); });
+    modalReward(got.kind, function(){ checkLevelUp(function(){ screenBag(); }); });
   }
 }
 
@@ -3620,7 +3745,7 @@ function screenDad(){
         '<h2>별 '+got+'개 획득!</h2>'+
         '<p>'+esc(PROG.name)+'이가 잘했어요!<br>쓸 수 있는 별 <b>⭐ '+walletStars()+'</b> · 모은 별 <b>'+totalStars()+'</b></p>'+
         '<button class="btn primary wide" id="ok" style="font-size:19px;padding:16px">고마워요! 🎉</button>');
-      ov.querySelector('#ok').onclick = function(){ ov.remove(); checkFinal(function(){ screenHome(); }); };
+      ov.querySelector('#ok').onclick = function(){ ov.remove(); checkLevelUp(function(){ screenHome(); }); };
     };
   }
   draw();
@@ -3738,7 +3863,7 @@ function screenBook(L){
       '</div>';
     document.getElementById('again').onclick = function(){ i=0; draw(); };
     document.getElementById('lib').onclick = screenLibrary;
-    checkFinal();
+    checkLevelUp();
   }
   draw();
 }
@@ -4381,7 +4506,7 @@ function startQuiz(q){
     starSound(); confetti(50);
     if(!q.done) pendAdd({key:'quiz:'+q.id, k:'quiz', id:q.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📝 '+q.title});
     render();
-    if(q.done) checkFinal();
+    if(q.done) checkLevelUp();
 
     function render(){
       var first = !q.done;
@@ -4406,7 +4531,7 @@ function startQuiz(q){
       if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
         modalStarDraw(function(got){
           q.done = true; q.stars = got; pendDone('quiz:'+q.id);
-          justGot = got; render(); checkFinal();
+          justGot = got; render(); checkLevelUp();
         });
       };
       if(document.getElementById('again')) document.getElementById('again').onclick = function(){ startQuiz(q); };
@@ -4857,7 +4982,7 @@ function startSent(s){
     starSound(); confetti(50);
     if(!s.done) pendAdd({key:'sent:'+s.id, k:'sent', id:s.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📖 '+s.title});
     render();
-    if(s.done) checkFinal();
+    if(s.done) checkLevelUp();
 
     function render(){
       var first = !s.done;
@@ -4882,7 +5007,7 @@ function startSent(s){
       if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
         modalStarDraw(function(got){
           s.done = true; s.stars = got; pendDone('sent:'+s.id);
-          justGot = got; render(); checkFinal();
+          justGot = got; render(); checkLevelUp();
         });
       };
       if(document.getElementById('again')) document.getElementById('again').onclick = function(){ startSent(s); };
@@ -5356,7 +5481,7 @@ function startMimemal(){
           var per = Math.floor(got/list.length), rem = got - per*list.length;
           list.forEach(function(m,i){ m.done = true; m.stars = per + (i<rem?1:0); });
           pendDone(mmKey);
-          justGot = got; render(); checkFinal();
+          justGot = got; render(); checkLevelUp();
         }, MM_STAR_MIN, MM_STAR_MAX);
       };
       document.getElementById('again').onclick = function(){ beep([700,900],.06); startMimemal(); };
@@ -6550,7 +6675,7 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
           var prev = (reMode && typeof set.stars==='number') ? set.stars : 0;
           set.done = true; set.at = Date.now(); set.stars = prev + got;
           pendDone('orig:'+set.id);
-          gotRe = reMode; justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkFinal();
+          gotRe = reMode; justGot = got; drawn = true; reMode = true; wasBefore = true; render(); checkLevelUp();
         }, lo, hi);
       };
       if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){ i = 0; fails = {}; stopAll(); ogHistEnter(function(){ stopAll(); screenOrigList(); }); ask(); };
@@ -6941,13 +7066,13 @@ function screenPaper(b){
         modalStarDraw(function(got){
           var prev = (reMode && typeof b.stars==='number') ? b.stars : 0;
           b.stars = prev + got; pendDone('paper:'+b.id);
-          justGot = got; drawn = true; wasBefore = true; render(); checkFinal();
+          justGot = got; drawn = true; wasBefore = true; render(); checkLevelUp();
         }, lo, hi);
       };
       if(document.getElementById('again')) document.getElementById('again').onclick = function(){ i=0; draw(); };
       document.getElementById('lst').onclick = screenSpecials;
     }
-    if(wasBefore && justGot===null) checkFinal();
+    if(wasBefore && justGot===null) checkLevelUp();
   }
   draw();
 }
@@ -7282,7 +7407,7 @@ function screenSpecial(sp){
         modalStarDraw(function(got){
           var prev = (reMode && typeof rec.stars==='number') ? rec.stars : 0;
           PROG.spec[sp.id] = {passed:true, at:Date.now(), stars: prev + got}; pendDone('spec:'+sp.id);
-          justGot = got; drawn = true; wasBefore = true; render(); checkFinal();
+          justGot = got; drawn = true; wasBefore = true; render(); checkLevelUp();
         }, lo, hi);
       };
       if(document.getElementById('again2')) document.getElementById('again2').onclick = function(){
@@ -7290,7 +7415,7 @@ function screenSpecial(sp){
       };
       document.getElementById('lst').onclick = screenSpecials;
     }
-    if(wasBefore && justGot===null) checkFinal();
+    if(wasBefore && justGot===null) checkLevelUp();
   }
   ask();
 }
@@ -7827,7 +7952,7 @@ function screenResult(){
   if(document.getElementById('redo')) document.getElementById('redo').onclick = function(){ startGame(LL, AA, WW); G.back=BB; };
   document.getElementById('again').onclick = function(){ startGame(LL, AA); G.back=BB; };
   document.getElementById('lv').onclick = function(){ (BB || function(){ screenLevel(LL); })(); };
-  checkFinal();   /* 별 400 도달하면 바로 축하 */
+  checkLevelUp();   /* 별 400 도달하면 바로 축하 */
 }
 
 /* =========================================================
@@ -8139,7 +8264,7 @@ function screenTestResult(){
       '<div class="st" style="color:'+(pass?'var(--melon)':'var(--berry)')+';font-size:52px;letter-spacing:0">'+score+'점</div>'+
       '<p>20문제 중 '+T.correct+'개 정답'+(pass?'' : ' · 90점부터 통과예요')+'</p>'+
       (pass
-        ? '<button class="btn primary wide" id="next" style="font-size:20px;padding:18px;margin-bottom:10px">'+(newly?'⬆️ 레벨 업! ⭐'+STAR_TEST+'개 받기':'레벨 화면으로')+'</button>'
+        ? '<button class="btn primary wide" id="next" style="font-size:20px;padding:18px;margin-bottom:10px">'+(newly?'⭐ 별 '+STAR_TEST+'개 받기!':'레벨 화면으로')+'</button>'
         : '<button class="btn primary wide" id="retry" style="margin-bottom:10px">🔁 다시 도전</button>')+
       '<button class="btn go wide" id="lv">레벨 화면으로</button>'+
     '</div>';
@@ -8149,7 +8274,8 @@ function screenTestResult(){
   document.getElementById('lv').onclick = function(){ screenLevel(L); };
   if(document.getElementById('next')) document.getElementById('next').onclick = function(){
     if(!newly){ screenLevel(L); return; }
-    modalLevelUp(prevLv, heroLv(), function(){ checkFinal(function(){ screenHome(); }); });
+    starSound(); toast('⭐ 별 '+STAR_TEST+'개 획득!');
+    checkLevelUp(function(){ screenHome(); });
   };
 }
 
@@ -8160,21 +8286,6 @@ function openMod(inner){
   document.body.appendChild(ov);
   Array.prototype.forEach.call(document.querySelectorAll('body > .conf'), function(c){ ov.insertBefore(c, ov.firstChild); });   /* 이미 떨어지는 색종이도 카드 뒤로 */
   return ov;
-}
-function bigHero(lv){ return heroSVG(lv).replace('class="hsvg"','class="hsvg lg"'); }
-
-function modalLevelUp(prev, now, cb){
-  confetti(20); starSound();
-  var ov = openMod(
-    '<div class="lvup">⬆️ 레벨 업!</div>'+
-    '<h2>Lv.'+prev+' → Lv.'+now+'</h2>'+
-    bigHero(now)+
-    '<h2 style="color:var(--grape)">'+esc(HERO[Math.min(now,HERO_MAX)].t)+'</h2>'+
-    '<div class="reel hit" style="margin:12px 0"><span class="e">⭐</span><b>별 '+STAR_TEST+'개 획득!</b></div>'+
-    '<p>'+esc(PROG.name)+'이가 더 멋있어졌어요!<br>별을 모아 🎁 보상을 뽑아보세요.</p>'+
-    '<button class="btn primary wide" id="ok" style="font-size:19px;padding:16px">야호! 🎉</button>'
-  );
-  ov.querySelector('#ok').onclick = function(){ ov.remove(); cb(); };
 }
 
 function modalReward(rw, cb){
@@ -8239,7 +8350,7 @@ function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 �
   else if(p.k === 'spec'){ if(!PROG.spec) PROG.spec = {}; var r = PROG.spec[p.id] || {}; prev = (p.re && typeof r.stars==='number') ? r.stars : 0; PROG.spec[p.id] = {passed:true, at:Date.now(), stars: prev + got}; }
 }
 function pendDraw(p, after){
-  modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkFinal(); }, p.lo, p.hi);
+  modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkLevelUp(); }, p.lo, p.hi);
 }
 /* ── 홈 맨 위 '오늘 할 것' — 지금 해야 할 일만 모은다 (안 뽑은 별 · 원서 이어하기 · 다시 볼 단어 · 지금 단계) ── */
 var HOME_LV_OPEN = false;
@@ -8303,19 +8414,6 @@ function modalStarDraw(cb, min, max){
   };
 }
 
-function modalFinal(cb){
-  confetti(60);
-  var ov = openMod(
-    '<div style="font-size:60px">🏆</div>'+
-    '<h2>전부 통과!!</h2>'+
-    '<p>별 <b>'+STAR_GOAL+'개</b>를 모았어요!<br>카드도 참고 여기까지 왔네요 👏<br>이제 영어 문장을 읽을 수 있어요!</p>'+
-    bigHero(HERO_MAX)+
-    '<div class="reel hit" style="background:linear-gradient(135deg,#B45309,#FDE047 50%,#B45309);border-color:#FFF7CD"><span class="e">'+FINAL.e+'</span><b style="color:#3B1D00">★ '+esc(FINAL.n)+' ★</b></div>'+
-    '<p style="margin-top:0">약속한 마지막 보상이에요. 아빠한테 보여주세요!</p>'+
-    '<button class="btn primary wide" id="ok" style="font-size:20px;padding:16px">🎉 확인</button>'
-  );
-  ov.querySelector('#ok').onclick = function(){ ov.remove(); cb(); };
-}
 
 /* =========================================================
    11) 설정 (부모용)
@@ -8353,7 +8451,7 @@ function screenSettings(){
       '<div class="muted">모은 별: <b>⭐ '+totalStars()+' / '+maxStars()+'</b> · 캐릭터 <b>Lv.'+heroLv()+' '+esc(heroTitle())+'</b><br>'+
       '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
       '&nbsp;· <b>지금 가진 별 '+walletStars()+'</b> = 모은 별 '+totalStars()+' − 카드로 쓴 '+spentStars()+' (카드 '+cards().length+'장)<br>'+
-      '&nbsp;· ★ '+esc(FINAL.n)+'까지 <b style="color:var(--berry-ink)">'+Math.max(0, STAR_GOAL-walletStars())+'개</b> 남음<br>'+
+      '&nbsp;· ⬆️ 레벨은 <b>모은 별 '+totalStars()+'</b>로 계산 · 다음 레벨(Lv.'+Math.min(LV_MAX, heroLv()+1)+')은 누적 별 <b>'+lvNeed(Math.min(LV_MAX, heroLv()+1))+'개</b><br>'+
       '테스트 통과: <b>'+passedCount()+'/'+LEVELS.length+'</b> · 읽은 책: <b>'+books().filter(function(L){ return bookRead(L.id)>0; }).length+'/'+books().length+'</b> · 스페셜: <b>'+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</b><br><br>'+
       LEVELS.map(function(L){
         var t=testInfo(L.id);
@@ -8389,17 +8487,15 @@ function screenSettings(){
         '• 음성은 기기의 영어 TTS를 사용합니다. 크롬 브라우저에서 가장 자연스럽습니다.<br><br>'+
         '<b>단계 테스트</b><br>'+
         '• 놀이 5개를 모두 끝내야 테스트가 열립니다. 20문제 · 1문제 5점 · <b>90점 이상 통과</b>입니다.<br>'+
-        '• 90점 이상 통과하면 캐릭터가 <b>레벨업</b>하고 <b>별 '+STAR_TEST+'개</b>를 받습니다. (16단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
-        '• 특별 보상 <b>★ 닌텐도 게임 칩</b>은 <b>별 '+STAR_GOAL+'개</b>(만점 '+maxStars()+')를 모으면 열립니다.<br>'+
-        '&nbsp;&nbsp;별: 놀이 '+LEVELS.reduce(function(a,L){ return a+levelMax(L); },0)+' + 레벨업 '+(LEVELS.length*STAR_TEST)+' + 책 '+(books().length*STAR_BOOK)+' + 스페셜 '+(SPECIALS.length*STAR_SPEC)+' + 원서 '+(origList().length*STAR_ORIG)+' + 종이책 '+(papers().length*STAR_PAPER)+' + 단어/문장테스트 '+((quizzes().length+sents().length)*STAR_PICK_MAX)+' (세트당 최대 '+STAR_PICK_MAX+')<br>'+
-        '&nbsp;&nbsp;쉽게 하시려면 Index.html의 <b>STAR_GOAL</b> 숫자만 고치세요.<br>'+
+        '• 90점 이상 통과하면 <b>별 '+STAR_TEST+'개</b>를 받습니다. ('+LEVELS.length+'단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
+        '• <b>⬆️ 레벨</b>은 지금까지 모은 별(누적)로 오릅니다. Lv.1은 별 '+lvNeed(1)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
+        '&nbsp;&nbsp;속도를 바꾸시려면 Index.html의 <b>LV_FIRST · LV_LAST</b>를 고치세요. 별을 써도 레벨은 내려가지 않습니다.<br>'+
         '• 다음 레벨은 테스트와 상관없이 놀이만 끝내면 열립니다. (막히지 않게)<br>'+
         '• 얻은 보상은 하준이 <b>🎒 가방</b>에 아이템으로 들어갑니다. 실제로 해주신 뒤 아이템을 눌러 <b>사용함</b>으로 바꿔주세요.<br><br>'+
         '<b>⭐ 별 경제</b><br>'+
-        '• 별은 <b>하나의 지갑</b>입니다. 뽑기도 카드도 닌텐도도 <b>같은 별</b>을 씁니다.<br>'+
+        '• 별은 <b>하나의 지갑</b>입니다. 뽑기도 카드도 <b>같은 별</b>을 씁니다.<br>'+
         '• <b>🎁 보상 뽑기</b>: 별 '+DRAW_PRICE+'개 → 랜덤 보상 1개 (가방에서). 하준이가 직접 뽑습니다.<br>'+
-        '• 별 '+CARD_PRICE+'개 → 축구카드 1만원권 1장 (가방에서). <b>뽑기·카드를 쓰면 그만큼 닌텐도가 멀어집니다.</b> 쓸 때 확인 창이 뜹니다.<br>'+
-        '• 뽑기/카드로 별을 쓰면 닌텐도('+STAR_GOAL+')가 멀어지니, 모자란 만큼은 <b>👨 아빠 별</b>로 채워주시면 됩니다. (아빠 별은 무제한)<br>'+
+        '• 별 '+CARD_PRICE+'개 → 축구카드 1만원권 1장 (가방에서). 쓸 때 확인 창이 뜹니다. 별을 써도 레벨은 그대로입니다.<br>'+
         '• <b>👨 아빠가 별 주기</b>: 아빠 비밀번호를 넣고 · 잘한 만큼 <b>⭐1~'+MAX_BONUS+'개</b>를 골라서 주세요. 언제 뭘 잘했는지 기록이 남습니다.<br>'+
         '• 비밀번호·최대 별·뽑기 값·카드 값을 바꾸시려면 Index.html의 <b>DAD_PIN · MAX_BONUS · DRAW_PRICE · CARD_PRICE</b>를 고치세요.'+
       '</div>'+
@@ -8433,7 +8529,7 @@ function screenSettings(){
   function doReset(){
     allowWipe = true; LOAD_BASE_SCORE = 0;   /* 의도한 초기화 → 안전장치 통과 */
     PROG={stars:{}, tests:{}, rewards:[], draws:[], miss:{}, books:{}, spec:{}, quizzes:[], sents:[], papers:null, bonus:[], cards:[],
-          spent:0, finalWon:false, finalUsed:false, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
+          spent:0, lvSeen:0, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
     try{ localStorage.removeItem('phonics'); }catch(e){}
     if(hasServer) apiPost({action:'reset'}, function(){});
     toast('🧹'); screenHome();
