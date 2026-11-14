@@ -659,6 +659,13 @@
     background:radial-gradient(90% 70% at 50% 18%,#3B5BDB 0,#1B2B52 60%,#101A36 100%)}
   .psvg{display:block;width:100%;height:auto}
   .pc-name{font-family:'Jua',sans-serif;font-size:calc(var(--w)*.135);line-height:1.15;padding-top:calc(var(--w)*.045);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+  .pc-meta{font-family:'Jua',sans-serif;font-size:calc(var(--w)*.1);line-height:1.2;white-space:nowrap;position:relative;opacity:.95}
+  .pc-flag{font-size:1.15em;vertical-align:-.08em}
+  .pcard.sm .pc-meta{font-size:calc(var(--w)*.125)}
+  .hud-pos{display:inline-block;font-family:'Jua',sans-serif;font-size:13px;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:1px 8px;margin-left:3px;white-space:nowrap}
+  .lv-meta{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;margin:4px 0 8px}
+  .lv-meta span{font-family:'Jua',sans-serif;font-size:15px;color:#fff;background:rgba(255,255,255,.14);border:1.5px solid rgba(255,255,255,.45);border-radius:999px;padding:4px 11px;white-space:nowrap}
+  .lv-meta b{color:#FFE066;font-weight:400}.lv-flag{font-style:normal;font-size:18px;vertical-align:-2px}
   .pcard.lock{background:linear-gradient(155deg,#5B6475,#2F3645);color:#C5CCDA}
   .pcard.lock:before{display:none}
   .pcard.lock .pc-art{background:#1A2030}
@@ -813,7 +820,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 16:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 16:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1478,9 +1485,21 @@ var PLAYERS = [
   ['손흥민',7,'KOR',0,'sonny','#1B1B1B',0,{f:'oval',e:'smile',m:'big',b:4}]
 ];
 var SKINS = ['#F7C99A','#E9B98C','#B97A56','#8A5636','#6B4226'];
+/* 포지션 (레벨 순서대로 0~50): F 공격수 · M 미드필더 · D 수비수 · G 골키퍼 */
+var POS_OF = 'F'+'FMFFMMMMFM'+'FDMMGFMDFDMFM'+'MMFFFFF'+'DFMFGFFFFMF'+'MFMMFMFF'+'F';
+var POS = {F:'공격수', M:'미드필더', D:'수비수', G:'골키퍼'};
+var POS_ICO = {F:'⚽', M:'🎯', D:'🛡️', G:'🧤'};
+/* 국적: 유니폼 코드 → [국기, 나라]. 골키퍼 유니폼(GK)·하준(ME)은 NAT_OF에서 따로 */
+var NATS = {KOR:['🇰🇷','대한민국'], BRA:['🇧🇷','브라질'], ARG:['🇦🇷','아르헨티나'], FRA:['🇫🇷','프랑스'], ENG:['🏴󠁧󠁢󠁥󠁮󠁧󠁿','잉글랜드'], ESP:['🇪🇸','스페인'],
+  GER:['🇩🇪','독일'], POR:['🇵🇹','포르투갈'], NED:['🇳🇱','네덜란드'], BEL:['🇧🇪','벨기에'], NOR:['🇳🇴','노르웨이'], EGY:['🇪🇬','이집트'],
+  CRO:['🇭🇷','크로아티아'], POL:['🇵🇱','폴란드'], URU:['🇺🇾','우루과이']};
+var NAT_OF = {0:'KOR', 15:'KOR', 35:'GER'};
 function playerAt(lv){
   var a = PLAYERS[Math.max(0, Math.min(LV_MAX, lv))];
-  return {n:a[0], no:a[1], kit:KITS[a[2]] || KITS.ME, skin:SKINS[a[3]] || SKINS[0], hair:a[4], hc:a[5], beard:a[6], x:a[7] || {}, lv:lv, tier:tierOf(lv)};
+  lv = Math.max(0, Math.min(LV_MAX, lv));
+  var nat = NATS[NAT_OF[lv] || a[2]] || NATS.KOR, ps = POS_OF.charAt(lv) || 'F';
+  return {n:a[0], no:a[1], kit:KITS[a[2]] || KITS.ME, skin:SKINS[a[3]] || SKINS[0], hair:a[4], hc:a[5], beard:a[6], x:a[7] || {}, lv:lv, tier:tierOf(lv),
+          flag:nat[0], nat:nat[1], pos:POS[ps], posIco:POS_ICO[ps]};
 }
 /* 예전 코드가 쓰는 이름들 (칭호 = "○○처럼!") */
 var HERO_MAX = LV_MAX;
@@ -1613,6 +1632,7 @@ function playerCard(lv, size, lock){
       '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
       '<div class="pc-art">'+playerSVG(lv, lock)+'</div>'+
       '<div class="pc-name">'+(lock ? '???' : esc(p.n))+'</div>'+
+      '<div class="pc-meta">'+(lock ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
     '</div>';
 }
 /* 예전 이름으로도 그릴 수 있게 */
@@ -1620,18 +1640,26 @@ function heroSVG(lv){ return '<div class="hsvg">'+playerCard(Math.max(0, Math.mi
 function bigHero(lv){ return '<div style="display:flex;justify-content:center;margin:8px 0">'+playerCard(Math.max(0, Math.min(LV_MAX, lv)), 'lg')+'</div>'; }
 
 /* 지금 레벨 · 다음 레벨까지 */
-function heroLv(){ return lvOf(totalStars()); }
+/* 레벨에 쓰는 별 = 레벨 시스템을 새로 시작한 뒤에 모은 별.
+   처음 한 번, 그때까지 모은 별을 PROG.lvBase에 적어 두고 그만큼 뺀다 → 하준이는 Lv.1부터 다시 시작.
+   (지갑의 별·가방은 그대로. 레벨만 새로 시작) */
+function lvStars(){
+  if(typeof PROG.lvBase !== 'number'){ PROG.lvBase = totalStars(); PROG.lvSeen = LV_START; }   /* 다음 저장 때 같이 저장된다 */
+  return Math.max(0, totalStars() - PROG.lvBase);
+}
+var LV_START = 1;   /* 시작 레벨 (별 0개일 때) */
+function heroLv(){ return Math.max(LV_START, lvOf(lvStars())); }
 function heroTitle(){ return HERO[heroLv()].t; }
 function lvProg(){
-  var s = totalStars(), L = lvOf(s);
+  var s = lvStars(), L = Math.max(LV_START, lvOf(s));
   if(L >= LV_MAX) return {lv:L, max:true, have:s, pct:100, left:0, need:0, got:0};
-  var a = lvNeed(L), b = lvNeed(L+1);
+  var a = L <= LV_START ? 0 : lvNeed(L), b = lvNeed(L+1);
   return {lv:L, max:false, have:s, got:s-a, need:b-a, left:b-s, pct:Math.max(3, Math.round((s-a)*100/(b-a)))};
 }
 /* 별이 늘어 레벨이 오르면 어디서든 축하한다 (별을 주는 곳마다 불린다) */
 function checkLevelUp(cb){
   cb = cb || function(){};
-  var now = heroLv(), seen = typeof PROG.lvSeen === 'number' ? PROG.lvSeen : 0;
+  var now = heroLv(), seen = typeof PROG.lvSeen === 'number' ? PROG.lvSeen : LV_START;
   if(now > seen){
     if(document.querySelector('.lvov')){ cb(); return false; }   /* 이미 축하 중 */
     PROG.lvSeen = now; saveProgress();
@@ -1650,7 +1678,7 @@ function heroCard(){
       '<button class="hud-card" id="dex" aria-label="선수 도감 열기">'+playerCard(lv, '')+'</button>'+
       '<div class="hud-info">'+
         '<div class="hud-name">'+esc(PROG.name)+'</div>'+
-        '<div class="hud-title">'+(lv === 0 ? '축구 꿈나무' : '<b>'+esc(p.n)+'</b>처럼!')+'</div>'+
+        '<div class="hud-title">'+(lv === 0 ? '축구 꿈나무' : '<b>'+esc(p.n)+'</b>처럼! <span class="hud-pos">'+p.flag+' '+esc(p.pos)+'</span>')+'</div>'+
         '<div class="hud-xp" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+g.pct+'" aria-label="다음 레벨까지"><i style="width:'+g.pct+'%"></i></div>'+
         '<div class="hud-cnt">'+(g.max ? '🏆 최고 레벨! 모은 별 '+g.have
             : '⭐ '+g.got+' / '+g.need+' · <b>'+g.left+'개</b> 더 모으면 Lv.'+(lv+1))+'</div>'+
@@ -1678,6 +1706,7 @@ function modalLevelUp(prev, now, cb){
       (newTier ? '<div class="lv-tier">🎖️ 새 등급 <b>'+esc(t.n)+'</b></div>' : '')+
       '<div class="lv-card">'+playerCard(now, 'lg')+'</div>'+
       '<div class="lv-who">'+(now >= LV_MAX ? '🏆 드디어 <b>손흥민</b>!! 월드클래스!' : '이제 <b>'+esc(p.n)+'</b>처럼!')+'</div>'+
+      '<div class="lv-meta"><span><i class="lv-flag">'+p.flag+'</i> '+esc(p.nat)+'</span><span>'+p.posIco+' '+esc(p.pos)+'</span><span>등번호 <b>'+p.no+'</b></span></div>'+
       (now - prev > 1 ? '<div class="lv-sub">한 번에 '+(now-prev)+'레벨이나 올랐어요!</div>' : '')+
       '<div class="lv-sub">'+(g.max ? '모든 선수를 모았어요!' : '다음 선수까지 ⭐ <b>'+g.left+'개</b>')+'</div>'+
       '<button class="btn primary wide" id="lvok">야호! 🎉</button>'+
@@ -1692,7 +1721,7 @@ function screenDex(){
   var g = lvProg(), lv = g.lv;
   var html = '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>📖 선수 도감</h2><div class="pill">'+lv+' / '+LV_MAX+'</div></div>'+
     '<div class="dexnow">'+
-      '<div><b>Lv.'+lv+'</b> · 모은 별 ⭐ '+g.have+'</div>'+
+      '<div><b>Lv.'+lv+'</b> · 레벨 별 ⭐ '+g.have+'</div>'+
       '<div class="hud-xp"><i style="width:'+g.pct+'%"></i></div>'+
       '<div class="muted" style="color:#DCE6F9">'+(g.max ? '모든 선수를 모았어요! 🏆' : '⭐ '+g.left+'개 더 모으면 다음 선수가 열려요')+'</div>'+
     '</div>';
@@ -2188,28 +2217,6 @@ function buyCard(){
   return true;
 }
 
-/* --- 아이템 2개 → 축구카드 1장 교환 ---
-   안 쓴 보상 아이템(뽑은 것·예전 슬롯)을 2개 내면 카드 1장을 받는다.
-   별은 쓰지 않는다 (이미 뽑을 때 냈으니까). 교환 개수를 바꾸려면 TRADE_NEED만. */
-var TRADE_NEED = 2;   /* 카드 1장에 필요한 아이템 수 */
-function tradeItems(){
-  return bagItems().filter(function(x){ return !x.used && (x.kind==='draw' || x.kind==='slot'); });
-}
-function tradeForCard(keys){
-  if(!keys || keys.length !== TRADE_NEED) return false;
-  var pool = tradeItems();
-  var picked = keys.map(function(k){ return pool.filter(function(x){ return x.key===k; })[0]; });
-  if(picked.some(function(x){ return !x; })) return false;
-  /* 낸 아이템은 가방에서 사라진다 */
-  picked.forEach(function(x){
-    if(x.kind==='draw') PROG.draws = draws().filter(function(r){ return r.id!==x.did; });
-    else if(x.kind==='slot') PROG.rewards = (PROG.rewards||[]).filter(function(r){ return r.s!==x.si; });
-  });
-  if(!PROG.cards) PROG.cards = [];
-  PROG.cards.push({id:'c'+Date.now(), at:Date.now(), used:false, via:'trade'});
-  saveProgress();
-  return true;
-}
 
 /* --- 가방에 든 것들 --- */
 function bagItems(){
@@ -2226,7 +2233,7 @@ function bagItems(){
   });
   cards().forEach(function(c, idx){
     out.push({key:'c'+c.id, e:'🃏', n:'축구카드 1만원권',
-      sub:(c.via==='trade' ? '아이템 '+TRADE_NEED+'개로 바꾼 카드' : '별 '+CARD_PRICE+'개로 바꾼 카드'),
+      sub:(c.via==='trade' ? '아이템으로 바꾼 카드' : '별 '+CARD_PRICE+'개로 바꾼 카드'),
       used:!!c.used, kind:'card', cid:c.id});
   });
   pkPrizes().forEach(function(pz){
@@ -3575,18 +3582,6 @@ function screenBag(){
         ? '<button class="btn go wide" id="buy" style="font-size:18px">🃏 지금 바꾸기!</button>'
         : '<div class="muted" style="text-align:center">별 <b>'+(CARD_PRICE-walletStars())+'개</b> 더 모으면 바꿀 수 있어요!</div>')+
     '</div>'+
-    /* 아이템 → 카드 교환 상점 */
-    '<div class="card" style="margin-bottom:12px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7)">'+
-      '<div style="display:flex;align-items:center;gap:12px">'+
-        '<div style="font-size:38px">🔁</div>'+
-        '<div style="flex:1"><b style="font-size:17px">아이템으로 카드 바꾸기</b>'+
-          '<div class="muted">안 쓴 아이템 <b style="color:var(--berry-ink)">'+TRADE_NEED+'개</b> → 축구카드 1만원권 <b>1장</b>'+
-          '<br>별은 안 써요! (지금 바꿀 수 있는 아이템 '+tradeItems().length+'개)</div></div>'+
-      '</div>'+
-      (tradeItems().length>=TRADE_NEED
-        ? '<button class="btn go wide" id="trade" style="font-size:18px;margin-top:8px">🔁 아이템 골라서 바꾸기!</button>'
-        : '<div class="muted" style="text-align:center;margin-top:8px">아이템이 <b>'+(TRADE_NEED-tradeItems().length)+'개</b> 더 있어야 바꿀 수 있어요!</div>')+
-    '</div>'+
     '<div class="sechd">🎁 얻은 아이템 <span style="font-size:13px">· 눌러서 사용 표시</span></div>';
   if(!its.length){
     html += '<div class="card" style="text-align:center"><div style="font-size:44px">🎒</div>'+
@@ -3601,7 +3596,7 @@ function screenBag(){
     }).join('') +'</div>';
   }
   html += '<div class="muted" style="text-align:center;margin-top:12px;line-height:1.6">'+
-    '아빠가 실제로 해주면 아이템을 눌러 <b>사용함</b>으로 바꿔요.<br>다시 누르면 되돌릴 수 있어요.</div>';
+    '아빠가 실제로 해주면 아이템을 눌러 <b>사용함</b>으로 바꿔요.<br>사용한 아이템을 되돌리려면 <b>아빠 비밀번호</b>가 필요해요.</div>';
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
   if(document.getElementById('buy')) document.getElementById('buy').onclick = function(){
@@ -3633,52 +3628,18 @@ function screenBag(){
   on('.item', function(){
     var x = bagItems().filter(function(y){ return y.key===this.dataset.k; }.bind(this))[0];
     if(!x) return;
-    useItem(x); beep([700],.05); toast(x.used?'↩️':'✅'); screenBag();
-  });
-
-  /* 🔁 아이템 2개 → 카드 교환 */
-  if(document.getElementById('trade')) document.getElementById('trade').onclick = function(){
-    var pool = tradeItems(), sel = [];
-    var ask = openMod(
-      '<div style="font-size:48px">🔁</div>'+
-      '<h2>어떤 아이템을 낼까?</h2>'+
-      '<p>낼 아이템 <b>'+TRADE_NEED+'개</b>를 골라주세요.<br><b style="color:var(--berry-ink)">낸 아이템은 가방에서 사라져요!</b></p>'+
-      '<div class="igrid" id="tgrid" style="margin-bottom:12px">'+
-        pool.map(function(x){
-          return '<button class="item" data-k="'+esc(x.key)+'">'+
-            '<div class="ie">'+x.e+'</div>'+
-            '<div class="inm">'+esc(x.n)+'</div>'+
-            '<div class="isb">'+esc(x.sub)+'</div>'+
-          '</button>';
-        }).join('')+
-      '</div>'+
-      '<button class="btn go wide" id="tok" style="font-size:19px;padding:16px;margin-bottom:9px" disabled>0/'+TRADE_NEED+'개 골랐어요</button>'+
-      '<button class="btn wide" id="tno">그만둘래요</button>');
-    function refresh(){
-      var b = ask.querySelector('#tok');
-      b.disabled = sel.length !== TRADE_NEED;
-      b.textContent = sel.length===TRADE_NEED ? '🃏 이 '+TRADE_NEED+'개로 카드 받기!' : sel.length+'/'+TRADE_NEED+'개 골랐어요';
+    if(x.used){
+      /* 이미 쓴 아이템을 되살리는 건 아빠만 (매번 비밀번호) */
+      dadGate(function(){ useItem(x); beep([700],.05); toast('↩️ 다시 쓸 수 있어요'); screenBag(); }, screenBag, '사용한 아이템을 되돌리려면 아빠 비밀번호가 필요해요 🙂');
+      return;
     }
-    Array.prototype.forEach.call(ask.querySelectorAll('#tgrid .item'), function(el){
-      el.onclick = function(){
-        var k = el.dataset.k, i = sel.indexOf(k);
-        if(i>=0){ sel.splice(i,1); el.style.outline=''; el.style.background=''; beep([420],.04); }
-        else if(sel.length < TRADE_NEED){ sel.push(k); el.style.outline='3px solid var(--melon)'; el.style.background='#ECFDF5'; beep([700],.04); }
-        else { noSound(); return; }
-        refresh();
-      };
-    });
-    ask.querySelector('#tno').onclick = function(){ beep([500],.06); ask.remove(); };
-    ask.querySelector('#tok').onclick = function(){
-      if(!tradeForCard(sel)){ noSound(); ask.remove(); screenBag(); return; }
-      ask.remove(); starSound(); confetti(24);
-      var ov = openMod('<div style="font-size:60px">🃏</div><h2>축구카드 획득!</h2>'+
-        '<p>아이템 '+TRADE_NEED+'개를 내고<br>축구카드 1만원권 <b>1장</b>을 받았어요!</p>'+
-        '<div class="reel hit"><span class="e">🃏</span><b>축구카드 ×'+cards().length+'</b></div>'+
-        '<button class="btn primary wide" id="ok" style="font-size:19px;padding:16px">야호! 🎉</button>');
-      ov.querySelector('#ok').onclick = function(){ ov.remove(); screenBag(); };
-    };
-  };
+    var ask = openMod('<div style="font-size:54px">'+x.e+'</div><h2>'+esc(x.n)+'</h2>'+
+      '<p>이 아이템을 <b>사용함</b>으로 바꿀까요?<br><span class="muted">한번 쓰면 되돌릴 때 <b>아빠 비밀번호</b>가 필요해요.</span></p>'+
+      '<button class="btn go wide" id="uy" style="font-size:19px;padding:16px;margin-bottom:9px">✅ 사용했어요</button>'+
+      '<button class="btn wide" id="un">아직 안 썼어요</button>');
+    ask.querySelector('#un').onclick = function(){ beep([500],.06); ask.remove(); };
+    ask.querySelector('#uy').onclick = function(){ ask.remove(); useItem(x); beep([700],.05); toast('✅'); screenBag(); };
+  });
 
   /* 🎁 보상 뽑기 (별 100개) */
   if(document.getElementById('draw')) document.getElementById('draw').onclick = function(){
@@ -8543,7 +8504,7 @@ function screenSettings(){
       '<div class="muted">모은 별: <b>⭐ '+totalStars()+' / '+maxStars()+'</b> · 캐릭터 <b>Lv.'+heroLv()+' '+esc(heroTitle())+'</b><br>'+
       '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
       '&nbsp;· <b>지금 가진 별 '+walletStars()+'</b> = 모은 별 '+totalStars()+' − 카드로 쓴 '+spentStars()+' (카드 '+cards().length+'장)<br>'+
-      '&nbsp;· ⬆️ 레벨은 <b>모은 별 '+totalStars()+'</b>로 계산 · 다음 레벨(Lv.'+Math.min(LV_MAX, heroLv()+1)+')은 누적 별 <b>'+lvNeed(Math.min(LV_MAX, heroLv()+1))+'개</b><br>'+
+      '&nbsp;· ⬆️ 레벨 별 <b>'+lvStars()+'</b> (= 모은 별 '+totalStars()+' − 새로 시작할 때 있던 '+(PROG.lvBase||0)+') · 다음 레벨(Lv.'+Math.min(LV_MAX, heroLv()+1)+')은 레벨 별 <b>'+lvNeed(Math.min(LV_MAX, heroLv()+1))+'개</b><br>'+
       '테스트 통과: <b>'+passedCount()+'/'+LEVELS.length+'</b> · 읽은 책: <b>'+books().filter(function(L){ return bookRead(L.id)>0; }).length+'/'+books().length+'</b> · 스페셜: <b>'+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</b><br><br>'+
       LEVELS.map(function(L){
         var t=testInfo(L.id);
@@ -8580,7 +8541,7 @@ function screenSettings(){
         '<b>단계 테스트</b><br>'+
         '• 놀이 5개를 모두 끝내야 테스트가 열립니다. 20문제 · 1문제 5점 · <b>90점 이상 통과</b>입니다.<br>'+
         '• 90점 이상 통과하면 <b>별 '+STAR_TEST+'개</b>를 받습니다. ('+LEVELS.length+'단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
-        '• <b>⬆️ 레벨</b>은 지금까지 모은 별(누적)로 오릅니다. Lv.1은 별 '+lvNeed(1)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
+        '• <b>⬆️ 레벨</b>은 Lv.1에서 시작해, 새로 시작한 뒤 모은 별(레벨 별)로 오릅니다. Lv.2는 별 '+lvNeed(2)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
         '&nbsp;&nbsp;속도를 바꾸시려면 Index.html의 <b>LV_FIRST · LV_LAST</b>를 고치세요. 별을 써도 레벨은 내려가지 않습니다.<br>'+
         '• 다음 레벨은 테스트와 상관없이 놀이만 끝내면 열립니다. (막히지 않게)<br>'+
         '• 얻은 보상은 하준이 <b>🎒 가방</b>에 아이템으로 들어갑니다. 실제로 해주신 뒤 아이템을 눌러 <b>사용함</b>으로 바꿔주세요.<br><br>'+
@@ -8621,7 +8582,7 @@ function screenSettings(){
   function doReset(){
     allowWipe = true; LOAD_BASE_SCORE = 0;   /* 의도한 초기화 → 안전장치 통과 */
     PROG={stars:{}, tests:{}, rewards:[], draws:[], miss:{}, books:{}, spec:{}, quizzes:[], sents:[], papers:null, bonus:[], cards:[],
-          spent:0, lvSeen:0, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
+          spent:0, lvBase:0, lvSeen:1, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
     try{ localStorage.removeItem('phonics'); }catch(e){}
     if(hasServer) apiPost({action:'reset'}, function(){});
     toast('🧹'); screenHome();
