@@ -813,7 +813,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 15:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 16:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1414,102 +1414,194 @@ var KITS = {
   CRO:['#F8F9FA','#E03131','check'], POL:['#F8F9FA','#E03131','band'], URU:['#74C0FC','#212529',''],
   GK:['#51CF66','#212529',''],       ME:['#2457C5','#FCC419','']
 };
-var SKINS = ['#F7C99A','#E9B98C','#B97A56','#7A4B2E'];
-/* [이름, 등번호, 유니폼, 피부(0~3), 머리 모양, 머리 색, 수염(0 없음·1 짧은·2 덥수룩)] */
+/* [이름, 등번호, 유니폼, 피부(0~4), 머리 모양, 머리 색, 수염, 특징{…}]
+   수염: 0 없음 · 1 까슬 · 2 덥수룩 · 3 턱수염+콧수염 · 4 콧수염
+   특징: f 얼굴형(round/oval/long/square) · e 눈(dot/smile) · m 입(smile/grin/big/calm) · b 눈썹 굵기 · n 코(0~2)
+         hb 머리띠 색 · hl 머리 포인트 색 · fr 주근깨 · er 귀걸이 · ck 볼 빨강(0~1) */
 var PLAYERS = [
-  ['하준',10,'ME',0,'mop','#2B2018',0],
+  ['하준',10,'ME',0,'mop','#2B2018',0,{f:'round',m:'grin'}],
   /* 1~10 유망주 */
-  ['양민혁',18,'KOR',0,'mop','#1B1B1B',0], ['배준호',10,'KOR',0,'short','#1B1B1B',0], ['엔드릭',9,'BRA',2,'fade','#1B1B1B',0],
-  ['가르나초',17,'ARG',1,'spiky','#C9A227',0], ['가비',6,'ESP',0,'short','#3A2A1E',0], ['무시알라',10,'GER',2,'curly','#1B1B1B',0],
-  ['파머',20,'ENG',0,'short','#8A5A2B',0], ['비르츠',17,'GER',0,'wavy','#5B3A22',0], ['야말',19,'ESP',2,'curly','#1B1B1B',0],
-  ['벨링엄',5,'ENG',2,'fade','#1B1B1B',0],
+  ['양민혁',18,'KOR',0,'twoblock','#1B1B1B',0,{f:'oval'}],
+  ['배준호',10,'KOR',0,'curtain','#1B1B1B',0,{f:'oval',e:'smile'}],
+  ['엔드릭',9,'BRA',3,'fade','#1B1B1B',0,{f:'round',m:'big',b:4}],
+  ['가르나초',17,'ARG',1,'quiff','#E3C565',0,{f:'long',b:4,er:1}],
+  ['가비',6,'ESP',0,'side','#4A3222',0,{f:'oval',b:5,m:'calm'}],
+  ['무시알라',10,'GER',2,'curly','#1B1B1B',0,{f:'long',e:'smile'}],
+  ['파머',20,'ENG',0,'side','#9A6B3A',0,{f:'long',m:'calm',n:1}],
+  ['비르츠',17,'GER',0,'wavy','#5B3A22',0,{f:'round',ck:1}],
+  ['야말',19,'ESP',2,'curly','#2B2018',0,{f:'oval',m:'grin',hl:'#C9A227'}],
+  ['벨링엄',5,'ENG',2,'fade','#1B1B1B',1,{f:'oval',b:5}],
   /* 11~23 한국의 별 */
-  ['조규성',9,'KOR',0,'wavy','#1B1B1B',0], ['설영우',22,'KOR',0,'short','#1B1B1B',0], ['황인범',6,'KOR',0,'mop','#1B1B1B',0],
-  ['이재성',10,'KOR',0,'short','#2B2018',0], ['조현우',21,'GK',0,'spiky','#C9A227',0], ['황희찬',11,'KOR',1,'fade','#1B1B1B',0],
-  ['기성용',16,'KOR',0,'wavy','#2B2018',0], ['이영표',12,'KOR',0,'short','#1B1B1B',0], ['안정환',19,'KOR',0,'long','#3A2A1E',0],
-  ['김민재',4,'KOR',1,'fade','#1B1B1B',0], ['이강인',18,'KOR',0,'mop','#2B2018',0], ['차범근',11,'KOR',0,'wavy','#1B1B1B',0],
-  ['박지성',13,'KOR',0,'mop','#1B1B1B',0],
+  ['조규성',9,'KOR',0,'curtainlong','#1B1B1B',0,{f:'oval',b:4,m:'calm'}],
+  ['설영우',22,'KOR',0,'twoblock','#1B1B1B',0,{f:'oval',e:'smile'}],
+  ['황인범',6,'KOR',0,'mop','#1B1B1B',0,{f:'round',m:'grin'}],
+  ['이재성',10,'KOR',0,'side','#2B2018',0,{f:'long',e:'smile'}],
+  ['조현우',21,'GK',0,'spiky','#E3C565',0,{f:'long',b:4}],
+  ['황희찬',11,'KOR',1,'buzz','#1B1B1B',0,{f:'square',b:5,m:'grin'}],
+  ['기성용',16,'KOR',0,'wavy','#2B2018',0,{f:'long',m:'calm',n:1}],
+  ['이영표',12,'KOR',0,'short','#1B1B1B',0,{f:'round',e:'smile',m:'grin'}],
+  ['안정환',19,'KOR',0,'perm','#3A2A1E',0,{f:'oval',b:4}],
+  ['김민재',4,'KOR',1,'quiff','#1B1B1B',0,{f:'square',b:5}],
+  ['이강인',18,'KOR',0,'bowl','#2B2018',0,{f:'round',ck:1,m:'grin'}],
+  ['차범근',11,'KOR',0,'thick','#1B1B1B',0,{f:'square',b:5,m:'grin'}],
+  ['박지성',13,'KOR',0,'shag','#1B1B1B',0,{f:'oval',e:'smile',n:1}],
   /* 24~30 현역 스타 */
-  ['포든',47,'ENG',0,'fade','#D9B45A',0], ['로드리',16,'ESP',0,'short','#2B2018',1], ['사카',7,'ENG',3,'fade','#1B1B1B',0],
-  ['비니시우스',7,'BRA',3,'fade','#1B1B1B',0], ['살라',11,'EGY',1,'afro','#1B1B1B',2], ['홀란',9,'NOR',0,'bun','#E8C96A',0],
-  ['음바페',10,'FRA',3,'fade','#1B1B1B',0],
+  ['포든',47,'ENG',0,'buzz','#D9C28A',0,{f:'long',m:'calm'}],
+  ['로드리',16,'ESP',0,'short','#2B2018',1,{f:'long',b:5,n:1}],
+  ['사카',7,'ENG',3,'fade','#1B1B1B',0,{f:'round',m:'big',e:'smile'}],
+  ['비니시우스',7,'BRA',4,'fade','#1B1B1B',0,{f:'oval',m:'big'}],
+  ['살라',11,'EGY',1,'afro','#1B1B1B',2,{f:'oval',e:'smile'}],
+  ['홀란',9,'NOR',0,'ponytail','#EBD58A',0,{f:'long',m:'big',b:3}],
+  ['음바페',10,'FRA',3,'buzz','#1B1B1B',0,{f:'round',m:'grin'}],
   /* 31~41 베테랑 */
-  ['판다이크',4,'NED',2,'bun','#1B1B1B',1], ['케인',9,'ENG',0,'short','#8A5A2B',1], ['더브라위너',7,'BEL',0,'short','#D9773A',0],
-  ['그리즈만',7,'FRA',0,'wavy','#D9B45A',1], ['노이어',1,'GK',0,'short','#C9A227',0], ['레반도프스키',9,'POL',0,'short','#3A2A1E',0],
-  ['수아레스',9,'URU',1,'short','#1B1B1B',1], ['벤제마',9,'FRA',1,'fade','#1B1B1B',2], ['네이마르',10,'BRA',1,'spiky','#3A2A1E',0],
-  ['모드리치',10,'CRO',0,'long','#C9A227',0], ['호날두',7,'POR',1,'spiky','#1B1B1B',0],
+  ['판다이크',4,'NED',2,'manbun','#1B1B1B',1,{f:'long',b:5,m:'calm'}],
+  ['케인',9,'ENG',0,'side','#9A6B3A',1,{f:'long',n:1}],
+  ['더브라위너',7,'BEL',0,'short','#E08A3C',0,{f:'round',ck:1,fr:1}],
+  ['그리즈만',7,'FRA',0,'wavy','#E3C565',4,{f:'oval',m:'grin'}],
+  ['노이어',1,'GK',0,'side','#E3C565',0,{f:'square',n:1}],
+  ['레반도프스키',9,'POL',0,'quiff','#3A2A1E',0,{f:'square',b:4,m:'calm'}],
+  ['수아레스',9,'URU',1,'short','#1B1B1B',1,{f:'oval',m:'big',b:5}],
+  ['벤제마',9,'FRA',1,'buzz','#1B1B1B',2,{f:'oval',m:'calm'}],
+  ['네이마르',10,'BRA',1,'mohawk','#2B2018',0,{f:'oval',m:'grin',hl:'#E3C565',er:1}],
+  ['모드리치',10,'CRO',0,'long','#D9B45A',0,{f:'long',n:2,hb:'#212529',m:'calm'}],
+  ['호날두',7,'POR',1,'slick','#1B1B1B',0,{f:'square',m:'big',b:4}],
   /* 42~49 전설 */
-  ['베컴',7,'ENG',0,'wavy','#C9A227',1], ['앙리',14,'FRA',3,'bald','#1B1B1B',1], ['호나우지뉴',10,'BRA',2,'long','#1B1B1B',1],
-  ['지단',10,'FRA',1,'bald','#1B1B1B',0], ['호나우두',9,'BRA',2,'fade','#1B1B1B',0], ['마라도나',10,'ARG',1,'afro','#1B1B1B',0],
-  ['펠레',10,'BRA',3,'fade','#1B1B1B',0], ['메시',10,'ARG',0,'short','#5B3A22',2],
+  ['베컴',7,'ENG',0,'quiff','#D9B45A',1,{f:'oval',b:4}],
+  ['앙리',14,'FRA',3,'bald','#1B1B1B',3,{f:'long',m:'calm'}],
+  ['호나우지뉴',10,'BRA',2,'curlylong','#1B1B1B',0,{f:'long',m:'big',hb:'#F8F9FA'}],
+  ['지단',10,'FRA',1,'receding','#2B2018',0,{f:'oval',m:'calm',b:5,n:1}],
+  ['호나우두',9,'BRA',2,'tuft','#1B1B1B',0,{f:'round',m:'big'}],
+  ['마라도나',10,'ARG',1,'thickcurl','#1B1B1B',0,{f:'round',b:5,m:'grin'}],
+  ['펠레',10,'BRA',4,'flat','#1B1B1B',0,{f:'oval',m:'big',e:'smile'}],
+  ['메시',10,'ARG',0,'side','#5B3A22',2,{f:'oval',n:1}],
   /* 50 */
-  ['손흥민',7,'KOR',0,'spiky','#1B1B1B',0]
+  ['손흥민',7,'KOR',0,'sonny','#1B1B1B',0,{f:'oval',e:'smile',m:'big',b:4}]
 ];
+var SKINS = ['#F7C99A','#E9B98C','#B97A56','#8A5636','#6B4226'];
 function playerAt(lv){
   var a = PLAYERS[Math.max(0, Math.min(LV_MAX, lv))];
-  return {n:a[0], no:a[1], kit:KITS[a[2]] || KITS.ME, skin:SKINS[a[3]] || SKINS[0], hair:a[4], hc:a[5], beard:a[6], lv:lv, tier:tierOf(lv)};
+  return {n:a[0], no:a[1], kit:KITS[a[2]] || KITS.ME, skin:SKINS[a[3]] || SKINS[0], hair:a[4], hc:a[5], beard:a[6], x:a[7] || {}, lv:lv, tier:tierOf(lv)};
 }
 /* 예전 코드가 쓰는 이름들 (칭호 = "○○처럼!") */
 var HERO_MAX = LV_MAX;
 var HERO = PLAYERS.map(function(a, i){ return {t: i === 0 ? '축구 꿈나무' : a[0]+'처럼!'}; });
 
-/* 선수 얼굴(가슴 위) — viewBox 0 0 200 220. lock=true면 실루엣 */
+/* 선수 캐리커처(가슴 위) — viewBox 0 0 200 220. lock=true면 실루엣.
+   사진이 아니라 특징(머리·얼굴형·수염·표정·등번호·유니폼 색)만 살린 그림. 엠블럼 없음 */
 function playerSVG(lv, lock){
-  var p = playerAt(lv), o = [], k = p.kit, sk = p.skin, hc = p.hc, id = 'pk'+lv+(lock?'l':'');
-  var dk = lock ? '#3A4252' : null;
+  var p = playerAt(lv), X = p.x, o = [], k = p.kit, sk = p.skin, hc = p.hc, id = 'pk'+lv+(lock?'l':'');
+  var dk = lock ? '#3A4252' : null, hl = X.hl || hc;
   function F(c){ return dk || c; }
+  function P(d, c, extra){ o.push('<path d="'+d+'" fill="'+F(c)+'"'+(extra||'')+'/>'); }
   o.push('<svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" class="psvg" role="img" aria-label="'+(lock ? '아직 잠긴 선수' : esc(p.n)+' 캐릭터')+'">');
-  o.push('<defs><clipPath id="'+id+'"><path d="M22 220 V178 Q22 150 60 142 L82 136 Q100 148 118 136 L140 142 Q178 150 178 178 V220 Z"/></clipPath></defs>');
-  /* 유니폼 */
+  o.push('<defs><clipPath id="'+id+'"><path d="M22 220 V178 Q22 150 60 142 L82 136 Q100 148 118 136 L140 142 Q178 150 178 178 V220 Z"/></clipPath>'+
+    '<clipPath id="'+id+'b"><rect x="0" y="0" width="200" height="66"/></clipPath><clipPath id="'+id+'s"><rect x="0" y="0" width="200" height="72"/></clipPath><clipPath id="'+id+'h"><rect x="0" y="0" width="200" height="44"/></clipPath></defs>');
+
+  /* ── 뒤로 넘어가는 머리 (어깨 뒤) ── */
+  if(p.hair === 'long')        P('M54 76 Q50 34 100 30 Q150 34 146 76 L152 140 Q138 150 128 136 L128 80 H72 L72 136 Q62 150 48 140 Z', hc);
+  if(p.hair === 'perm')        P('M52 78 Q44 34 100 28 Q156 34 148 78 Q160 96 150 112 Q160 128 146 142 Q134 150 128 134 L128 80 H72 L72 134 Q66 150 54 142 Q40 128 50 112 Q40 96 52 78 Z', hc);
+  if(p.hair === 'curtainlong') P('M54 78 Q50 34 100 30 Q150 34 146 78 L148 122 Q138 130 130 120 L128 80 H72 L70 120 Q62 130 52 122 Z', hc);
+  if(p.hair === 'curlylong')   P('M50 76 Q42 30 100 26 Q158 30 150 76 Q164 90 152 104 Q166 118 152 132 Q160 148 142 150 Q130 152 128 136 L128 80 H72 L72 136 Q70 152 58 150 Q40 148 48 132 Q34 118 48 104 Q36 90 50 76 Z', hc);
+  if(p.hair === 'ponytail')    P('M130 44 Q168 40 170 78 Q172 110 156 128 Q150 112 152 92 Q150 66 132 60 Z', hc);
+  if(p.hair === 'afro')        P('M44 84 Q28 44 60 24 Q80 4 106 12 Q138 2 152 30 Q174 52 156 86 Q150 62 100 56 Q50 62 44 84 Z', hc);
+  if(p.hair === 'thickcurl')   P('M46 88 Q34 50 58 30 Q78 10 104 16 Q136 8 150 34 Q168 56 154 90 Q150 64 100 58 Q50 64 46 88 Z', hc);
+
+  /* ── 유니폼 ── */
   o.push('<g clip-path="url(#'+id+')"><rect x="0" y="120" width="200" height="110" fill="'+F(k[0])+'"/>');
   if(!lock){
-    if(k[2] === 'stripe') for(var x=30; x<180; x+=28) o.push('<rect x="'+x+'" y="120" width="14" height="110" fill="'+k[1]+'"/>');
+    if(k[2] === 'stripe') for(var sx=30; sx<180; sx+=28) o.push('<rect x="'+sx+'" y="120" width="14" height="110" fill="'+k[1]+'"/>');
     if(k[2] === 'band') o.push('<rect x="0" y="160" width="200" height="14" fill="'+k[1]+'"/>');
     if(k[2] === 'check') for(var cy=128; cy<220; cy+=20) for(var cx=20+((cy-128)/20%2)*20; cx<190; cx+=40) o.push('<rect x="'+cx+'" y="'+cy+'" width="20" height="20" fill="'+k[1]+'"/>');
     o.push('<path d="M22 178 Q22 150 60 142 L52 172 Z M178 178 Q178 150 140 142 L148 172 Z" fill="'+k[1]+'" opacity=".9"/>');
   }
   o.push('</g>');
-  /* 깃 + 목 */
-  o.push('<path d="M82 136 Q100 150 118 136 L112 128 H88 Z" fill="'+F(sk)+'"/>');
-  if(!lock) o.push('<path d="M80 136 Q100 154 120 136" fill="none" stroke="'+k[1]+'" stroke-width="6" stroke-linecap="round"/>');
-  /* 등번호 */
+  /* 목 + 깃 */
+  P('M82 136 Q100 150 118 136 L113 122 H87 Z', sk);
   if(!lock){
+    o.push('<path d="M87 124 Q100 134 113 124" fill="none" stroke="rgba(0,0,0,.14)" stroke-width="5" stroke-linecap="round"/>');
+    o.push('<path d="M80 136 Q100 154 120 136" fill="none" stroke="'+k[1]+'" stroke-width="6" stroke-linecap="round"/>');
     var light = /^#(F8|FF|FC|A5|DE)/i.test(k[0]) || k[2] === 'stripe';
     o.push('<text x="100" y="206" text-anchor="middle" font-size="46" font-family="Patrick Hand, sans-serif" fill="'+(light ? '#1C2C5B' : '#fff')+'" stroke="'+(light ? '#fff' : 'rgba(0,0,0,.35)')+'" stroke-width="'+(k[2] ? 3 : 1)+'" paint-order="stroke">'+p.no+'</text>');
   }
-  /* 머리 뒤쪽(긴 머리·아프로) */
-  if(p.hair === 'long') o.push('<path d="M54 76 Q50 34 100 30 Q150 34 146 76 L150 134 Q138 142 128 132 L128 80 H72 L72 132 Q62 142 50 134 Z" fill="'+F(hc)+'"/>');
-  if(p.hair === 'afro') o.push('<path d="M46 80 Q34 44 62 26 Q80 8 104 14 Q134 6 148 32 Q168 52 154 82 Q150 60 100 56 Q52 60 46 80 Z" fill="'+F(hc)+'"/>');
-  /* 귀 + 얼굴 */
-  o.push('<circle cx="57" cy="86" r="9" fill="'+F(sk)+'"/><circle cx="143" cy="86" r="9" fill="'+F(sk)+'"/>');
-  o.push('<path d="M58 78 Q58 40 100 40 Q142 40 142 78 Q142 128 100 132 Q58 128 58 78 Z" fill="'+F(sk)+'"/>');
-  /* 수염 */
-  if(!lock && p.beard === 1) o.push('<path d="M64 98 Q70 130 100 132 Q130 130 136 98 Q128 118 100 120 Q72 118 64 98 Z" fill="'+hc+'" opacity=".38"/>');
-  if(!lock && p.beard === 2) o.push('<path d="M60 90 Q64 134 100 136 Q136 134 140 90 Q130 112 114 106 Q100 100 86 106 Q70 112 60 90 Z" fill="'+hc+'" opacity=".92"/>');
-  /* 머리 모양 */
-  var H = {
-    mop:   'M56 82 Q52 36 100 32 Q148 36 144 82 Q138 62 124 58 Q100 70 76 58 Q62 62 56 82 Z',
-    short: 'M57 76 Q54 34 100 32 Q146 34 143 76 Q136 54 100 52 Q64 54 57 76 Z',
-    fade:  'M62 62 Q62 36 100 34 Q138 36 138 62 Q128 48 100 48 Q72 48 62 62 Z',
-    spiky: 'M56 76 Q54 44 66 38 L70 24 L80 36 L88 18 L98 34 L108 16 L116 34 L128 22 L132 38 Q146 46 144 76 Q136 56 100 54 Q64 56 56 76 Z',
-    wavy:  'M54 88 Q46 40 84 30 Q112 20 134 36 Q154 50 146 88 Q142 66 128 60 Q112 50 96 58 Q78 66 66 60 Q58 70 54 88 Z',
-    curly: 'M58 70 Q52 50 66 42 Q66 28 82 30 Q92 20 104 28 Q118 20 126 32 Q142 32 138 48 Q150 58 142 72 Q136 56 100 54 Q64 56 58 70 Z',
-    bun:   'M57 74 Q56 36 100 34 Q144 36 143 74 Q134 52 100 50 Q66 52 57 74 Z',
-    long:  'M56 80 Q54 36 100 32 Q146 36 144 80 Q136 58 104 54 Q92 64 70 58 Q60 64 56 80 Z',
-    afro:  'M58 76 Q56 50 100 48 Q144 50 142 76 Q134 60 100 58 Q66 60 58 76 Z'
+
+  /* ── 얼굴형 ── */
+  var FACE = {
+    round:  'M57 80 Q57 40 100 40 Q143 40 143 80 Q143 128 100 132 Q57 128 57 80 Z',
+    oval:   'M60 78 Q60 38 100 38 Q140 38 140 78 Q140 118 122 130 Q100 140 78 130 Q60 118 60 78 Z',
+    long:   'M62 76 Q62 34 100 34 Q138 34 138 76 Q138 118 124 132 Q100 146 76 132 Q62 118 62 76 Z',
+    square: 'M58 76 Q58 38 100 38 Q142 38 142 76 L140 108 Q136 130 112 134 H88 Q64 130 60 108 Z'
   };
-  if(p.hair === 'bun') o.push('<circle cx="100" cy="24" r="13" fill="'+F(hc)+'"/>');
-  if(H[p.hair]) o.push('<path d="'+H[p.hair]+'" fill="'+F(hc)+'"/>');
-  if(p.hair === 'bald' && !lock) o.push('<path d="M70 50 Q100 38 130 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".35"/>');
+  var fk = FACE[X.f] ? X.f : 'round', earY = fk === 'long' ? 84 : 86;
+  o.push('<circle cx="'+(fk==='long'?60:57)+'" cy="'+earY+'" r="9" fill="'+F(sk)+'"/><circle cx="'+(fk==='long'?140:143)+'" cy="'+earY+'" r="9" fill="'+F(sk)+'"/>');
+  if(!lock && X.er) o.push('<circle cx="'+(fk==='long'?58:55)+'" cy="'+(earY+9)+'" r="3" fill="#FFE066" stroke="#B08900" stroke-width="1"/>');
+  P(FACE[fk], sk);
+
+  /* ── 수염 ── */
+  if(!lock){
+    if(p.beard === 1) o.push('<path d="M64 100 Q70 132 100 136 Q130 132 136 100 Q128 120 100 122 Q72 120 64 100 Z" fill="'+hc+'" opacity=".32"/>');
+    if(p.beard === 2) o.push('<path d="M60 88 Q62 136 100 140 Q138 136 140 88 Q132 112 114 105 Q100 99 86 105 Q68 112 60 88 Z" fill="'+hc+'" opacity=".94"/>');
+    if(p.beard === 3) o.push('<path d="M84 104 Q100 97 116 104 Q118 128 100 134 Q82 128 84 104 Z" fill="'+hc+'" opacity=".9"/>');
+    if(p.beard === 4) o.push('<path d="M82 103 Q100 94 118 103 Q108 107 100 104 Q92 107 82 103 Z" fill="'+hc+'"/>');
+  }
+
+  /* ── 머리 모양 (앞쪽) ── */
+  var H = {
+    mop:      'M56 84 Q52 36 100 32 Q148 36 144 84 Q138 62 124 58 Q100 70 76 58 Q62 62 56 84 Z',
+    bowl:     'M54 86 Q50 34 100 30 Q150 34 146 86 Q142 68 132 66 Q100 76 68 66 Q58 68 54 86 Z',
+    shag:     'M54 88 Q48 36 100 30 Q152 36 146 88 L140 70 L132 78 L124 62 L112 72 L100 60 L88 72 L76 62 L68 78 L60 70 Z',
+    short:    'M57 76 Q54 34 100 32 Q146 34 143 76 Q136 54 100 52 Q64 54 57 76 Z',
+    side:     'M56 78 Q52 34 100 30 Q148 34 144 78 Q140 58 126 52 Q96 66 70 54 Q60 60 56 78 Z',
+    fade:     'M62 62 Q62 34 100 32 Q138 34 138 62 Q128 48 100 48 Q72 48 62 62 Z',
+    flat:     'M60 62 L60 38 Q100 28 140 38 L140 62 Q128 50 100 50 Q72 50 60 62 Z',
+    spiky:    'M56 76 Q54 44 66 38 L70 20 L80 34 L88 12 L98 30 L108 10 L116 30 L128 16 L132 36 Q146 46 144 76 Q136 56 100 54 Q64 56 56 76 Z',
+    quiff:    'M58 74 Q54 40 76 30 Q96 6 132 22 Q150 34 142 74 Q136 54 112 50 Q84 52 70 58 Q62 62 58 74 Z',
+    slick:    'M58 72 Q54 38 82 28 Q108 14 136 30 Q148 44 142 72 Q134 50 104 48 Q76 48 58 72 Z',
+    sonny:    'M56 76 Q52 42 72 32 Q88 14 112 20 Q140 20 144 50 Q146 64 142 76 Q138 58 124 52 Q104 44 84 52 Q66 58 56 76 Z',
+    wavy:     'M54 90 Q46 40 84 30 Q112 20 134 36 Q154 50 146 90 Q142 66 128 60 Q112 50 96 58 Q78 66 66 60 Q58 70 54 90 Z',
+    thick:    'M52 90 Q42 36 100 26 Q158 36 148 90 Q144 64 126 58 Q100 50 74 58 Q56 64 52 90 Z',
+    curly:    'M58 70 Q50 50 64 42 Q64 26 80 28 Q90 16 104 26 Q118 16 128 30 Q144 30 140 46 Q152 58 142 72 Q136 56 100 54 Q64 56 58 70 Z',
+    twoblock: 'M60 70 Q54 34 100 30 Q146 34 140 70 Q134 56 120 54 Q100 64 78 54 Q66 56 60 70 Z',
+    curtain:  'M56 84 Q52 34 100 30 Q148 34 144 84 Q138 60 104 44 L100 40 L96 44 Q62 60 56 84 Z',
+    curtainlong:'M56 96 Q50 34 100 30 Q150 34 144 96 Q140 62 104 44 L100 40 L96 44 Q60 62 56 96 Z',
+    long:     'M56 80 Q54 36 100 32 Q146 36 144 80 Q136 58 104 54 Q92 64 70 58 Q60 64 56 80 Z',
+    perm:     'M54 82 Q50 34 100 30 Q150 34 146 82 Q140 60 118 52 Q100 60 82 52 Q60 60 54 82 Z',
+    curlylong:'M54 78 Q50 34 100 30 Q150 34 146 78 Q138 56 100 52 Q62 56 54 78 Z',
+    ponytail: 'M58 74 Q56 34 100 32 Q144 34 142 74 Q134 50 100 48 Q66 50 58 74 Z',
+    manbun:   'M58 72 Q56 36 100 34 Q144 36 142 72 Q134 52 100 50 Q66 52 58 72 Z',
+    afro:     'M58 78 Q56 50 100 48 Q144 50 142 78 Q134 60 100 58 Q66 60 58 78 Z',
+    thickcurl:'M56 84 Q54 50 100 46 Q146 50 144 84 Q136 62 100 60 Q64 62 56 84 Z',
+    mohawk:   'M80 56 Q78 20 100 12 Q122 20 120 56 Q110 48 100 48 Q90 48 80 56 Z',
+    tuft:     'M78 52 Q78 34 100 32 Q122 34 122 52 Q110 44 100 44 Q90 44 78 52 Z'
+  };
+  /* 아주 짧은 머리(삭발 자국) */
+  if(/^(buzz|mohawk|tuft|twoblock|receding)$/.test(p.hair) && !lock)
+    o.push('<path d="'+FACE[fk]+'" fill="'+hc+'" opacity="'+(p.hair==='buzz' ? .82 : .28)+'" clip-path="url(#'+id+(p.hair==='buzz' ? 'b' : 's')+')"/>');
+  if(p.hair === 'buzz' && lock) P('M62 62 Q62 34 100 32 Q138 34 138 62 Q128 48 100 48 Q72 48 62 62 Z', hc);
+  if(p.hair === 'receding'){ P('M58 84 Q54 58 66 50 Q66 66 70 80 Z', hc); P('M142 84 Q146 58 134 50 Q134 66 130 80 Z', hc); }
+  if(p.hair === 'manbun') o.push('<circle cx="100" cy="26" r="13" fill="'+F(hc)+'"/>');
+  if(H[p.hair]) P(H[p.hair], hc);
+  if(!lock && X.hl && H[p.hair]) o.push('<path d="'+H[p.hair]+'" fill="'+hl+'" clip-path="url(#'+id+'h)" opacity=".95"/>');
+  if(!lock && p.hair === 'bald') o.push('<path d="M72 50 Q100 38 128 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".3"/>');
+  if(!lock && /curl|afro|perm/.test(p.hair)) o.push('<path d="M72 44 q6 -8 12 0 q6 -8 12 0 q6 -8 12 0 q6 -8 12 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".22"/>');
+  /* 머리띠 */
+  if(!lock && X.hb) o.push('<path d="M'+(fk==='long'?63:59)+' 62 Q100 50 '+(fk==='long'?137:141)+' 62" fill="none" stroke="'+X.hb+'" stroke-width="5" stroke-linecap="round"/>');
+
   if(lock){
     o.push('<text x="100" y="104" text-anchor="middle" font-size="54" font-family="Jua, sans-serif" fill="#8792A8">?</text>');
   } else {
-    /* 눈 · 눈썹 · 입 · 볼 */
-    o.push('<circle cx="84" cy="88" r="5" fill="#2B2A33"/><circle cx="116" cy="88" r="5" fill="#2B2A33"/>');
-    o.push('<circle cx="85.8" cy="86.2" r="1.7" fill="#fff"/><circle cx="117.8" cy="86.2" r="1.7" fill="#fff"/>');
-    o.push('<path d="M74 76 Q84 71 93 75 M107 75 Q116 71 126 76" fill="none" stroke="'+hc+'" stroke-width="3.4" stroke-linecap="round"/>');
-    o.push('<path d="M86 106 Q100 118 114 106" fill="'+(p.beard === 2 ? '#fff' : 'none')+'" stroke="#2B2A33" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>');
-    if(!p.beard) o.push('<circle cx="72" cy="100" r="6" fill="#FF8787" opacity=".4"/><circle cx="128" cy="100" r="6" fill="#FF8787" opacity=".4"/>');
+    /* 눈썹 · 눈 · 코 · 입 · 볼 */
+    var bw = X.b || 3.4, ink = '#2B2A33';
+    o.push('<path d="M73 '+(77-bw*0.3)+' Q84 '+(71-bw*0.2)+' 94 75 M106 75 Q116 '+(71-bw*0.2)+' 127 '+(77-bw*0.3)+'" fill="none" stroke="'+(hc === '#E3C565' || hc === '#EBD58A' || hc === '#D9C28A' || hc === '#D9B45A' ? '#8A6B2A' : hc)+'" stroke-width="'+bw+'" stroke-linecap="round"/>');
+    if(X.e === 'smile') o.push('<path d="M78 90 Q84 82 90 90 M110 90 Q116 82 122 90" fill="none" stroke="'+ink+'" stroke-width="3.6" stroke-linecap="round"/>');
+    else o.push('<circle cx="84" cy="88" r="5" fill="'+ink+'"/><circle cx="116" cy="88" r="5" fill="'+ink+'"/><circle cx="85.8" cy="86.2" r="1.7" fill="#fff"/><circle cx="117.8" cy="86.2" r="1.7" fill="#fff"/>');
+    if(X.n) o.push('<path d="M100 '+(X.n > 1 ? 88 : 92)+' Q'+(X.n > 1 ? 108 : 105)+' 100 99 102" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2.6" stroke-linecap="round"/>');
+    var my = p.beard === 2 ? 112 : 108, dark = p.beard === 2;
+    if(X.m === 'big')       o.push('<path d="M82 '+(my-2)+' Q100 '+(my+18)+' 118 '+(my-2)+' Z" fill="#fff" stroke="'+ink+'" stroke-width="3" stroke-linejoin="round"/>');
+    else if(X.m === 'grin') o.push('<path d="M86 '+(my-1)+' Q100 '+(my+13)+' 114 '+(my-1)+' Z" fill="#fff" stroke="'+ink+'" stroke-width="3" stroke-linejoin="round"/>');
+    else if(X.m === 'calm') o.push('<path d="M90 '+(my+2)+' Q100 '+(my+7)+' 110 '+(my+2)+'" fill="none" stroke="'+(dark ? '#fff' : ink)+'" stroke-width="3.4" stroke-linecap="round"/>');
+    else                    o.push('<path d="M86 '+my+' Q100 '+(my+12)+' 114 '+my+'" fill="none" stroke="'+(dark ? '#fff' : ink)+'" stroke-width="3.6" stroke-linecap="round"/>');
+    if(!p.beard) o.push('<circle cx="72" cy="101" r="6.5" fill="#FF8787" opacity="'+(X.ck ? .6 : .32)+'"/><circle cx="128" cy="101" r="6.5" fill="#FF8787" opacity="'+(X.ck ? .6 : .32)+'"/>');
+    if(X.fr) o.push('<g fill="#C0703A" opacity=".7"><circle cx="76" cy="96" r="1.4"/><circle cx="82" cy="99" r="1.4"/><circle cx="70" cy="99" r="1.4"/><circle cx="124" cy="96" r="1.4"/><circle cx="118" cy="99" r="1.4"/><circle cx="130" cy="99" r="1.4"/></g>');
   }
   o.push('</svg>');
   return o.join('');
