@@ -842,7 +842,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 19:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 19:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2652,6 +2652,7 @@ function screenIntro(){
       '<button class="btn primary wide" id="start" style="font-size:22px;padding:18px">시작하기</button>'+
       '<p class="muted" style="margin-top:18px">소리가 나오려면 소리 버튼을 한 번 눌러주세요.<br>이어폰이나 스피커를 켜면 더 잘 들려요.</p>'+
     '</div>';
+  try{ ppLoadAll(); }catch(e){}   /* 시작 화면 카드에도 아빠가 넣은 선수 사진 */
   document.getElementById('start').addEventListener('click', function(){
     say('Hello!', 0.9);   // 첫 터치로 음성 권한 활성화
     beep([784],.08);
