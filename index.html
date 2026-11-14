@@ -453,24 +453,22 @@
   .hw-prog b{flex:none;font-family:'Jua',sans-serif;font-weight:400;font-size:19px;color:#2F7D3A}
   .hw-bar{flex:1;height:16px;border-radius:999px;background:#EFE7D2;border:2px solid #2B2A33;overflow:hidden}
   .hw-bar i{display:block;height:100%;background:#2F9E44;transition:width .3s}
-  .hw-note{background:#EEF3FF;border:2px solid #2457C5;border-radius:14px;padding:10px 12px;margin:0 0 9px;font-size:17px;line-height:1.5;color:#1B3C8C}
-  .hw{display:flex;align-items:center;gap:13px;width:100%;min-height:76px;margin:0 0 10px;padding:12px 13px;border:2.5px solid #2B2A33;border-radius:18px;
+  .hw-note{background:#EEF3FF;border:2px solid #2457C5;border-radius:14px;padding:8px 11px;margin:0 0 8px;font-size:14.5px;line-height:1.5;color:#1B3C8C}
+  .hw{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:56px;margin:0 0 8px;padding:10px 10px 10px 13px;border:2.5px solid #2B2A33;border-radius:16px;
     background:#fff;font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:3px 4px 0 rgba(43,42,51,.16)}
   .hw:active{transform:translateY(2px);box-shadow:1px 2px 0 rgba(43,42,51,.16)}
-  .hw-box{flex:none;width:46px;height:46px;border:3px solid #2B2A33;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:30px;line-height:1;color:#fff}
-  .hw-t{flex:1;min-width:0}
-  .hw-t b{display:block;font-family:'Jua',sans-serif;font-weight:400;font-size:22px;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
-  .hw-t small{display:block;font-size:16px;line-height:1.45;color:var(--ink-soft);margin-top:3px;word-break:keep-all;overflow-wrap:anywhere}
+  .hw-box{flex:none;order:2;width:38px;height:38px;border:3px solid #2B2A33;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:25px;line-height:1;color:#fff}
+  .hw-t{flex:1;min-width:0;padding-top:1px}
+  .hw-t b{display:block;font-family:'Jua',sans-serif;font-weight:400;font-size:18px;line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
+  .hw-t small{display:block;font-size:14px;line-height:1.45;color:var(--ink-soft);margin-top:3px;word-break:keep-all;overflow-wrap:anywhere}
   .hw-t small.hw-n{color:#2F7D3A}
-  .hw-d{flex:none;font-family:'Jua',sans-serif;font-size:16px;padding:6px 10px;border-radius:999px;background:#F1ECDD;color:#4A463C;white-space:nowrap}
+  .hw-d{display:inline-block;font-family:'Jua',sans-serif;font-size:13px;padding:1px 8px;margin-right:6px;border-radius:999px;background:#F1ECDD;color:#4A463C;white-space:nowrap;vertical-align:1px}
   .hw-d.soon{background:#FFE9B8;color:#7A4B00}
   .hw-d.now{background:#C92A2A;color:#fff}
-  .hw-d.late{background:#2B2A33;color:#fff}
   .hw.now{background:#FFF1F1;border-color:#C92A2A}
-  .hw.late{background:#F4F1EA}
-  .hw.done{background:#EEF9F1;border-color:#2F7D3A;box-shadow:none;min-height:60px}
+  .hw.done{background:#EEF9F1;border-color:#2F7D3A;box-shadow:none;min-height:48px}
   .hw.done .hw-box{background:#2F9E44;border-color:#2F7D3A}
-  .hw.done .hw-t b{text-decoration:line-through;color:#5B6B5E;font-size:19px}
+  .hw.done .hw-t b{text-decoration:line-through;color:#5B6B5E;font-size:16px}
   .hw-more{width:100%;min-height:48px;margin:0 0 10px;border:2px dashed #9A937F;border-radius:14px;background:transparent;font-family:'Jua',sans-serif;font-size:17px;color:var(--ink-soft);cursor:pointer}
   .hw-all{text-align:center;font-family:'Jua',sans-serif;font-size:21px;color:#2F7D3A;padding:10px 4px 14px}
   .hwsay{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9000;max-width:calc(100vw - 32px);padding:13px 20px;border-radius:999px;background:#2B2A33;color:#fff;
@@ -883,7 +881,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 08:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 09:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -9149,13 +9147,21 @@ function hwSorted(){
     var da = a.d === null ? 9999 : a.d, db = b.d === null ? 9999 : b.d; return da - db || a.i - b.i;
   });
 }
+/* 마감 날이 지난 숙제는 목록에서 뺀다(마감 당일까지는 보인다). 날짜가 없는 숙제는 그대로 둔다 */
+function hwPrune(){
+  var keep = HW.items.filter(function(x){ var d = hwDday(x.due); return d === null || d >= 0; });
+  if(keep.length === HW.items.length) return false;
+  HW.items = keep; hwKeep();
+  if(hasServer && !OFFLINE) apiPost({action:'hwSet', pin:DAD_PIN, hw:{items:HW.items, notice:HW.notice || []}}, function(j){ if(j && j.ok && j.hw){ HW = j.hw; hwKeep(); } });
+  return true;
+}
 function hwSync(force){
   if(!hasServer || OFFLINE || (!force && Date.now() - HW_SYNC_AT < HW_SYNC_MS)) return;
   HW_SYNC_AT = Date.now();
   function got(j){
     if(!j || !j.ok || !j.hw) return;
     if(j.hw.ts === HW.ts) return;
-    HW = j.hw; hwKeep(); hwRedraw();
+    HW = j.hw; hwKeep(); hwPrune(); hwRedraw();
   }
   if(HW_PEND.length){   /* 연결이 안 됐을 때 체크해 둔 것부터 보낸다 */
     var list = HW_PEND.slice();
@@ -9186,21 +9192,21 @@ function hwToggle(id){
 function hwRow(o){
   var x = o.x, d = o.d, badge = '', cls = '';
   if(!x.done && d !== null){
-    if(d < 0){ badge = '<span class="hw-d late">'+(-d)+'일 지남</span>'; cls = ' late'; }
-    else if(d === 0){ badge = '<span class="hw-d now">오늘까지!</span>'; cls = ' now'; }
+    if(d === 0){ badge = '<span class="hw-d now">오늘까지!</span>'; cls = ' now'; }
     else if(d === 1){ badge = '<span class="hw-d soon">내일까지</span>'; cls = ' soon'; }
     else badge = '<span class="hw-d">D-'+d+'</span>';
   }
   var sub = [hwDueTxt(x.due), x.how].filter(function(s){ return s; }).join(' · ');
   return '<button class="hw'+(x.done ? ' done' : cls)+'" data-hw="'+esc(x.id)+'" role="checkbox" aria-checked="'+(x.done ? 'true' : 'false')+'">'+
-    '<span class="hw-box" aria-hidden="true">'+(x.done ? '✔' : '')+'</span>'+
     '<span class="hw-t"><b>'+esc(x.t)+'</b>'+
-      (sub ? '<small>📅 '+esc(sub)+'</small>' : '')+
+      (sub || badge ? '<small>'+badge+(sub ? '📅 '+esc(sub) : '')+'</small>' : '')+
       (x.note ? '<small class="hw-n">💡 '+esc(x.note)+'</small>' : '')+
-    '</span>'+badge+'</button>';
+    '</span>'+
+    '<span class="hw-box" aria-hidden="true">'+(x.done ? '✔' : '')+'</span></button>';
 }
 /* 홈 맨 위 숙제 묶음 — 숙제가 없으면 빈 문자열 */
 function hwHtml(){
+  hwPrune();
   if(!HW.items.length && !(HW.notice || []).length) return '';
   var all = hwSorted(), todo = all.filter(function(o){ return !o.x.done; }), done = all.filter(function(o){ return o.x.done; }), n = HW.items.length;
   var h = '';
@@ -9235,6 +9241,7 @@ function hwNewId(){ return 'h'+Date.now().toString(36)+Math.floor(Math.random()*
 
 /* ── ✏️ 아빠: 숙제 고치기 ── */
 function screenHwEdit(){
+  hwPrune();
   var W = {items: HW.items.map(function(x){ return {id:x.id, t:x.t, due:x.due, how:x.how, note:x.note, done:!!x.done, doneAt:x.doneAt || 0}; }), notice: (HW.notice || []).slice()};
   function read(){
     Array.prototype.forEach.call(app.querySelectorAll('.hwe'), function(c){
@@ -9247,7 +9254,7 @@ function screenHwEdit(){
   function draw(focusLast){
     app.innerHTML =
       '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>✏️ 숙제 고치기</h2><div class="pill">'+W.items.length+'개</div></div>'+
-      '<div class="card" style="margin-bottom:12px;line-height:1.6"><b>숙제 안내 사진</b>(밴드·카톡 화면 캡처)을 넣으면 AI가 읽어서 아래에 채워요. 틀린 곳은 고친 뒤 <b>저장</b>을 눌러 주세요.</div>'+
+      '<div class="card" style="margin-bottom:12px;line-height:1.6"><b>숙제 안내 사진</b>(밴드·카톡 화면 캡처)을 넣으면 AI가 읽어서 아래에 채워요. 틀린 곳은 고친 뒤 <b>저장</b>을 눌러 주세요.<br><span class="muted">마감 날이 지난 숙제는 다음 날 자동으로 지워져요.</span></div>'+
       '<div class="row" style="gap:8px;margin-bottom:14px"><button class="btn primary" id="hwscan" style="flex:1;min-height:52px">📷 사진으로 넣기</button><button class="btn" id="hwadd" style="flex:1;min-height:52px">➕ 직접 쓰기</button></div>'+
       W.items.map(function(x, i){
         return '<div class="card hwe" data-i="'+i+'">'+
@@ -9314,7 +9321,7 @@ function todayHtml(){
   var hw = hwHtml();
   return '<div class="today"><div class="today-h"><span>📌 오늘 할 것</span><button class="iconbtn" id="hwedit" aria-label="아빠: 숙제 고치기">✏️</button></div>'+
     (hw || '<div class="hw-empty">아직 넣은 숙제가 없어요. 아빠가 ✏️ 를 눌러 숙제를 넣어 주세요.</div>')+
-    (rows.length ? (hw ? '<div class="today-sub">📱 앱에서 할 것</div>' : '')+rows.join('') : '')+'</div>';
+    '</div>';
 }
 function bindPendHome(){ hwBind(); on('.pendgo', function(){ var p = pendFind(this.dataset.pk); if(p) pendDraw(p, function(){ screenHome(); }); }); }
 function modalStarDraw(cb, min, max){
