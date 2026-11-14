@@ -674,7 +674,7 @@
   .pcard.lock:after{display:none}
   @keyframes pcshine{0%,55%{left:-70%}100%{left:130%}}
 
-  .hud{display:flex;gap:14px;align-items:center;border:2px solid #2B2A33;border-radius:20px;padding:14px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden;
+  .hud{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center;border:2px solid #2B2A33;border-radius:20px;padding:14px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden;
     background:radial-gradient(120% 90% at 0% 0%,#2F4AA8 0,#182650 55%,#0F1833 100%);box-shadow:var(--shadow)}
   .hud:before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(115deg,rgba(255,255,255,.04) 0 14px,transparent 14px 28px)}
   .hud-card{border:0;background:none;padding:0;cursor:pointer;flex:none;position:relative;font:inherit}
@@ -692,6 +692,19 @@
   .hud-btn:active{background:rgba(255,255,255,.26)}
   .hud-btn span{background:#FCC419;color:#3B2208;border-radius:999px;padding:1px 7px;margin-left:3px;font-size:13px}
   .hud-btn span.hot{animation:bagpop 1.6s ease-in-out infinite}
+  .hud-next{flex:1 1 100%;display:flex;align-items:center;gap:12px;position:relative;border-top:1.5px dashed rgba(255,255,255,.3);padding-top:11px}
+  .peek{position:relative;flex:none}
+  .peek-top{position:absolute;inset:0;transition:clip-path .8s cubic-bezier(.16,1,.3,1)}
+  .hud-next-t{font-size:13.5px;line-height:1.5;color:#DCE6F9;min-width:0}
+  .hud-next-t b{font-family:'Jua',sans-serif;font-weight:400;font-size:16px;color:#fff}
+  .hud-next-t .pk-pct{font-family:'Jua',sans-serif;color:#FFE066;font-size:15px;margin-left:4px}
+  .hud-next-t em{font-style:normal;font-family:'Jua',sans-serif;color:#FFE066;font-size:15px}
+  .hud-next.hot .peek{animation:peekpulse 1.4s ease-in-out infinite}
+  @keyframes peekpulse{0%,100%{transform:none}50%{transform:scale(1.07) rotate(-2deg)}}
+  @media (prefers-reduced-motion:reduce){ .hud-next.hot .peek{animation:none} }
+  .pklv{margin-bottom:12px;background:#E7EEFB;font-size:15px}
+  .combo{margin-bottom:12px;background:#FFF4E6;border-color:#E8590C;font-size:17px;line-height:1.5}
+  .combo b{color:#C2410C}
   .hud button:focus-visible{outline:3px solid #FFE066;outline-offset:2px}
 
   .lvov{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;background:rgba(9,14,32,.94);color:#fff;text-align:center}
@@ -820,7 +833,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 17:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 17:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1367,6 +1380,15 @@ var DRAW_PRICE = 100;   /* 보상 뽑기 1회 = 별 100개 */
 var PK_PRICE = 50;      /* 도전 1회에 드는 별 */
 var PK_SHOTS = 5;       /* 총 슛 횟수 */
 var PK_WIN_NEED = 3;    /* 상품 받는 최소 골 수 */
+var PK_LV_SKILL = 0.003;   /* 레벨 1마다 골키퍼가 방향을 맞힐 확률이 이만큼 내려간다 (Lv.50이면 −0.15) */
+var PK_LV_SHOT = 25;       /* 이 레벨마다 슛 기회 +1 (Lv.25 → 6번, Lv.50 → 7번) */
+function pkSkill(){ return Math.max(0.3, PK_KEEPER_SKILL - PK_LV_SKILL*heroLv()); }
+function pkShots(){ return PK_SHOTS + Math.floor(heroLv()/PK_LV_SHOT); }
+function pkLvBonus(){
+  var lv = heroLv(), cut = Math.round((PK_KEEPER_SKILL - pkSkill())*100), ex = pkShots() - PK_SHOTS;
+  if(!cut && !ex) return '';
+  return '⬆️ <b>Lv.'+lv+' 보너스</b>: '+[cut ? '골키퍼가 '+cut+'% 덜 막아요' : '', ex ? '슛 기회 +'+ex+'번' : ''].filter(Boolean).join(' · ');
+}
 var PK_KEEPER_SKILL = 0.6; /* 골키퍼가 공 방향을 맞혀 몸을 날릴 확률 (0~1) — 높을수록 어려움. 0.6이면 한 골 확률 약 40% */
 var PK_PRIZES = [
   {id:'ice',  e:'🍦', n:'아이스크림 1개'},
@@ -1627,12 +1649,13 @@ function playerSVG(lv, lock){
 }
 /* 선수 카드 (게임 카드 틀) — size: '' | 'lg' | 'sm' */
 function playerCard(lv, size, lock){
+  var peek = lock === 'peek'; if(peek) lock = false;   /* peek: 그림은 보이지만 이름은 아직 비밀 */
   var p = playerAt(lv), t = p.tier;
   return '<div class="pcard '+(size||'')+' t-'+t.k+(lock?' lock':'')+'" style="--c1:'+t.c1+';--c2:'+t.c2+';--ci:'+t.ink+'">'+
       '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
       '<div class="pc-art">'+playerSVG(lv, lock)+'</div>'+
-      '<div class="pc-name">'+(lock ? '???' : esc(p.n))+'</div>'+
-      '<div class="pc-meta">'+(lock ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
+      '<div class="pc-name">'+(lock || peek ? '???' : esc(p.n))+'</div>'+
+      '<div class="pc-meta">'+(lock || peek ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
     '</div>';
 }
 /* 예전 이름으로도 그릴 수 있게 */
@@ -1669,6 +1692,21 @@ function checkLevelUp(cb){
   cb(); return false;
 }
 
+/* 다음 선수 미리보기: 별이 찰수록 실루엣 카드가 아래부터 색이 드러난다. 절반 넘으면 나라·포지션 힌트, PEEK_HOT% 넘으면 '조금만 더!' */
+var PEEK_HINT = 50, PEEK_HOT = 80;
+function nextPeek(g){
+  if(g.max) return '';
+  var L = g.lv + 1, pct = Math.max(0, Math.min(100, Math.round(g.got*100/g.need))), p = playerAt(L), hot = pct >= PEEK_HOT;
+  return '<div class="hud-next'+(hot ? ' hot' : '')+'">'+
+      '<div class="peek" aria-hidden="true">'+playerCard(L, 'sm', true)+
+        '<div class="peek-top" style="clip-path:inset('+(100-pct)+'% 0 0 0);-webkit-clip-path:inset('+(100-pct)+'% 0 0 0)">'+playerCard(L, 'sm', 'peek')+'</div></div>'+
+      '<div class="hud-next-t"><b>다음 선수</b> <span class="pk-pct">'+pct+'%</span><br>'+
+        (pct >= PEEK_HINT ? '힌트: '+p.flag+' '+esc(p.pos) : '🔒 누구일까?')+'<br>'+
+        (hot ? '<em>🔥 조금만 더! 곧 나와요</em>' : '별이 찰수록 카드가 보여요')+
+      '</div>'+
+    '</div>';
+}
+
 /* ── 홈: 게임 HUD 같은 선수 패널 ── */
 function heroCard(){
   var g = lvProg(), lv = g.lv, p = playerAt(lv);
@@ -1687,6 +1725,7 @@ function heroCard(){
           '<button class="hud-btn" id="dex2">📖 선수 도감</button>'+
         '</div>'+
       '</div>'+
+      nextPeek(g)+
     '</div>';
 }
 
@@ -2200,7 +2239,24 @@ function giveBonus(n, memo){
   return n;
 }
 /* 지금까지 모은 별 (누적 기록용) */
-function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars(); }
+/* 🔥 콤보 보너스: 시험에서 연속으로 맞히면 끝날 때 별을 조금 더 (COMBO_PER연속마다 1개, 한 시험 최대 COMBO_MAX개, 하루 최대 COMBO_DAILY_MAX개) */
+var COMBO_PER = 3, COMBO_MAX = 5, COMBO_DAILY_MAX = 10;
+function comboStars(){ return (PROG.combo && PROG.combo.t) || 0; }
+function comboDay(){ var d = new Date(); return d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate(); }
+function comboToast(n){ if(n >= 2){ toast('🔥 '+n+'연속!'); beep([880,1100,1320,1560].slice(0, Math.min(4, n)), .05); } }
+function comboAward(best){
+  var c = PROG.combo || {d:0, n:0, t:0}, d = comboDay();
+  if(c.d !== d){ c.d = d; c.n = 0; }
+  var want = Math.min(COMBO_MAX, Math.floor((best||0)/COMBO_PER)), got = Math.max(0, Math.min(want, COMBO_DAILY_MAX - c.n));
+  if(got > 0){ c.n += got; c.t = (c.t||0) + got; PROG.combo = c; saveProgress(); }
+  return got;
+}
+function comboHtml(best, got){
+  if((best||0) < 2) return '';
+  return '<div class="card combo">🔥 최고 <b>'+best+'연속</b> 정답!'+
+    (got > 0 ? '<br>콤보 보너스 <b>⭐ +'+got+'</b>' : (Math.floor(best/COMBO_PER) > 0 ? '<br><span class="muted">오늘 콤보 보너스는 다 받았어요 (하루 '+COMBO_DAILY_MAX+'개)</span>' : '<br><span class="muted">'+COMBO_PER+'연속부터 보너스 별!</span>'))+'</div>';
+}
+function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
    ★ 뽑기도 카드도 '이 별'을 쓴다. 레벨은 모은 별(누적)로 정해져서, 별을 써도 레벨은 안 내려간다. */
@@ -2500,7 +2556,7 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="pkbig" style="margin:0 0 12px">'+
       '<div class="ico">⚽</div>'+
-      '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+PK_SHOTS+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
+      '<div class="t"><b>페널티킥 게임</b><small>별 '+PK_PRICE+'개로 도전 · '+pkShots()+'번 차서 '+PK_WIN_NEED+'골! · 상품 '+pkPrizes().length+'개</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="dadbtn" style="margin:0 0 12px">'+
@@ -2616,7 +2672,8 @@ function startPKGame(){
     '<div style="font-size:52px">⚽</div>'+
     '<h2>페널티킥 게임</h2>'+
     '<p><b>별 '+PK_PRICE+'개</b>를 내고 도전해요!<br>'+
-      PK_SHOTS+'번 차서 <b>'+PK_WIN_NEED+'골</b> 이상 넣으면<br>상품을 하나 뽑을 수 있어요.</p>'+
+      pkShots()+'번 차서 <b>'+PK_WIN_NEED+'골</b> 이상 넣으면<br>상품을 하나 뽑을 수 있어요.</p>'+
+    (pkLvBonus() ? '<div class="card pklv">'+pkLvBonus()+'</div>' : '<div class="muted" style="margin-bottom:10px">⬆️ 레벨이 오르면 골키퍼가 덜 막고, Lv.'+PK_LV_SHOT+'부터 슛 기회가 늘어요!</div>')+
     (walletStars() >= PK_PRICE
       ? '<div class="card" style="margin-bottom:12px">지금 별 <b>'+walletStars()+'개</b> → 도전하면 <b>'+(walletStars()-PK_PRICE)+'개</b>가 남아요.</div>'+
         '<button class="btn primary wide" id="ok" style="font-size:20px;padding:16px;margin-bottom:9px">별 '+PK_PRICE+'개 내고 도전! ⚽</button>'
@@ -3090,13 +3147,13 @@ function screenPKGame(){
     '<div class="topbar">'+
       '<button class="iconbtn" id="back" aria-label="그만하기">←</button>'+
       '<h2>⚽ 페널티킥</h2>'+
-      '<div class="pill" id="pkpill">0/'+PK_SHOTS+'</div>'+
+      '<div class="pill" id="pkpill">0/'+pkShots()+'</div>'+
     '</div>'+
     '<div class="pkboard" id="score"></div>'+
     '<div class="pkfield" id="field"><canvas id="pkcv" role="img" aria-label="페널티킥 경기장. 공을 위로 쭉 밀거나 골대 안을 눌러서 슛!"></canvas>'+
       '<div class="pkgoalflash" id="flash">GOAL!</div></div>'+
     '<div class="pkmsg" id="msg" role="status">공을 손가락으로 <b>골대 쪽으로 쭉</b> 밀어서 슛! ⚽</div>'+
-    '<div class="pktip">👆 길게 밀수록 세고 높게 · 골대 안을 톡 눌러도 돼요</div>';
+    '<div class="pktip">👆 길게 밀수록 세고 높게 · 골대 안을 톡 눌러도 돼요'+(pkLvBonus() ? '<br>'+pkLvBonus() : '')+'</div>';
   document.getElementById('back').onclick = function(){
     if(confirm('게임을 그만둘까요? 낸 별 '+PK_PRICE+'개는 돌려받지 못해요.')){ if(game) game.stop(); screenHome(); }
   };
@@ -3111,23 +3168,23 @@ function screenPKGame(){
     board();
     setTimeout(function(){
       if(!document.getElementById('pkcv')) return;
-      if(shot >= PK_SHOTS){ game.stop(); finish(); }
-      else { game.reset(shot); msg.innerHTML = (PK_SHOTS-shot===1 ? '🔥 <b>마지막 슛!</b> ' : '')+'다음 슛! 공을 쭉 밀어요 ⚽'; }
+      if(shot >= pkShots()){ game.stop(); finish(); }
+      else { game.reset(shot); msg.innerHTML = (pkShots()-shot===1 ? '🔥 <b>마지막 슛!</b> ' : '')+'다음 슛! 공을 쭉 밀어요 ⚽'; }
     }, res.goal ? 2300 : 1900);
   });
 
   function board(){
     var dots = '';
-    for(var s=0; s<PK_SHOTS; s++){
+    for(var s=0; s<pkShots(); s++){
       var k = kinds[s];
       dots += '<span class="pkdot '+(k===undefined?'':(shotLog[s]?'g':'m'))+'" aria-hidden="true">'+(k===undefined?'':(shotLog[s]?'⚽':'✕'))+'</span>';
     }
-    var need = Math.max(0, PK_WIN_NEED-goals), left = PK_SHOTS-shot;
+    var need = Math.max(0, PK_WIN_NEED-goals), left = pkShots()-shot;
     document.getElementById('score').innerHTML =
       '<div class="pkteam"><span>하준 FC</span><b>'+goals+'</b></div>'+
       '<div class="pkdots">'+dots+'</div>'+
       '<div class="pkneed">'+(need===0 ? '🎁 상품 확정!' : (need>left ? '다음 판에 도전!' : '🎯 '+need+'골 더!'))+'</div>';
-    document.getElementById('pkpill').textContent = shot+'/'+PK_SHOTS;
+    document.getElementById('pkpill').textContent = shot+'/'+pkShots();
   }
 
   function finish(){
@@ -3137,7 +3194,7 @@ function screenPKGame(){
       '<div class="result">'+
         '<div class="big">'+(won?'🏆':'😅')+'</div>'+
         '<h2>'+(won?'승리!':'아쉬워요!')+'</h2>'+
-        '<p>'+PK_SHOTS+'번 차서 <b>'+goals+'골</b>을 넣었어요!<br>'+
+        '<p>'+pkShots()+'번 차서 <b>'+goals+'골</b>을 넣었어요!<br>'+
           (won ? '<b style="color:var(--melon-ink)">'+PK_WIN_NEED+'골 이상 성공! 상품을 뽑으세요! 🎁</b>'
                : PK_WIN_NEED+'골 이상 넣으면 상품을 받아요. 다시 도전해봐요!')+'</p>'+
         '<div class="card" style="margin-bottom:12px;font-size:16px;line-height:1.9">'+
@@ -3246,7 +3303,7 @@ function pkGame(cv, onResult){
     var T = 0.98 - 0.48*Math.min(1.1, pw) - 0.18*(flick || 0);   /* 셀수록·휙 찰수록 빨리 도착 → 골키퍼가 늦는다 */
     /* 골키퍼: 공 쪽을 맞힐지 (PK_KEEPER_SKILL), 아니면 다른 쪽 */
     var side = tx > 0.9 ? 1 : (tx < -0.9 ? -1 : 0), dir;
-    var guess = Math.random() < PK_KEEPER_SKILL;
+    var guess = Math.random() < pkSkill();   /* 레벨이 높을수록 덜 맞힌다 */
     if(guess) dir = side;
     else { var o = [-1,0,1].filter(function(v){ return v !== side; }); dir = o[Math.floor(Math.random()*o.length)]; }
     /* 다이빙 계획: 몸 가운데(가슴·팔)가 노린 곳으로 가게. 발은 한 걸음(±1.3m), 점프는 0.6m까지만 */
@@ -4166,6 +4223,7 @@ function handErrMsg(j){
 function startQuiz(q){
   var order = shuffle(q.items.map(function(_,i){ return i; }));
   var pos = 0, round = 1, results = order.map(function(){ return null; });  /* null/ok/bad */
+  var streak = 0, bestStreak = 0, comboGot = null;   /* 🔥 연속 정답 */
   runOne();
 
   function bar(){
@@ -4320,7 +4378,8 @@ function startQuiz(q){
     var it = q.items[order[pos]];
     var correct = normW(myW) === normW(it.w);
     results[order[pos]] = correct ? 'ok' : 'bad';
-    if(correct){ okSound(); toast('\u2b55'); } else { beep([300],.1); }
+    if(correct){ streak++; bestStreak = Math.max(bestStreak, streak); okSound(); if(streak >= 2) comboToast(streak); else toast('\u2b55'); }
+    else { streak = 0; beep([300],.1); }
 
     app.innerHTML = head(correct ? '\u2b55 \uc815\ub2f5!' : '\u274c \uc544\uc26c\uc6cc\uc694') +
       '<div class="card">'+
@@ -4558,8 +4617,9 @@ function startQuiz(q){
     var justGot = null;
     starSound(); confetti(50);
     if(!q.done) pendAdd({key:'quiz:'+q.id, k:'quiz', id:q.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📝 '+q.title});
+    if(comboGot === null) comboGot = comboAward(bestStreak);
     render();
-    if(q.done) checkLevelUp();
+    if(q.done || comboGot > 0) checkLevelUp();
 
     function render(){
       var first = !q.done;
@@ -4569,6 +4629,7 @@ function startQuiz(q){
           '<h2>\ub2e8\uc5b4 \ud14c\uc2a4\ud2b8 \ud1b5\uacfc!</h2>'+
           '<p>\u201c'+esc(q.title)+'\u201d<br><b>'+q.items.length+'\ubb38\uc81c\ub97c \ubaa8\ub450 \ub9de\ucd94\uc5c8\uc5b4\uc694!</b><br>'+
             '<span class="muted">'+round+'\ubc88 \ub3c4\uc804 \ub05d\uc5d0 \uc131\uacf5</span></p>'+
+          comboHtml(bestStreak, comboGot)+
           (justGot!==null
             ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+
                 new Array(justGot+1).join('\u2b50')+'<br><b>\ubcc4 '+justGot+'\uac1c</b>\ub97c \ubc1b\uc558\uc5b4\uc694!</div>'
@@ -8047,7 +8108,7 @@ function makeTestQs(L){
 }
 
 function startTest(L){
-  T = {L:L, qs:makeTestQs(L), i:0, correct:0, marks:[], lock:false};
+  T = {L:L, qs:makeTestQs(L), i:0, correct:0, marks:[], lock:false, streak:0, best:0};
   renderT();
 }
 function tHead(label){
@@ -8081,7 +8142,8 @@ function tNext(){
 function tAnswer(ok, showFn){
   if(T.lock) return; T.lock=true;
   T.marks[T.i] = ok?1:0;
-  if(ok){ T.correct++; okSound(); toast('⚽'); } else { noSound(); }
+  if(ok){ T.correct++; T.streak = (T.streak||0) + 1; T.best = Math.max(T.best||0, T.streak); okSound(); if(T.streak >= 2) comboToast(T.streak); else toast('⚽'); }
+  else { T.streak = 0; noSound(); }
   if(showFn) showFn();
   setTimeout(tNext, ok?750:1500);
 }
@@ -8305,6 +8367,7 @@ function screenTestResult(){
   var pass = score>=PASS;
   var prevLv = heroLv();
   var newly = saveTest(T.L.id, score);
+  var comboGot = comboAward(T.best || 0);
   var msg = pass ? ['하준이 최고!! 🔥','완벽해! 대단하다!','와~ 진짜 잘 읽는다!'][Math.floor(Math.random()*3)]
                  : ['아깝다! 조금만 더!','거의 다 왔어!','한 번만 더 해보자!'][Math.floor(Math.random()*3)];
   if(pass) confetti(30);
@@ -8316,6 +8379,7 @@ function screenTestResult(){
       '<h2>'+msg+'</h2>'+
       '<div class="st" style="color:'+(pass?'var(--melon)':'var(--berry)')+';font-size:52px;letter-spacing:0">'+score+'점</div>'+
       '<p>20문제 중 '+T.correct+'개 정답'+(pass?'' : ' · 90점부터 통과예요')+'</p>'+
+      comboHtml(T.best || 0, comboGot)+
       (pass
         ? '<button class="btn primary wide" id="next" style="font-size:20px;padding:18px;margin-bottom:10px">'+(newly?'⭐ 별 '+STAR_TEST+'개 받기!':'레벨 화면으로')+'</button>'
         : '<button class="btn primary wide" id="retry" style="margin-bottom:10px">🔁 다시 도전</button>')+
@@ -8323,6 +8387,7 @@ function screenTestResult(){
     '</div>';
 
   var L=T.L;
+  if(comboGot > 0 && !(pass && newly)) setTimeout(function(){ if(document.getElementById('lv')) checkLevelUp(); }, 700);
   if(document.getElementById('retry')) document.getElementById('retry').onclick = function(){ startTest(L); };
   document.getElementById('lv').onclick = function(){ screenLevel(L); };
   if(document.getElementById('next')) document.getElementById('next').onclick = function(){
@@ -8549,6 +8614,8 @@ function screenSettings(){
         '• 별은 <b>하나의 지갑</b>입니다. 뽑기도 카드도 <b>같은 별</b>을 씁니다.<br>'+
         '• <b>🎁 보상 뽑기</b>: 별 '+DRAW_PRICE+'개 → 랜덤 보상 1개 (가방에서). 하준이가 직접 뽑습니다.<br>'+
         '• 별 '+CARD_PRICE+'개 → 축구카드 1만원권 1장 (가방에서). 쓸 때 확인 창이 뜹니다. 별을 써도 레벨은 그대로입니다.<br>'+
+        '• <b>🔥 콤보 보너스</b>: 단어 테스트·단계 테스트에서 '+COMBO_PER+'연속 정답마다 별 1개 (한 시험 최대 '+COMBO_MAX+'개, 하루 최대 '+COMBO_DAILY_MAX+'개). 숫자는 <b>COMBO_PER · COMBO_MAX · COMBO_DAILY_MAX</b>.<br>'+
+        '• <b>⚽ 페널티킥 레벨 보너스</b>: 레벨 1마다 골키퍼가 방향을 맞힐 확률이 '+(PK_LV_SKILL*100).toFixed(1)+'%p씩 내려가고, Lv.'+PK_LV_SHOT+'마다 슛 기회가 1번 늘어납니다 (<b>PK_LV_SKILL · PK_LV_SHOT</b>).<br>'+
         '• <b>👨 아빠가 별 주기</b>: 아빠 비밀번호를 넣고 · 잘한 만큼 <b>⭐1~'+MAX_BONUS+'개</b>를 골라서 주세요. 언제 뭘 잘했는지 기록이 남습니다.<br>'+
         '• 비밀번호·최대 별·뽑기 값·카드 값을 바꾸시려면 Index.html의 <b>DAD_PIN · MAX_BONUS · DRAW_PRICE · CARD_PRICE</b>를 고치세요.'+
       '</div>'+
