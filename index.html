@@ -842,7 +842,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 21:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 23:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2089,6 +2089,10 @@ function paperStars(){ return papers().reduce(function(a,b){ return a + (b.done 
 var voice=null, RATE=0.9;
 var TTSMODE='device';                 /* 'device' = 기기 음성 · 'ai' = Google Cloud AI 음성 */
 var AIVOICE='en-US-Neural2-F';
+/* 문장은 가장 사람 같은 목소리(Chirp3-HD)로, 낱소리·낱말 끊어 읽기는 발음이 정확한 AIVOICE(Neural2)로 나눠 읽는다 */
+var NATVOICE_DEF='en-US-Chirp3-HD-Leda';   /* 문장 목소리 기본값 (설정에서 바꿀 수 있음) */
+var NATVOICE=NATVOICE_DEF;                 /* '' 이면 나눠 읽지 않고 AIVOICE 하나로 */
+var NAT_MIN_WORDS=2;                       /* 이 낱말 수 이상이면 '문장'으로 보고 문장 목소리로 읽는다 */
 var AI_OK=false;                      /* 서버에 API 키가 있는가 */
 var acache=new Map();                 /* 같은 소리는 한 번만 받아온다 */
 var curAudio=null;
@@ -2152,19 +2156,38 @@ function ssmlOf(parts, gap){
   });
   return '<speak>'+out+'</speak>';
 }
-function playB64(b64, onEnd, onTime){
+function playB64(b64, onEnd, onTime, pr){
   var a = new Audio('data:audio/mp3;base64,'+b64);
   curAudio = a;
-  if(onTime) a.ontimeupdate = function(){ onTime(a.currentTime); };
+  if(pr && pr !== 1){ try{ a.preservesPitch = true; a.playbackRate = pr; }catch(e){} }
+  if(onTime) a.ontimeupdate = function(){ onTime(a.currentTime, a.duration); };
   a.onended = function(){ if(curAudio===a) curAudio=null; if(onEnd) onEnd(); };
   a.onerror = function(){ if(onEnd) onEnd(); };
   a.play().catch(function(){ if(onEnd) onEnd(); });
 }
-function aiFetch(ssml, rate, marks, cb){
-  var ck = ssml+'|'+AIVOICE+'|'+rate+'|'+marks;
+/* 문장 목소리로 읽어도 되는가 — 음소(ipa)·쉼 조각이 없고, 조각마다 낱말이 NAT_MIN_WORDS개 이상일 때 */
+function natOK(parts){
+  if(!NATVOICE || !parts.length) return false;
+  for(var i=0;i<parts.length;i++){
+    var p = parts[i];
+    if(p.ipa || p.silent || !p.t) return false;
+    if(String(p.t).trim().split(/\s+/).length < NAT_MIN_WORDS) return false;
+  }
+  return true;
+}
+function plainOf(parts){
+  if(parts.length === 1) return String(parts[0].t).trim();
+  return parts.map(function(p){ var t = String(p.t).trim(); return /[.!?]$/.test(t) ? t : t+'.'; }).join(' ');
+}
+/* nat = 문장 목소리로 읽을 글(없으면 AIVOICE로 ssml 을 읽는다) */
+function aiFetch(ssml, rate, marks, cb, nat){
+  var vo = nat ? NATVOICE : AIVOICE;
+  var ck = ssml+'|'+vo+'|'+rate+'|'+marks;
   if(acache.has(ck)){ cb(acache.get(ck)); return; }
   if(!hasServer){ cb(null); return; }
-  apiPost({action:'tts', ssml:ssml, voice:AIVOICE, rate:rate, marks:marks}, function(r){
+  var req = {action:'tts', ssml:ssml, voice:vo, rate:rate, marks:marks};
+  if(nat){ req.text = nat; req.fb = /Chirp/i.test(AIVOICE) ? 'en-US-Neural2-F' : AIVOICE; }
+  apiPost(req, function(r){
     if(!r || r.error || !r.audio){ cb(null); return; }
     if(acache.size > 400) acache.clear();
     acache.set(ck, r); cb(r);
@@ -2179,8 +2202,8 @@ function sayParts(parts, rate){
   var r = rate || RATE;
   if(useAI()){
     aiFetch(ssmlOf(parts), r, false, function(res){
-      if(res) playB64(res.audio); else devParts(parts, r);
-    });
+      if(res) playB64(res.audio, null, null, res.rate === false ? r : 1); else devParts(parts, r);
+    }, natOK(parts) ? plainOf(parts) : null);
   } else devParts(parts, r);
 }
 function devParts(parts, r){
@@ -2200,16 +2223,21 @@ function speakWords(words, rate, onWord, onEnd){
       if(!res){ devWords(words, r, onWord, onEnd); return; }
       var mk = (res.marks||[]).map(function(m){ return {i:parseInt(String(m.markName).slice(1),10), t:m.timeSeconds||0}; })
                               .sort(function(a,b){ return a.t-b.t; });
-      var last = -2;
+      var last = -2, est = !mk.length;
       playB64(res.audio,
         function(){ onWord(-1); if(onEnd) onEnd(); },
-        function(ct){
+        function(ct, dur){
+          if(est && dur > 0 && isFinite(dur)){   /* 문장 목소리는 낱말 시각을 안 줘서, 글자 수 비율로 짚는다 */
+            est = false; var tot = 0, acc = 0;
+            words.forEach(function(w){ tot += String(w).length + 1.5; });
+            mk = words.map(function(w, i){ var t0 = 0.04 + Math.max(0, dur - 0.25)*acc/tot; acc += String(w).length + 1.5; return {i:i, t:t0}; });
+          }
           if(!mk.length) return;
           var cur = -1;
           for(var i=0;i<mk.length;i++){ if(ct >= mk[i].t - 0.02) cur = mk[i].i; }
           if(cur!==last){ last=cur; onWord(cur); }
-        });
-    });
+        }, res.rate === false ? r : 1);
+    }, (NATVOICE && words.length >= NAT_MIN_WORDS) ? words.join(' ') : null);
   } else devWords(words, r, onWord, onEnd);
 }
 function devWords(words, r, onWord, onEnd){
@@ -2232,7 +2260,8 @@ function blendOf(it){
 /* 미리 받아두면 하준이가 누를 때 안 기다린다 */
 function prefetch(parts){
   if(!useAI()) return;
-  aiFetch(ssmlOf(parts.map(P)), RATE, false, function(){});
+  parts = parts.map(P);
+  aiFetch(ssmlOf(parts), RATE, false, function(){}, natOK(parts) ? plainOf(parts) : null);
 }
 
 /* 효과음 (파일 없이 WebAudio) */
@@ -2275,7 +2304,7 @@ function localLoad(){
 function applyProg(){
   normProg();
   RATE = PROG.rate || 0.9;
-  try{ TTSMODE=PROG.tts.mode; AIVOICE=PROG.tts.voice; pickVoice(); }catch(e){ ERRS.push('voice: '+e); }
+  try{ TTSMODE=PROG.tts.mode; AIVOICE=PROG.tts.voice; NATVOICE = typeof PROG.tts.nat === 'string' ? PROG.tts.nat : NATVOICE_DEF; pickVoice(); }catch(e){ ERRS.push('voice: '+e); }
 }
 /**
  * 사파리(아이패드/아이폰)에서 API 응답이 늦거나 막혀도
@@ -9231,11 +9260,24 @@ function drawVoices(){
         return 4;
       };
       var vs = r.voices.slice().sort(function(a,b){ return rank(a.name)-rank(b.name) || a.name.localeCompare(b.name); });
-      w.innerHTML = '<label>목소리 <select id="av" style="flex:1;padding:8px;border-radius:10px;border:2px solid var(--line);font-family:inherit">'+
+      var nats = vs.filter(function(v){ return /Chirp3-HD/i.test(v.name); });
+      var SS = 'style="flex:1;padding:8px;border-radius:10px;border:2px solid var(--line);font-family:inherit"';
+      w.innerHTML =
+        (nats.length ? '<label>문장 목소리 <select id="nv" '+SS+'>'+
+          '<option value=""'+(NATVOICE===''?' selected':'')+'>나눠 읽지 않기</option>'+
+          nats.map(function(v){
+            return '<option value="'+esc(v.name)+'"'+(v.name===NATVOICE?' selected':'')+'>'+esc(v.name.replace('en-US-Chirp3-HD-',''))+' ('+esc(v.g||'')+')</option>';
+          }).join('')+'</select></label>'+
+          '<div class="muted" style="margin:4px 0 10px">문장은 가장 사람 같은 목소리(Chirp3-HD)로 읽어요.</div>' : '')+
+        '<label>낱소리·낱말 목소리 <select id="av" '+SS+'>'+
         vs.map(function(v){
           return '<option value="'+esc(v.name)+'"'+(v.name===AIVOICE?' selected':'')+'>'+esc(v.name)+' ('+esc(v.g||'')+')</option>';
         }).join('')+'</select></label>'+
-        '<div class="muted" style="margin-top:4px">Neural2 = 자연스럽고 음소 발음이 정확 (추천)<br>Chirp3-HD = 가장 사람 같지만 음소 기능이 없을 수 있어요</div>';
+        '<div class="muted" style="margin-top:4px">낱소리(/k/ 같은 소리)와 낱말은 발음이 정확한 Neural2 를 추천해요.</div>';
+      if(document.getElementById('nv')) document.getElementById('nv').onchange = function(){
+        NATVOICE = this.value; PROG.tts.nat = NATVOICE; saveProgress();
+        acache.clear(); say('Hello, Hajun! Let\'s read a story together.', RATE);
+      };
       document.getElementById('av').onchange = function(){
         AIVOICE = this.value; PROG.tts.voice = AIVOICE; saveProgress();
         acache.clear(); sayParts([SND.c,'at','cat'], RATE);

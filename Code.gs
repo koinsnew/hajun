@@ -151,27 +151,44 @@ function ttsSynth(req) {
   if (!ssml) return { error: 'EMPTY' };
 
   var ck = 'tts_' + Utilities.base64EncodeWebSafe(
-    Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, ssml + '|' + voice + '|' + rate + '|' + marks));
+    Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, ssml + '|' + voice + '|' + rate + '|' + marks + '|' + (req.text || '')));
   var cache = CacheService.getScriptCache();
   var hit = cache.get(ck);
   if (hit) return JSON.parse(hit);
 
-  var body = {
-    input: { ssml: ssml },
-    voice: { languageCode: 'en-US', name: voice },
-    audioConfig: { audioEncoding: 'MP3', speakingRate: rate, pitch: 0, volumeGainDb: 0 }
-  };
-  if (marks) body.enableTimePointing = ['SSML_MARK'];
-
+  var URL = 'https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=' + encodeURIComponent(k);
+  function post(b) {
+    return UrlFetchApp.fetch(URL, { method: 'post', contentType: 'application/json', payload: JSON.stringify(b), muteHttpExceptions: true });
+  }
   try {
-    var r = UrlFetchApp.fetch('https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=' + encodeURIComponent(k), {
-      method: 'post', contentType: 'application/json',
-      payload: JSON.stringify(body), muteHttpExceptions: true
-    });
-    var code = r.getResponseCode(), txt = r.getContentText();
-    if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
-    var j = JSON.parse(txt);
-    var out = { audio: j.audioContent, marks: j.timepoints || [] };
+    var out = null;
+    /* 문장 목소리(Chirp3-HD): SSML·낱말 시각을 못 쓰므로 글(text)로 보낸다.
+       빠르기를 못 받으면 빠르기 없이 한 번 더(rate:false → 앱이 재생 속도로 맞춘다). 그래도 안 되면 아래 기본 목소리로. */
+    var text = String(req.text || '');
+    if (text && /Chirp/i.test(voice)) {
+      var nb = { input: { text: text }, voice: { languageCode: 'en-US', name: voice }, audioConfig: { audioEncoding: 'MP3', speakingRate: rate } };
+      var nr = post(nb);
+      if (nr.getResponseCode() === 200) out = { audio: JSON.parse(nr.getContentText()).audioContent, marks: [], nat: true };
+      else {
+        delete nb.audioConfig.speakingRate;
+        nr = post(nb);
+        if (nr.getResponseCode() === 200) out = { audio: JSON.parse(nr.getContentText()).audioContent, marks: [], nat: true, rate: false };
+      }
+      if (!out) voice = req.fb || 'en-US-Neural2-F';
+    }
+    if (!out) {
+      var body = {
+        input: { ssml: ssml },
+        voice: { languageCode: 'en-US', name: voice },
+        audioConfig: { audioEncoding: 'MP3', speakingRate: rate, pitch: 0, volumeGainDb: 0 }
+      };
+      if (marks) body.enableTimePointing = ['SSML_MARK'];
+      var r = post(body);
+      var code = r.getResponseCode(), txt = r.getContentText();
+      if (code !== 200) return { error: 'HTTP ' + code + ' ' + txt.slice(0, 300) };
+      var j = JSON.parse(txt);
+      out = { audio: j.audioContent, marks: j.timepoints || [] };
+    }
     try {
       var st = JSON.stringify(out);
       if (st.length < 95000) cache.put(ck, st, 21600);
