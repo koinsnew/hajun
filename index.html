@@ -820,7 +820,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 16:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 17:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1641,13 +1641,13 @@ function bigHero(lv){ return '<div style="display:flex;justify-content:center;ma
 
 /* 지금 레벨 · 다음 레벨까지 */
 /* 레벨에 쓰는 별 = 레벨 시스템을 새로 시작한 뒤에 모은 별.
-   처음 한 번, 그때까지 모은 별을 PROG.lvBase에 적어 두고 그만큼 뺀다 → 하준이는 Lv.1부터 다시 시작.
+   처음 한 번, 그때까지 모은 별을 PROG.lvBase에 적어 두고 그만큼 뺀다 → 하준이는 Lv.0(하준 카드)부터 다시 시작.
    (지갑의 별·가방은 그대로. 레벨만 새로 시작) */
 function lvStars(){
   if(typeof PROG.lvBase !== 'number'){ PROG.lvBase = totalStars(); PROG.lvSeen = LV_START; }   /* 다음 저장 때 같이 저장된다 */
   return Math.max(0, totalStars() - PROG.lvBase);
 }
-var LV_START = 1;   /* 시작 레벨 (별 0개일 때) */
+var LV_START = 0;   /* 시작 레벨 (별 0개일 때) — Lv.0 = 하준이 자기 카드 */
 function heroLv(){ return Math.max(LV_START, lvOf(lvStars())); }
 function heroTitle(){ return HERO[heroLv()].t; }
 function lvProg(){
@@ -8541,7 +8541,7 @@ function screenSettings(){
         '<b>단계 테스트</b><br>'+
         '• 놀이 5개를 모두 끝내야 테스트가 열립니다. 20문제 · 1문제 5점 · <b>90점 이상 통과</b>입니다.<br>'+
         '• 90점 이상 통과하면 <b>별 '+STAR_TEST+'개</b>를 받습니다. ('+LEVELS.length+'단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
-        '• <b>⬆️ 레벨</b>은 Lv.1에서 시작해, 새로 시작한 뒤 모은 별(레벨 별)로 오릅니다. Lv.2는 별 '+lvNeed(2)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
+        '• <b>⬆️ 레벨</b>은 Lv.0(하준 카드)에서 시작해, 새로 시작한 뒤 모은 별(레벨 별)로 오릅니다. Lv.1은 별 '+lvNeed(1)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
         '&nbsp;&nbsp;속도를 바꾸시려면 Index.html의 <b>LV_FIRST · LV_LAST</b>를 고치세요. 별을 써도 레벨은 내려가지 않습니다.<br>'+
         '• 다음 레벨은 테스트와 상관없이 놀이만 끝내면 열립니다. (막히지 않게)<br>'+
         '• 얻은 보상은 하준이 <b>🎒 가방</b>에 아이템으로 들어갑니다. 실제로 해주신 뒤 아이템을 눌러 <b>사용함</b>으로 바꿔주세요.<br><br>'+
@@ -8582,7 +8582,7 @@ function screenSettings(){
   function doReset(){
     allowWipe = true; LOAD_BASE_SCORE = 0;   /* 의도한 초기화 → 안전장치 통과 */
     PROG={stars:{}, tests:{}, rewards:[], draws:[], miss:{}, books:{}, spec:{}, quizzes:[], sents:[], papers:null, bonus:[], cards:[],
-          spent:0, lvBase:0, lvSeen:1, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
+          spent:0, lvBase:0, lvSeen:0, tts:PROG.tts, name:'옥하준', rate:RATE}; normProg();
     try{ localStorage.removeItem('phonics'); }catch(e){}
     if(hasServer) apiPost({action:'reset'}, function(){});
     toast('🧹'); screenHome();
