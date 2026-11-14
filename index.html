@@ -658,6 +658,15 @@
   .pc-art{border-radius:calc(var(--w)*.09);overflow:hidden;position:relative;border:1.5px solid rgba(0,0,0,.35);
     background:radial-gradient(90% 70% at 50% 18%,#3B5BDB 0,#1B2B52 60%,#101A36 100%)}
   .psvg{display:block;width:100%;height:auto}
+  .pc-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 0;display:block}
+  .pc-photo[hidden]{display:none}
+  .dexcell{cursor:pointer;border-radius:12px}
+  .dexcell:focus-visible{outline:3px solid var(--grape);outline-offset:3px}
+  .ppcrop{position:relative;margin:0 auto 10px;border:2px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff;touch-action:none}
+  .ppcrop canvas{display:block;touch-action:none;cursor:grab}
+  .ppguide{position:absolute;left:28%;right:28%;top:14%;height:46%;border:2px dashed rgba(36,87,197,.75);border-radius:50%;pointer-events:none}
+  .ppzoom{display:flex;align-items:center;gap:10px;justify-content:center;margin:0 0 12px;font-family:'Jua',sans-serif;font-size:15px}
+  .ppzoom input{flex:1;max-width:210px;min-height:32px}
   .pc-name{font-family:'Jua',sans-serif;font-size:calc(var(--w)*.135);line-height:1.15;padding-top:calc(var(--w)*.045);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
   .pc-meta{font-family:'Jua',sans-serif;font-size:calc(var(--w)*.1);line-height:1.2;white-space:nowrap;position:relative;opacity:.95}
   .pc-flag{font-size:1.15em;vertical-align:-.08em}
@@ -833,7 +842,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 17:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.14 19:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1653,7 +1662,7 @@ function playerCard(lv, size, lock){
   var p = playerAt(lv), t = p.tier;
   return '<div class="pcard '+(size||'')+' t-'+t.k+(lock?' lock':'')+'" style="--c1:'+t.c1+';--c2:'+t.c2+';--ci:'+t.ink+'">'+
       '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
-      '<div class="pc-art">'+playerSVG(lv, lock)+'</div>'+
+      '<div class="pc-art">'+playerSVG(lv, lock)+ppImg(lv, lock)+'</div>'+
       '<div class="pc-name">'+(lock || peek ? '???' : esc(p.n))+'</div>'+
       '<div class="pc-meta">'+(lock || peek ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
     '</div>';
@@ -1755,6 +1764,192 @@ function modalLevelUp(prev, now, cb){
   setTimeout(function(){ var b = ov.querySelector('#lvok'); if(b) b.focus(); }, 60);
 }
 
+/* =========================================================
+   📷 선수 카드 사진 (아빠가 직접 넣는 사진)
+   · 사진은 앱 코드가 아니라 구글 드라이브(원서 그림과 같은 폴더)에 저장 → 다른 기기에서도 보인다
+   · PROG.pphoto = { 레벨: 그림 키 }.  사진이 없는 선수는 캐릭터 그림 그대로
+   · 규격: PP_W × PP_H (10:11). 얼굴이 가운데 위쪽에 오게 자른다
+   ========================================================= */
+var PP_W = 400, PP_H = 440, PP_Q = 0.86;
+function ppKey(lv){ return (PROG.pphoto && PROG.pphoto[lv]) || ''; }
+var PP_ASKED = {};
+/* 저장된 사진들을 불러온다 (기기 사본 → 없으면 서버) */
+function ppLoadAll(){
+  var keys = [], m = PROG.pphoto || {};
+  Object.keys(m).forEach(function(lv){ var k = m[lv]; if(k && !ORIG_MEM[k] && !PP_ASKED[k]){ PP_ASKED[k] = 1; keys.push(k); } });
+  if(!keys.length) return;
+  var miss = [], left = keys.length;
+  keys.forEach(function(k){
+    origImgGet(k, function(url){
+      if(!url) miss.push(k);
+      if(--left === 0){
+        ppFill();
+        (function next(){
+          if(!miss.length) return;
+          var part = miss.splice(0, ORIG_FETCH_CHUNK);
+          origSrvGet(part, function(j){
+            var imgs = (j && j.imgs) || {};
+            Object.keys(imgs).forEach(function(k2){ origImgPut(k2, imgs[k2]); });
+            ppFill(); next();
+          });
+        })();
+      }
+    });
+  });
+}
+/* 화면이 바뀔 때마다 사진 칸을 채운다 */
+var PP_T = 0;
+try{ new MutationObserver(function(){ if(PP_T) return; PP_T = setTimeout(function(){ PP_T = 0; ppFill(); }, 40); }).observe(document.documentElement, {childList:true, subtree:true}); }catch(e){}
+/* 화면에 있는 사진 칸을 채운다 */
+function ppFill(){
+  Array.prototype.forEach.call(document.querySelectorAll('img.pc-photo[hidden]'), function(im){
+    var u = ORIG_MEM[im.getAttribute('data-k')];
+    if(u){ im.src = u; im.hidden = false; }
+  });
+}
+function ppImg(lv, lock){
+  var k = ppKey(lv); if(!k || lock) return '';
+  var u = ORIG_MEM[k];
+  return '<img class="pc-photo" data-k="'+esc(k)+'" alt="'+esc(playerAt(lv).n)+' 사진"'+(u ? ' src="'+u+'"' : ' hidden')+'>';
+}
+/* 사진 저장: 서버(드라이브) → 진도에 키 기록 → 예전 사진 지우기 */
+function ppSave(lv, url, cb){
+  var key = 'o_plv'+lv+'_'+Date.now().toString(36), old = ppKey(lv);
+  origSrvPut(key, url, function(j){
+    if(!j || !j.ok) return cb(false, origErrMsg(j));
+    origImgPut(key, url);
+    if(!PROG.pphoto) PROG.pphoto = {};
+    PROG.pphoto[lv] = key; saveProgress();
+    if(old){ origImgDel([old]); origSrvDel([old]); }
+    cb(true);
+  });
+}
+function ppRemove(lv){
+  var old = ppKey(lv); if(!old) return;
+  delete PROG.pphoto[lv]; saveProgress();
+  origImgDel([old]); origSrvDel([old]);
+}
+/* 사진 파일 → 규격(10:11)으로 자동 자르기: 가로를 꽉 채우고, 위쪽(얼굴)을 살린다 */
+function ppAutoCrop(file, cb){
+  var rd = new FileReader();
+  rd.onerror = function(){ cb(''); };
+  rd.onload = function(){
+    var im = new Image();
+    im.onerror = function(){ cb(''); };
+    im.onload = function(){ cb(ppDraw(im, null)); };
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+/* v = {s:배율, x, y} (자르기 화면 기준) 없으면 자동 */
+function ppDraw(im, v){
+  var c = document.createElement('canvas'); c.width = PP_W; c.height = PP_H;
+  var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, PP_W, PP_H);
+  var s, x, y;
+  if(v){ s = v.s; x = v.x; y = v.y; }
+  else { s = Math.max(PP_W/im.width, PP_H/im.height); x = (PP_W - im.width*s)/2; y = Math.min(0, (PP_H - im.height*s)*0.12); }
+  g.drawImage(im, x, y, im.width*s, im.height*s);
+  try{ return c.toDataURL('image/jpeg', PP_Q); }catch(e){ return ''; }
+}
+/* 자르기 화면: 끌어서 위치, 막대로 크기 */
+function ppCropUI(lv, file, done){
+  var rd = new FileReader();
+  rd.onload = function(){
+    var im = new Image();
+    im.onerror = function(){ alert('사진을 열 수 없어요. 다른 사진(JPG/PNG)으로 해보세요.'); };
+    im.onload = function(){
+      var VW = 250, VH = Math.round(VW*PP_H/PP_W), k = VW/PP_W;   /* 화면 칸 크기와 실제 규격의 비율 */
+      var s0 = Math.max(PP_W/im.width, PP_H/im.height), v = {s:s0, x:(PP_W - im.width*s0)/2, y:Math.min(0, (PP_H - im.height*s0)*0.12)};
+      var p = playerAt(lv);
+      var o = openMod('<h2 style="margin:0 0 4px">📷 '+esc(p.n)+' 사진 맞추기</h2>'+
+        '<div class="muted" style="margin-bottom:8px">사진을 끌어서 얼굴을 가운데 위쪽에 맞추세요</div>'+
+        '<div class="ppcrop" style="width:'+VW+'px;height:'+VH+'px"><canvas id="ppcv" width="'+PP_W+'" height="'+PP_H+'" style="width:'+VW+'px;height:'+VH+'px"></canvas><i class="ppguide" aria-hidden="true"></i></div>'+
+        '<label class="ppzoom">크기 <input type="range" id="ppz" min="100" max="400" value="100" aria-label="사진 크기"></label>'+
+        '<button class="btn go wide" id="ppok" style="font-size:18px;margin-bottom:8px">✅ 이대로 넣기</button>'+
+        '<button class="btn wide" id="ppno">취소</button>');
+      var cv = o.querySelector('#ppcv'), g = cv.getContext('2d');
+      function clamp(){
+        var w = im.width*v.s, h = im.height*v.s;
+        v.x = w >= PP_W ? Math.min(0, Math.max(PP_W - w, v.x)) : (PP_W - w)/2;
+        v.y = h >= PP_H ? Math.min(0, Math.max(PP_H - h, v.y)) : (PP_H - h)/2;
+      }
+      function draw(){ clamp(); g.fillStyle = '#fff'; g.fillRect(0, 0, PP_W, PP_H); g.drawImage(im, v.x, v.y, im.width*v.s, im.height*v.s); }
+      draw();
+      var drag = null;
+      cv.addEventListener('pointerdown', function(e){ e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(x){} drag = {x:e.clientX, y:e.clientY, vx:v.x, vy:v.y}; });
+      cv.addEventListener('pointermove', function(e){ if(!drag) return; v.x = drag.vx + (e.clientX-drag.x)/k; v.y = drag.vy + (e.clientY-drag.y)/k; draw(); });
+      cv.addEventListener('pointerup', function(){ drag = null; }); cv.addEventListener('pointercancel', function(){ drag = null; });
+      o.querySelector('#ppz').oninput = function(){
+        var ns = s0*(+this.value)/100, cx = PP_W/2, cy = PP_H*0.4;   /* 얼굴 자리 기준으로 확대 */
+        v.x = cx - (cx - v.x)*ns/v.s; v.y = cy - (cy - v.y)*ns/v.s; v.s = ns; draw();
+      };
+      o.querySelector('#ppno').onclick = function(){ o.remove(); };
+      o.querySelector('#ppok').onclick = function(){
+        var b = this; b.disabled = true; b.textContent = '저장하는 중…';
+        ppSave(lv, ppDraw(im, v), function(ok, msg){
+          o.remove();
+          if(!ok){ noSound(); alert(msg || '저장하지 못했어요.'); return; }
+          okSound(); toast('📷 사진을 넣었어요'); done && done();
+        });
+      };
+    };
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+function ppPick(multi, cb){
+  var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = !!multi; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = function(){ var fs = Array.prototype.slice.call(inp.files || []); if(inp.parentNode) inp.parentNode.removeChild(inp); if(fs.length) cb(fs); };
+  inp.click();
+}
+/* 파일 이름으로 레벨 찾기: "01_양민혁.jpg" · "50 손흥민.png" · "메시.jpg" */
+function ppLvOfName(name){
+  var base = String(name || '').replace(/\.[A-Za-z0-9]+$/, ''), m = /^\s*(\d{1,2})(?=\D|$)/.exec(base);
+  if(m && +m[1] >= 0 && +m[1] <= LV_MAX) return +m[1];
+  for(var i = LV_MAX; i >= 0; i--) if(base.indexOf(PLAYERS[i][0]) >= 0) return i;
+  return -1;
+}
+/* 여러 장 한 번에: 이름으로 선수를 찾아 자동으로 잘라 넣는다 */
+function ppBulk(files, done){
+  var list = [], skip = [];
+  files.forEach(function(f){ var lv = ppLvOfName(f.name); if(lv >= 0) list.push({f:f, lv:lv}); else skip.push(f.name); });
+  if(!list.length){ alert('파일 이름에서 선수를 찾지 못했어요.\n"01_양민혁.jpg"처럼 레벨 번호나 선수 이름을 넣어 주세요.'); return; }
+  var o = openMod('<div style="font-size:44px">📷</div><h2>사진 넣는 중…</h2><p id="ppb">0 / '+list.length+'</p>'), n = 0, bad = [];
+  (function next(){
+    if(n >= list.length){
+      o.remove(); okSound();
+      alert('📷 '+(list.length - bad.length)+'장을 넣었어요.'+(bad.length ? '\n못 넣은 사진: '+bad.join(', ') : '')+(skip.length ? '\n선수를 못 찾은 파일: '+skip.join(', ') : ''));
+      done && done(); return;
+    }
+    var it = list[n++]; o.querySelector('#ppb').textContent = n+' / '+list.length+' · '+PLAYERS[it.lv][0];
+    ppAutoCrop(it.f, function(url){
+      if(!url){ bad.push(it.f.name); return next(); }
+      ppSave(it.lv, url, function(ok){ if(!ok) bad.push(it.f.name); next(); });
+    });
+  })();
+}
+/* 도감에서 카드를 누르면: 크게 보기 + (아빠) 사진 넣기 */
+function dexDetail(L){
+  var lv = heroLv(), open = L <= lv, p = playerAt(L), has = !!ppKey(L);
+  var o = openMod('<div style="display:flex;justify-content:center;margin-bottom:10px">'+playerCard(L, 'lg', !open)+'</div>'+
+    (open ? '<p style="margin:0 0 10px"><b style="font-size:20px">'+esc(p.n)+'</b><br>'+p.flag+' '+esc(p.nat)+' · '+p.posIco+' '+esc(p.pos)+' · 등번호 '+p.no+'</p>'
+          : '<p style="margin:0 0 10px">🔒 레벨 별 <b>'+lvNeed(L)+'개</b>를 모으면 열려요</p>')+
+    '<button class="btn wide" id="ppadd" style="margin-bottom:8px">👨 아빠: '+(has ? '사진 바꾸기' : '사진 넣기')+'</button>'+
+    (has ? '<button class="btn wide" id="ppdel" style="margin-bottom:8px">👨 아빠: 사진 빼기 (캐릭터로)</button>' : '')+
+    '<button class="btn primary wide" id="ppx">닫기</button>');
+  ppFill();
+  o.querySelector('#ppx').onclick = function(){ o.remove(); };
+  o.querySelector('#ppadd').onclick = function(){
+    o.remove();
+    needDad(function(){ screenDex(); ppPick(false, function(fs){ ppCropUI(L, fs[0], screenDex); }); }, screenDex, '선수 사진은 아빠만 넣을 수 있어요 🙂');
+  };
+  if(has) o.querySelector('#ppdel').onclick = function(){
+    o.remove();
+    needDad(function(){ ppRemove(L); toast('캐릭터 그림으로 돌아갔어요'); screenDex(); }, screenDex, '선수 사진은 아빠만 바꿀 수 있어요 🙂');
+  };
+}
+
 /* ── 선수 도감 ── */
 function screenDex(){
   var g = lvProg(), lv = g.lv;
@@ -1769,13 +1964,21 @@ function screenDex(){
     html += '<div class="dexhd" style="--c1:'+t.c1+';--c2:'+t.c2+'"><b>'+esc(t.n)+'</b><span>Lv.'+t.from+(to > t.from ? '~'+to : '')+'</span></div><div class="dexgrid">';
     for(var L = t.from; L <= to; L++){
       var open = L <= lv;
-      html += '<div class="dexcell'+(L === lv ? ' now' : '')+'">'+playerCard(L, 'sm', !open)+
+      html += '<div class="dexcell'+(L === lv ? ' now' : '')+'" data-lv="'+L+'" role="button" tabindex="0" aria-label="'+(open ? esc(PLAYERS[L][0]) : '잠긴 선수')+' 카드 크게 보기">'+playerCard(L, 'sm', !open)+
         '<small>'+(open ? (L === lv ? '지금!' : '✓') : '⭐ '+lvNeed(L))+'</small></div>';
     }
     html += '</div>';
   });
+  html += '<button class="btn ogdadadd" id="ppbulk" style="margin-top:18px">👨 아빠: 선수 사진 여러 장 넣기</button>'+
+    '<div class="muted" style="text-align:center;margin-top:6px;font-size:13px">파일 이름을 "01_양민혁.jpg"처럼 레벨 번호나 선수 이름으로 하면 자동으로 들어가요.<br>한 장씩 넣으려면 선수 카드를 누르세요.</div>';
   app.innerHTML = html;
+  ppLoadAll();
   document.getElementById('back').onclick = screenHome;
+  on('.dexcell', function(){ beep([700,900],.05); dexDetail(+this.dataset.lv); });
+  Array.prototype.forEach.call(app.querySelectorAll('.dexcell'), function(c){ c.onkeydown = function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); c.click(); } }; });
+  document.getElementById('ppbulk').onclick = function(){
+    needDad(function(){ screenDex(); ppPick(true, function(fs){ ppBulk(fs, screenDex); }); }, screenDex, '선수 사진은 아빠만 넣을 수 있어요 🙂');
+  };
   var cur = app.querySelector('.dexcell.now'); if(cur && cur.scrollIntoView) setTimeout(function(){ cur.scrollIntoView({block:'center'}); }, 60);
 }
 
@@ -2601,6 +2804,7 @@ function screenHome(){
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
   document.getElementById('dex').onclick = document.getElementById('dex2').onclick = function(){ beep([700,900],.06); screenDex(); };
+  ppLoadAll();
   setTimeout(function(){ if(document.getElementById('dex')) checkLevelUp(); }, 350);   /* 아빠 별·새 레벨 방식으로 오른 레벨도 축하 */
   document.getElementById('dadbtn').onclick = screenDad;
   bindPendHome();
