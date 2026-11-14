@@ -881,7 +881,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 09:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 09:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -9319,7 +9319,7 @@ function todayHtml(){
   var cur = LEVELS.filter(function(L){ return unlocked(L) && !levelDone(L); })[0];
   if(rows.length < 3 && cur) rows.push(todoRow('todolv', cur.icon, cur.id+'단계 이어서 하기', esc(cur.title)+' · ⭐ '+levelStars(cur)+'/'+levelMax(cur), '▶', {attr:'data-id="'+cur.id+'"'}));
   var hw = hwHtml();
-  return '<div class="today"><div class="today-h"><span>📌 오늘 할 것</span><button class="iconbtn" id="hwedit" aria-label="아빠: 숙제 고치기">✏️</button></div>'+
+  return '<div class="today"><div class="today-h"><span>📌 하준 숙제</span><button class="iconbtn" id="hwedit" aria-label="아빠: 숙제 고치기">✏️</button></div>'+
     (hw || '<div class="hw-empty">아직 넣은 숙제가 없어요. 아빠가 ✏️ 를 눌러 숙제를 넣어 주세요.</div>')+
     '</div>';
 }
