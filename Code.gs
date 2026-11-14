@@ -32,6 +32,7 @@ function doGet(e) {
   else if (action === 'ttsStatus') out = ttsStatus();
   else if (action === 'voices')    out = ttsVoices();
   else if (action === 'ocrStatus') out = { enabled: _hasOcrKey() };
+  else if (action === 'ppMap')     out = { ok: true, map: _ppMap() };
   else if (action === 'ping')      out = { ok: true };
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, p.callback);
@@ -51,6 +52,7 @@ function doPost(e) {
   else if (action === 'word')   out = wordInfo(body);
   else if (action === 'trans')  out = transSentence(body);
   else if (action === 'hand')   out = handRead(body);
+  else if (action === 'ppSet')  out = ppSet(body);
   else if (action === 'imgPut') out = origPutImg(body);
   else if (action === 'imgGet') out = origGetImgs(body);
   else if (action === 'imgDel') out = origDelImgs(body);
@@ -84,6 +86,7 @@ function getProgress() {
   try {
     var o = JSON.parse(raw);
     if (!o.stars) o.stars = {};
+    o.pphoto = _ppMap();   // 선수 사진 목록은 따로 지킨 것을 넣어 준다
     return o;
   } catch (e) {
     return { stars: {}, name: '', rate: 0.8 };
@@ -91,6 +94,13 @@ function getProgress() {
 }
 function saveProgress(obj) {
   if (!obj || typeof obj !== 'object') return false;
+  var pm = _ppMap();                     // (처음이면 예전 목록을 먼저 옮겨 둔다)
+  if (obj.pphoto) {                      // 선수 사진 목록은 진도와 따로 지킨다. 목록에 없는 레벨만 받아 둔다(옛 화면에서 넣은 사진)
+    var add = false;
+    for (var lv in obj.pphoto) { if (!pm[lv] && _origKeyOk(String(obj.pphoto[lv]))) { pm[lv] = obj.pphoto[lv]; add = true; } }
+    if (add) PropertiesService.getScriptProperties().setProperty(PP_MAP_PROP, JSON.stringify(pm));
+    delete obj.pphoto;
+  }
   _store().setProperty(PROP_KEY, JSON.stringify(obj));
   return true;
 }
@@ -117,13 +127,16 @@ function clearTtsApiKey() {
 function _ttsKey() { return PropertiesService.getScriptProperties().getProperty(TTS_PROP); }
 
 function ttsStatus() {
-  var k = _ttsKey();
-  return { enabled: !!(k && k !== 'YOUR_KEY') };
+  var k = _ttsKey(), cloud = !!(k && k !== 'YOUR_KEY'), gem = !cloud && _hasOcrKey();
+  return { enabled: cloud || gem, gem: gem };   // gem = Cloud TTS 키 없이 Gemini 키로 읽는 중
 }
 
 function ttsVoices() {
   var k = _ttsKey();
-  if (!k || k === 'YOUR_KEY') return { error: 'NO_KEY' };
+  if (!k || k === 'YOUR_KEY') {
+    if (_hasOcrKey()) return { gem: true, voices: GEM_TTS_VOICES.map(function (v) { return { name: v[0], g: v[1] }; }) };
+    return { error: 'NO_KEY' };
+  }
   var cache = CacheService.getScriptCache();
   var hit = cache.get('tts_voices');
   if (hit) return JSON.parse(hit);
@@ -143,7 +156,7 @@ function ttsVoices() {
 
 function ttsSynth(req) {
   var k = _ttsKey();
-  if (!k || k === 'YOUR_KEY') return { error: 'NO_KEY' };
+  if (!k || k === 'YOUR_KEY') return _hasOcrKey() ? gemTts(req) : { error: 'NO_KEY' };
   var ssml  = String(req.ssml || '');
   var voice = req.voice || 'en-US-Neural2-F';
   var rate  = Number(req.rate) || 1.0;
@@ -580,4 +593,109 @@ function handRead(req) {
   var d = g.data || {};
   if (d.items && d.items.length) d = d.items[0] || {};
   return { ok: true, en: String(d.en || '').trim(), ko: String(d.ko || '').trim(), model: g.model };
+}
+
+/* ===== 📷 선수 사진 목록 (레벨 → 그림 키) =====
+ * 진도(PROGRESS)와 따로 둔다. 진도는 '마지막에 저장한 기기 것'이 통째로 덮어쓰기 때문에,
+ * 사진 목록을 그 안에 두면 다른 기기가 저장할 때 사라질 수 있다.
+ * → 여기서 따로 지키고, 진도를 내려줄 때 항상 이 목록을 넣어 준다. */
+var PP_MAP_PROP = 'PLAYER_PHOTO_MAP';
+function _ppMap() {
+  var sp = PropertiesService.getScriptProperties(), raw = sp.getProperty(PP_MAP_PROP);
+  if (raw) { try { return JSON.parse(raw) || {}; } catch (e) { return {}; } }
+  var m = {};   // 처음 한 번: 지금 진도에 들어 있는 목록을 옮겨 온다
+  try { var r = _store().getProperty(PROP_KEY), o = r ? JSON.parse(r) : null; if (o && o.pphoto) m = o.pphoto; } catch (e) {}
+  sp.setProperty(PP_MAP_PROP, JSON.stringify(m));
+  return m;
+}
+function ppSet(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var lv = String(parseInt(req.lv, 10));
+  if (!/^\d{1,2}$/.test(lv)) return { error: 'BAD_LV' };
+  var key = String(req.key || '');
+  if (key && !_origKeyOk(key)) return { error: 'BAD_KEY' };
+  var lock = null;
+  try { lock = LockService.getScriptLock(); lock.waitLock(5000); } catch (e) { lock = null; }
+  var m = _ppMap();
+  if (key) m[lv] = key; else delete m[lv];
+  PropertiesService.getScriptProperties().setProperty(PP_MAP_PROP, JSON.stringify(m));
+  try { if (lock) lock.releaseLock(); } catch (e) {}
+  return { ok: true, map: m };
+}
+
+/* ===== 🗣️ Gemini 음성 (Cloud TTS 키가 없을 때) =====
+ * 사진 읽기에 쓰는 Gemini 키로 사람 같은 목소리를 만든다.
+ * 무료 한도가 모델마다 1분에 몇 번뿐이라, 한 번 만든 소리는 드라이브에 저장해 두고 다시 쓴다(같은 문장은 한 번만 만든다).
+ * 한도에 걸리면 다음 모델로, 다 걸리면 BUSY → 앱이 기기 음성으로 읽는다. */
+var GEM_TTS_MODELS = ['gemini-3.8-flash-lite-tts', 'gemini-3.8-flash-tts', 'gemini-3.1-flash-tts-preview', 'gemini-2.5-flash-preview-tts'];
+var GEM_TTS_VOICES = [['Kore', 'FEMALE'], ['Leda', 'FEMALE'], ['Aoede', 'FEMALE'], ['Zephyr', 'FEMALE'], ['Puck', 'MALE'], ['Charon', 'MALE'], ['Fenrir', 'MALE'], ['Orus', 'MALE']];
+var GEM_TTS_DAILY_MAX = 2000;       // 하루에 새로 만드는 소리 상한
+var GEM_TTS_MAX_CHARS = 600;        // 한 번에 읽는 글 길이 상한
+var TTS_FOLDER_PROP = 'TTS_FOLDER_ID';
+var TTS_FOLDER_NAME = '하준 영어 - 소리 저장';
+function _ttsFolder(create) {
+  var sp = PropertiesService.getScriptProperties(), id = sp.getProperty(TTS_FOLDER_PROP);
+  if (id) { try { return DriveApp.getFolderById(id); } catch (e) {} }
+  if (!create) return null;
+  var f = DriveApp.createFolder(TTS_FOLDER_NAME);
+  sp.setProperty(TTS_FOLDER_PROP, f.getId());
+  return f;
+}
+function _wav(pcm, rate) {   // 16비트 모노 PCM → WAV
+  var n = pcm.length, h = [];
+  function s(t) { for (var i = 0; i < t.length; i++) h.push(t.charCodeAt(i)); }
+  function u32(v) { h.push(v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >> 24) & 255); }
+  function u16(v) { h.push(v & 255, (v >> 8) & 255); }
+  s('RIFF'); u32(36 + n); s('WAVE'); s('fmt '); u32(16); u16(1); u16(1); u32(rate); u32(rate * 2); u16(2); u16(16); s('data'); u32(n);
+  var out = h.map(function (b) { return b > 127 ? b - 256 : b; });
+  return out.concat(pcm);
+}
+function gemTts(req) {
+  var text = String(req.text || '').trim();
+  if (!text) {
+    var s = String(req.ssml || '');
+    if (/<phoneme/.test(s)) return { error: 'NO_PHONEME' };
+    text = s.replace(/<break[^>]*>/g, ', ').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim();
+  }
+  if (!text) return { error: 'EMPTY' };
+  if (text.length > GEM_TTS_MAX_CHARS) return { error: 'TOO_LONG' };
+  var voice = 'Kore';
+  GEM_TTS_VOICES.forEach(function (v) { if (v[0] === req.voice) voice = v[0]; });
+  var dg = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, voice + '|' + text, Utilities.Charset.UTF_8);
+  var name = 'tts_' + dg.map(function (b) { return ('0' + ((b + 256) % 256).toString(16)).slice(-2); }).join('');
+  var folder = null;
+  try {
+    folder = _ttsFolder(true);
+    var it = folder.getFilesByName(name);
+    if (it.hasNext()) return { audio: Utilities.base64Encode(it.next().getBlob().getBytes()), mime: 'audio/wav', marks: [], nat: true, rate: false, cached: true };
+  } catch (e) { folder = null; }
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'GT_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= GEM_TTS_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  var payload = JSON.stringify({
+    contents: [{ parts: [{ text: text }] }],   // 글만 보낸다 — 말투 지시문을 붙이면 그 지시문까지 읽어 버리는 모델이 있다
+    generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } } }
+  });
+  var lastErr = '';
+  try {
+    for (var t = 0; t < GEM_TTS_MODELS.length; t++) {
+      var r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + GEM_TTS_MODELS[t] + ':generateContent', {
+        method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+        headers: { 'x-goog-api-key': _ocrKey() }, payload: payload
+      });
+      var code = r.getResponseCode();
+      if (code !== 200) { lastErr = 'HTTP ' + code + ' ' + GEM_TTS_MODELS[t]; continue; }   // 한도(429)·없어진 모델(404) → 다음 모델
+      var j = JSON.parse(r.getContentText()), cand = (j.candidates || [])[0], inl = null;
+      if (cand && cand.content && cand.content.parts) cand.content.parts.forEach(function (p) { if (p.inlineData && p.inlineData.data) inl = p.inlineData; });
+      if (!inl) { lastErr = 'EMPTY ' + GEM_TTS_MODELS[t]; continue; }
+      var bytes = Utilities.base64Decode(inl.data);
+      var riff = bytes.length > 4 && bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70;
+      if (!riff) { var m = /rate=(\d+)/.exec(String(inl.mimeType || '')); bytes = _wav(bytes, m ? Number(m[1]) : 24000); }
+      sp.setProperty(dayKey, String(n + 1));
+      try { if (folder) folder.createFile(Utilities.newBlob(bytes, 'audio/wav', name)); } catch (e) {}
+      return { audio: Utilities.base64Encode(bytes), mime: 'audio/wav', marks: [], nat: true, rate: false, model: GEM_TTS_MODELS[t] };
+    }
+    return { error: 'BUSY ' + lastErr };
+  } catch (e) { return { error: String(e) }; }
 }

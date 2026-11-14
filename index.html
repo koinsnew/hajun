@@ -842,7 +842,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.14 23:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 00:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1803,8 +1803,45 @@ function modalLevelUp(prev, now, cb){
 var PP_W = 400, PP_H = 440, PP_Q = 0.86;
 function ppKey(lv){ return (PROG.pphoto && PROG.pphoto[lv]) || ''; }
 var PP_ASKED = {};
+/* ── 새 버전 확인: 다른 기기가 옛 화면에 머물지 않게, 시작 화면·홈에 있을 때만 새 화면으로 다시 연다 ── */
+var UPD_AT = 0, UPD_MS = 600000;
+function updCheck(){
+  if(Date.now() - UPD_AT < UPD_MS || !/^https?:/.test(location.protocol)) return;
+  UPD_AT = Date.now();
+  try{
+    fetch(location.pathname+'?upd='+Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.text() : ''; }).then(function(t){
+      var m = /var APP_VERSION = '([^']+)'/.exec(t || '');
+      if(!m || m[1] <= APP_VERSION) return;
+      var k = 'upd_'+m[1];
+      try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k, '1'); }catch(e){ return; }
+      if(!(document.getElementById('start') || document.getElementById('fkbig'))) { UPD_AT = 0; try{ sessionStorage.removeItem(k); }catch(e){} return; }   /* 공부 중이면 나중에 */
+      location.replace(location.pathname+'?v='+encodeURIComponent(m[1].replace(/[^0-9]/g, '')));
+    }).catch(function(){});
+  }catch(e){}
+}
+try{ document.addEventListener('visibilitychange', function(){ if(!document.hidden) updCheck(); }); }catch(e){}
 /* 저장된 사진들을 불러온다 (기기 사본 → 없으면 서버) */
-function ppLoadAll(){
+/* 선수 사진 목록은 서버가 진도와 따로 지킨다(ppMap). 켜 둔 채 오래 쓰는 기기도 새 사진을 받도록 가끔 다시 묻는다 */
+var PP_SYNC_AT = 0, PP_SYNC_MS = 45000;
+function ppSync(){
+  if(!hasServer || OFFLINE || Date.now() - PP_SYNC_AT < PP_SYNC_MS) return;
+  PP_SYNC_AT = Date.now();
+  apiGet('ppMap', function(j){
+    if(!j || !j.ok || !j.map) return;
+    if(JSON.stringify(j.map) === JSON.stringify(PROG.pphoto || {})) return;
+    PROG.pphoto = j.map;
+    try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
+    ppLoadAll(true);
+    /* 지금 보이는 카드도 새 사진으로 */
+    try{
+      if(document.getElementById('ppbulk')) screenDex();
+      else if(document.getElementById('fkbig')) screenHome();
+      else if(document.getElementById('start') && typeof screenIntro === 'function') screenIntro();
+    }catch(e){}
+  });
+}
+function ppLoadAll(noSync){
+  if(!noSync){ ppSync(); updCheck(); }
   var keys = [], m = PROG.pphoto || {};
   Object.keys(m).forEach(function(lv){ var k = m[lv]; if(k && !ORIG_MEM[k] && !PP_ASKED[k]){ PP_ASKED[k] = 1; keys.push(k); } });
   if(!keys.length) return;
@@ -1850,6 +1887,7 @@ function ppSave(lv, url, cb){
     origImgPut(key, url);
     if(!PROG.pphoto) PROG.pphoto = {};
     PROG.pphoto[lv] = key; saveProgress();
+    apiPost({action:'ppSet', pin:DAD_PIN, lv:lv, key:key}, function(){});   /* 서버의 사진 목록(모든 기기 공용) */
     if(old){ origImgDel([old]); origSrvDel([old]); }
     cb(true);
   });
@@ -1857,6 +1895,7 @@ function ppSave(lv, url, cb){
 function ppRemove(lv){
   var old = ppKey(lv); if(!old) return;
   delete PROG.pphoto[lv]; saveProgress();
+  apiPost({action:'ppSet', pin:DAD_PIN, lv:lv, key:''}, function(){});
   origImgDel([old]); origSrvDel([old]);
 }
 /* 사진 파일 → 규격(10:11)으로 자동 자르기: 가로를 꽉 채우고, 위쪽(얼굴)을 살린다 */
@@ -2092,7 +2131,10 @@ var AIVOICE='en-US-Neural2-F';
 /* 문장은 가장 사람 같은 목소리(Chirp3-HD)로, 낱소리·낱말 끊어 읽기는 발음이 정확한 AIVOICE(Neural2)로 나눠 읽는다 */
 var NATVOICE_DEF='en-US-Chirp3-HD-Leda';   /* 문장 목소리 기본값 (설정에서 바꿀 수 있음) */
 var NATVOICE=NATVOICE_DEF;                 /* '' 이면 나눠 읽지 않고 AIVOICE 하나로 */
-var NAT_MIN_WORDS=2;                       /* 이 낱말 수 이상이면 '문장'으로 보고 문장 목소리로 읽는다 */
+var NAT_MIN_WORDS=2;
+var AI_GEM=false;                     /* 서버가 Cloud TTS 키 없이 Gemini 키로 읽는 중인가 (ttsStatus.gem) */
+var GEMVOICE='Kore';                  /* Gemini 목소리 (설정에서 바꿀 수 있음) */
+var GEM_CACHE_MAX=60;                 /* Gemini 소리는 용량이 커서 이 기기 메모리에는 이만큼만 둔다 */                       /* 이 낱말 수 이상이면 '문장'으로 보고 문장 목소리로 읽는다 */
 var AI_OK=false;                      /* 서버에 API 키가 있는가 */
 var acache=new Map();                 /* 같은 소리는 한 번만 받아온다 */
 var curAudio=null;
@@ -2156,8 +2198,8 @@ function ssmlOf(parts, gap){
   });
   return '<speak>'+out+'</speak>';
 }
-function playB64(b64, onEnd, onTime, pr){
-  var a = new Audio('data:audio/mp3;base64,'+b64);
+function playB64(b64, onEnd, onTime, pr, mime){
+  var a = new Audio('data:'+(mime || 'audio/mp3')+';base64,'+b64);
   curAudio = a;
   if(pr && pr !== 1){ try{ a.preservesPitch = true; a.playbackRate = pr; }catch(e){} }
   if(onTime) a.ontimeupdate = function(){ onTime(a.currentTime, a.duration); };
@@ -2167,6 +2209,7 @@ function playB64(b64, onEnd, onTime, pr){
 }
 /* 문장 목소리로 읽어도 되는가 — 음소(ipa)·쉼 조각이 없고, 조각마다 낱말이 NAT_MIN_WORDS개 이상일 때 */
 function natOK(parts){
+  if(AI_GEM) return parts.length > 0 && parts.every(function(p){ return !p.ipa && !p.silent && p.t; });   /* Gemini: 낱소리만 빼고 다 */
   if(!NATVOICE || !parts.length) return false;
   for(var i=0;i<parts.length;i++){
     var p = parts[i];
@@ -2181,15 +2224,15 @@ function plainOf(parts){
 }
 /* nat = 문장 목소리로 읽을 글(없으면 AIVOICE로 ssml 을 읽는다) */
 function aiFetch(ssml, rate, marks, cb, nat){
-  var vo = nat ? NATVOICE : AIVOICE;
+  var vo = nat ? (AI_GEM ? GEMVOICE : NATVOICE) : AIVOICE;
   var ck = ssml+'|'+vo+'|'+rate+'|'+marks;
   if(acache.has(ck)){ cb(acache.get(ck)); return; }
-  if(!hasServer){ cb(null); return; }
+  if(!hasServer || (AI_GEM && !nat)){ cb(null); return; }   /* Gemini 는 낱소리(음소)를 못 읽는다 → 기기 음성 */
   var req = {action:'tts', ssml:ssml, voice:vo, rate:rate, marks:marks};
   if(nat){ req.text = nat; req.fb = /Chirp/i.test(AIVOICE) ? 'en-US-Neural2-F' : AIVOICE; }
   apiPost(req, function(r){
     if(!r || r.error || !r.audio){ cb(null); return; }
-    if(acache.size > 400) acache.clear();
+    if(acache.size > (AI_GEM ? GEM_CACHE_MAX : 400)) acache.clear();
     acache.set(ck, r); cb(r);
   });
 }
@@ -2202,7 +2245,7 @@ function sayParts(parts, rate){
   var r = rate || RATE;
   if(useAI()){
     aiFetch(ssmlOf(parts), r, false, function(res){
-      if(res) playB64(res.audio, null, null, res.rate === false ? r : 1); else devParts(parts, r);
+      if(res) playB64(res.audio, null, null, res.rate === false ? r : 1, res.mime); else devParts(parts, r);
     }, natOK(parts) ? plainOf(parts) : null);
   } else devParts(parts, r);
 }
@@ -2236,8 +2279,8 @@ function speakWords(words, rate, onWord, onEnd){
           var cur = -1;
           for(var i=0;i<mk.length;i++){ if(ct >= mk[i].t - 0.02) cur = mk[i].i; }
           if(cur!==last){ last=cur; onWord(cur); }
-        }, res.rate === false ? r : 1);
-    }, (NATVOICE && words.length >= NAT_MIN_WORDS) ? words.join(' ') : null);
+        }, res.rate === false ? r : 1, res.mime);
+    }, (AI_GEM || (NATVOICE && words.length >= NAT_MIN_WORDS)) ? words.join(' ') : null);
   } else devWords(words, r, onWord, onEnd);
 }
 function devWords(words, r, onWord, onEnd){
@@ -2304,7 +2347,7 @@ function localLoad(){
 function applyProg(){
   normProg();
   RATE = PROG.rate || 0.9;
-  try{ TTSMODE=PROG.tts.mode; AIVOICE=PROG.tts.voice; NATVOICE = typeof PROG.tts.nat === 'string' ? PROG.tts.nat : NATVOICE_DEF; pickVoice(); }catch(e){ ERRS.push('voice: '+e); }
+  try{ TTSMODE=PROG.tts.mode; AIVOICE=PROG.tts.voice; NATVOICE = typeof PROG.tts.nat === 'string' ? PROG.tts.nat : NATVOICE_DEF; GEMVOICE = PROG.tts.gv || 'Kore'; pickVoice(); }catch(e){ ERRS.push('voice: '+e); }
 }
 /**
  * 사파리(아이패드/아이폰)에서 API 응답이 늦거나 막혀도
@@ -2355,7 +2398,7 @@ function loadProgress(cb){
         try{ apiPost({action:'save', prog:PROG}, function(){}); }catch(e){}
       }
       try{
-        apiGet('ttsStatus', function(st){ AI_OK = !!(st && st.enabled); fin(); });
+        apiGet('ttsStatus', function(st){ AI_OK = !!(st && st.enabled); AI_GEM = !!(st && st.gem); fin(); });
         setTimeout(fin, 4000);
       }catch(e){ fin(); }
     });
@@ -9250,6 +9293,16 @@ function drawVoices(){
       (function(r){
       if(!r || r.error || !r.voices){
         w.innerHTML = '<div class="muted" style="color:var(--berry-ink)">목소리 목록을 못 받았어요: '+esc(r && r.error ? r.error : '알 수 없음')+'</div>';
+        return;
+      }
+      if(r.gem){   /* Gemini 키로 읽는 중 — 목소리 하나만 고른다 */
+        w.innerHTML = '<label>목소리 <select id="gv" style="flex:1;padding:8px;border-radius:10px;border:2px solid var(--line);font-family:inherit">'+
+          r.voices.map(function(v){ return '<option value="'+esc(v.name)+'"'+(v.name===GEMVOICE?' selected':'')+'>'+esc(v.name)+' ('+(v.g==='MALE'?'남':'여')+')</option>'; }).join('')+'</select></label>'+
+          '<div class="muted" style="margin-top:4px;line-height:1.6">Gemini 목소리로 낱말·문장을 읽어요. 처음 듣는 문장은 만드는 데 2~3초 걸리고, 한 번 만든 소리는 저장해 두고 바로 나와요.<br>한꺼번에 많이 만들면(1분에 열 번쯤) 잠깐 기기 음성으로 나올 수 있어요. 낱소리(/k/ 같은 소리)는 기기 음성으로 읽어요.</div>';
+        document.getElementById('gv').onchange = function(){
+          GEMVOICE = this.value; PROG.tts.gv = GEMVOICE; saveProgress();
+          acache.clear(); say('Hello, Hajun! Let\'s read a story together.', RATE);
+        };
         return;
       }
       var rank = function(n){
