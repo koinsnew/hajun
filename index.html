@@ -501,6 +501,15 @@
   .wr-intro{margin-bottom:12px;font-size:17px;line-height:1.6}
   .wr-rules{margin-bottom:14px;font-size:16px}
   .wr-rules ol{margin:8px 0 0;padding-left:24px;line-height:1.8}
+  .rp-lab{display:block;font-size:15px;color:var(--ink-soft);margin:2px 2px 6px}
+  .rp-in{display:block;width:100%;box-sizing:border-box;min-height:52px;margin:0 0 12px;padding:10px 14px;border:2px solid #2B2A33;border-radius:14px;background:#fff;font:inherit;font-size:18px;color:var(--ink)}
+  .rp-in:focus{outline:3px solid #2457C5;outline-offset:2px}
+  .rp-title small{display:block;font-size:14px;color:var(--ink-soft)}
+  .rp-tt{font-family:'Jua',sans-serif;font-size:23px;line-height:1.35;overflow-wrap:anywhere}
+  .rp-hl{background:#FFE9A8;border-radius:6px;padding:1px 5px;font-weight:700;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+  .rp-q h3{font-size:16px !important;color:var(--ink-soft)}
+  .rp-q .wr-text{font-size:20px}
+  .rp-ko{margin-top:6px;font-size:15px;color:var(--ink-soft);line-height:1.5}
   .wr-go{font-size:21px !important;padding:18px !important;min-height:64px}
   .wr-row{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;margin:0 0 8px;padding:10px 13px;border:2px solid #2B2A33;border-radius:16px;background:#fff;font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:3px 4px 0 rgba(43,42,51,.16)}
   .wr-row-t{flex:1;min-width:0}
@@ -980,7 +989,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 22:25';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 23:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -3055,12 +3064,14 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="ogbig" style="margin:0 0 12px">'+
       '<div class="ico">📘</div>'+
-      '<div class="t"><b>원서 테스트</b><small>📘 책 속 그림 보고 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
+      '<div class="t"><b>원서 읽기</b><small>📘 책 속 그림 보고 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="mmbig" style="margin:0 0 12px">'+
-      '<div class="ico">📷</div>'+
-      '<div class="t"><b>미매말</b><small>그림 보고 영어 문장 쓰기 · 문제 '+mimemal().filter(function(m){ return m.done; }).length+'/'+mimemal().length+' · ⭐'+MM_STAR_MIN+'~'+MM_STAR_MAX+'</small></div>'+
+    '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
+      '<div class="ico">🌟</div>'+
+      '<div class="t"><b>미매말</b><small>👨 아빠 앞에서 · 시 '+
+        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
+        ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="ntbig" style="margin:0 0 12px">'+
@@ -3078,11 +3089,9 @@ function screenHome(){
       '<div class="t"><b>주제글쓰기</b><small>한글 글 사진을 올리면 맞춤법을 고쳐 줘요</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
-      '<div class="ico">🌟</div>'+
-      '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
-        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
-        ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
+    '<button class="testbtn" id="rpbig" style="margin:0 0 12px">'+
+      '<div class="ico">📗</div>'+
+      '<div class="t"><b>북리포트</b><small>책 제목을 적은 종이를 찍어 올리면 빈칸을 채워 줘요</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '</div>'+
@@ -3132,7 +3141,7 @@ function screenHome(){
   document.getElementById('fkbig').onclick = startFKGame;
   document.getElementById('spbig').onclick = screenSpecials;
   document.getElementById('pkbig').onclick = startPKGame;
-  document.getElementById('mmbig').onclick = screenMimemal;
+  document.getElementById('rpbig').onclick = function(){ beep([700],.06); screenReport(); };
   document.getElementById('ogbig').onclick = screenOrigList;
   document.getElementById('ntbig').onclick = screenNoteHome;
   document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
@@ -3260,11 +3269,8 @@ function noteCats(){
     })});
   C.push({key:'s', ico:'📖', name:'브릭스 읽기', color:'#C2255C', unit:'문장',
     sets: sents().map(function(s){ return {title:s.title, items:(s.items||[]).filter(function(x){ return x && x.en; })}; })});
-  C.push({key:'o', ico:'📘', name:'원서 테스트', color:'#2457C5', unit:'문장',
+  C.push({key:'o', ico:'📘', name:'원서 읽기', color:'#2457C5', unit:'문장',
     sets: origList().map(function(o){ return {title:o.t || o.title || '원서', items:(o.items||[]).filter(function(x){ return x && x.en; })}; })});
-  var mm = mimemal().filter(function(m){ return m && m.en; }).map(function(m){ return {en:m.en, ko:''}; });
-  C.push({key:'m', ico:'📷', name:'미매말', color:'#6741D9', unit:'문장',
-    sets: mm.length ? [{title:'미매말 문장 모두', items:mm}] : []});
   var sp = [];
   SPECIALS.forEach(function(p){
     if(specHidden(p.id)) return;
@@ -3276,7 +3282,7 @@ function noteCats(){
     var all = []; b.lines.forEach(function(l){ all = all.concat(noteSplit(l)); });
     sp.push({title:(b.e||'📕')+' '+b.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
   });
-  C.push({key:'p', ico:'🌟', name:'스페셜 테스트', color:'#C92A2A', unit:'문장', sets: sp});
+  C.push({key:'p', ico:'🌟', name:'미매말', color:'#C92A2A', unit:'문장', sets: sp});
   C.forEach(function(c){ c.sets = c.sets.filter(function(s){ return s.items.length; }); c.sets.forEach(function(s){ s.cat = c.key; s.unit = c.unit; }); });
   return C;
 }
@@ -7197,7 +7203,7 @@ function screenOrigList(note){
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back" aria-label="뒤로">←</button>'+
-      '<h2>📘 원서 테스트</h2>'+
+      '<h2>📘 원서 읽기</h2>'+
       '<div class="pill">⭐ '+origStars()+'</div>'+
     '</div>'+
     (note ? '<div class="ognotice" role="status">'+esc(note)+'</div>' : '')+
@@ -7724,7 +7730,7 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
       app.innerHTML =
         '<div class="result">'+
           '<div class="big">🏆</div>'+
-          '<h2>원서 테스트 통과!</h2>'+
+          '<h2>원서 읽기 통과!</h2>'+
           '<p>'+esc(set.t)+'<br><b>그림 '+items.length+'개를 다 썼어요!</b></p>'+
         firstHtml()+
           (justGot!==null
@@ -7829,7 +7835,7 @@ function screenSpecials(){
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back">←</button>'+
-      '<h2>🌟 스페셜 테스트</h2>'+
+      '<h2>🌟 미매말</h2>'+
       '<div class="pill">🏆 '+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
@@ -8455,7 +8461,7 @@ function screenSpecial(sp){
       app.innerHTML =
         '<div class="result">'+
           '<div class="big">🏆</div>'+
-          '<h2>스페셜 테스트 통과!</h2>'+
+          '<h2>미매말 통과!</h2>'+
           '<p>'+esc(sp.t)+'<br>'+esc(sp.ko)+'<br><b>'+(sp.st.length*4)+'줄을 다 읽었어요!</b></p>'+
           (justGot!==null
             ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+
@@ -9612,6 +9618,128 @@ function progRefresh(){
   });
 }
 /* =========================================================
+   📗 북리포트
+   · 책 제목을 적은 Book Report 학습지를 사진으로 찍어 올리면, AI 선생님이 빈칸을 아주 쉬운 문장으로 채워 알려 준다
+   · 책 본문 사진을 같이 올리면 그 내용으로 채운다(더 정확). 학습지만 올리면 AI가 아는 책 내용으로 채운다
+   · 결과는 영어일기와 같은 곳(wr 기록, kind:'report')에 모아 둔다 → 어느 기기에서나 다시 본다
+   ========================================================= */
+var RP_MAX_PHOTOS = 6;     /* 한 번에 올리는 사진 수 (학습지 + 책 본문) */
+var RP_TIMEOUT = 120;      /* AI 답을 기다리는 시간(초) */
+function rpTidy(r){
+  function S(v){ return String(v == null ? '' : v).trim(); }
+  return {title:S(r.title), src:S(r.src),
+    blanks:(r.blanks || []).filter(function(b){ return b && S(b.answer); }).slice(0, 12).map(function(b){ return {q:S(b.q), pre:S(b.pre), post:S(b.post), answer:S(b.answer), ko:S(b.ko)}; }),
+    summary:(r.summary || []).map(S).filter(function(x){ return x; }).slice(0, 8), summaryKo:S(r.summaryKo), praise:S(r.praise)};
+}
+function rpSentence(b){ return (b.pre ? b.pre+' ' : '')+b.answer+(b.post ? ' '+b.post : ''); }
+function screenReport(){
+  stopAll();
+  var titleKeep = '';
+  function draw(){
+    var list = WR_LIST.filter(function(e){ return e.kind === 'report'; }).sort(function(a, b){ return b.at - a.at; });
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>📗 북리포트</h2><div style="width:44px"></div></div>'+
+      '<div class="card wr-intro"><b>Book Report</b> 종이에 <b>책 제목</b>을 적고 사진을 찍어 올려요.<br>AI 선생님이 <b>빈칸</b>을 아주 쉬운 문장으로 채워 줘요.</div>'+
+      '<label class="rp-lab" for="rpTitle">책 제목 (종이에 적었으면 비워 둬도 돼요)</label>'+
+      '<input id="rpTitle" class="rp-in" type="text" autocomplete="off" autocapitalize="words" placeholder="예: Maisy Goes to the Library" value="'+esc(titleKeep)+'">'+
+      '<button class="btn primary wide wr-go" id="rpgo">📷 북리포트 사진 올리기</button>'+
+      '<div class="muted" style="text-align:center;margin:6px 0 16px;line-height:1.5">책 본문 사진도 같이 올리면 더 정확해요 · '+RP_MAX_PHOTOS+'장까지</div>'+
+      '<h3 class="homehd">📚 지난 북리포트</h3>'+
+      (list.length ? list.map(function(e){
+        return '<button class="wr-row" data-id="'+esc(e.id)+'"><span class="wr-row-t"><b>'+esc(e.r.title || '북리포트')+'</b><small>'+esc(wrDate(e.at))+'</small></span><span class="wr-pill">빈칸 '+(e.r.blanks || []).length+'</span></button>';
+      }).join('') : '<div class="card muted" style="text-align:center">아직 올린 북리포트가 없어요.</div>');
+    document.getElementById('back').onclick = screenHome;
+    document.getElementById('rpTitle').oninput = function(){ titleKeep = this.value; };
+    document.getElementById('rpgo').onclick = function(){ beep([700,900],.06); rpUpload(titleKeep); };
+    on('.wr-row', function(){ var id = this.dataset.id, e = WR_LIST.filter(function(x){ return x.id === id; })[0]; if(e){ beep([600],.05); screenRpResult(e); } });
+  }
+  draw();
+  if(Date.now() - WR_SYNC_AT > 20000) wrSync(function(){ if(document.getElementById('rpgo') && !titleKeep) draw(); });
+}
+function rpUpload(title){
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = function(){
+    var files = Array.prototype.slice.call(inp.files || []).slice(0, RP_MAX_PHOTOS);
+    if(inp.parentNode) inp.parentNode.removeChild(inp);
+    if(!files.length) return;
+    var cancelled = false, timer = null;
+    var ov = document.createElement('div'); ov.className = 'wr-ov';
+    ov.innerHTML = '<div class="wr-ovbox"><div style="font-size:46px">📗</div>'+
+      '<span class="sw-bars" aria-hidden="true" style="margin:10px auto 6px;justify-content:center"><i></i><i></i><i></i><i></i><i></i></span>'+
+      '<div id="wrMsg" class="wr-ovmsg">사진을 준비하고 있어요…</div>'+
+      '<div class="muted" style="line-height:1.5">AI 선생님이 빈칸을 채우는 데 20~50초 걸려요.<br>화면을 닫지 말고 기다려 주세요.</div>'+
+      '<button class="btn" id="wrCancel" style="margin-top:14px">✖ 취소</button></div>';
+    document.body.appendChild(ov);
+    function close(){ cancelled = true; clearTimeout(timer); if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    function msg(t){ var m = document.getElementById('wrMsg'); if(m) m.textContent = t; }
+    function fail(t){ if(cancelled) return; close(); noSound(); alert(t); }
+    document.getElementById('wrCancel').onclick = close;
+    var out = [];
+    (function next(i){
+      if(cancelled) return;
+      if(i >= files.length) return send();
+      msg('사진 준비 '+(i+1)+'/'+files.length);
+      scanPrep({file: files[i]}, function(b64){ if(b64) out.push(b64); next(i+1); });
+    })(0);
+    function send(){
+      if(!out.length) return fail('사진을 열지 못했어요. 다른 사진으로 다시 해 주세요.');
+      msg('AI 선생님이 북리포트를 읽고 있어요…');
+      timer = setTimeout(function(){ fail('너무 오래 걸려서 멈췄어요. 잠시 뒤에 다시 해 주세요.'); }, RP_TIMEOUT*1000);
+      apiPost({action:'ocr', kind:'report', pin:DAD_PIN, images:out, title:String(title || '').trim().slice(0, 120)}, function(j){
+        if(cancelled) return;
+        clearTimeout(timer);
+        if(!j || !j.ok || !j.data) return fail(scanErrMsg(j));
+        var r = j.data; if(r.items && r.items.length && !r.blanks) r = r.items[0] || {};
+        if(r.error === 'NO_TITLE') return fail('책 제목을 찾지 못했어요.\n종이의 Title 칸에 제목을 적거나, 위의 칸에 책 제목을 써 주세요.');
+        if(r.error === 'UNKNOWN_BOOK') return fail('“'+(r.title || '이 책')+'” 은(는) AI 선생님이 내용을 잘 모르는 책이에요.\n책 본문 사진을 같이 올려 주세요.');
+        var t = rpTidy(r);
+        if(r.error || !t.blanks.length) return fail('북리포트 종이를 읽지 못했어요.\n밝은 곳에서 종이가 다 보이도록 반듯하게 다시 찍어 주세요.');
+        var e = {id:'w'+Date.now().toString(36), kind:'report', at:Date.now(), r:t};
+        WR_LIST.push(e); wrKeep();
+        apiPost({action:'wrAdd', pin:DAD_PIN, entry:e}, function(){});
+        close(); starSound(); confetti(26);
+        screenRpResult(e);
+      });
+    }
+  };
+  inp.click();
+}
+function screenRpResult(e){
+  stopAll();
+  var r = e.r;
+  app.innerHTML =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>📗 북리포트</h2><div style="width:44px"></div></div>'+
+    '<div class="card wr-sec rp-title"><small>Title</small><div class="rp-tt">'+esc(r.title || '(제목 없음)')+'</div></div>'+
+    '<div class="muted" style="margin:0 2px 10px;line-height:1.5">'+(r.src === 'pages'
+      ? '올려 준 책 사진을 보고 채웠어요. <span class="rp-hl">색칠한 곳</span>이 빈칸에 쓸 말이에요.'
+      : 'AI 선생님이 알고 있는 책 내용으로 채웠어요. <span class="rp-hl">색칠한 곳</span>이 빈칸에 쓸 말이에요. 책과 다르면 책 사진도 같이 올려 봐요.')+'</div>'+
+    r.blanks.map(function(b, i){
+      return '<div class="card wr-sec rp-q"><h3>'+esc(b.q || ('빈칸 '+(i+1)))+' <button class="btn wr-say rp-say" data-i="'+i+'">🔊 듣기</button></h3>'+
+        '<div class="wr-text en">'+(b.pre ? esc(b.pre)+' ' : '')+'<span class="rp-hl">'+esc(b.answer)+'</span>'+(b.post ? ' '+esc(b.post) : '')+'</div>'+
+        (b.ko ? '<div class="rp-ko">'+esc(b.ko)+'</div>' : '')+'</div>';
+    }).join('')+
+    (r.summary.length ? '<div class="card wr-sec wr-easy"><h3>SUMMARY <button class="btn wr-say" id="rpsum">🔊 듣기</button></h3>'+
+      '<div class="wr-text en">'+r.summary.map(function(s){ return '<span class="rp-hl">'+esc(s)+'</span>'; }).join('<br>')+'</div>'+
+      (r.summaryKo ? '<details class="wr-ko"><summary>우리말 뜻 보기</summary><div class="wr-text">'+esc(r.summaryKo).replace(/\n/g, '<br>')+'</div></details>' : '')+'</div>' : '')+
+    '<div class="wr-tip">✏️ 종이의 빈칸에 한 글자씩 또박또박 따라 써 봐요!</div>'+
+    '<button class="btn primary wide" id="again" style="margin:6px 0 10px">📷 다른 북리포트 올리기</button>'+
+    '<button class="btn wide" id="del" style="font-size:15px;min-height:44px">🗑 이 북리포트 지우기 (아빠)</button>';
+  document.getElementById('back').onclick = screenReport;
+  document.getElementById('again').onclick = function(){ beep([700,900],.06); screenReport(); };
+  on('.rp-say', function(){ wrSpeak(rpSentence(r.blanks[+this.dataset.i]), this); });
+  var sm = document.getElementById('rpsum'); if(sm) sm.onclick = function(){ wrSpeak(r.summary.join('\n'), sm); };
+  document.getElementById('del').onclick = function(){
+    dadGate(function(){
+      WR_LIST = WR_LIST.filter(function(x){ return x.id !== e.id; }); wrKeep();
+      apiPost({action:'wrDel', pin:DAD_PIN, id:e.id}, function(){});
+      screenReport();
+    }, function(){ screenRpResult(e); }, '지우려면 아빠 비밀번호가 필요해요');
+  };
+  window.scrollTo(0, 0);
+}
+/* =========================================================
    📔 영어일기 · ✍️ 주제글쓰기
    · 하준이가 공책에 쓴 글을 사진으로 찍어 올리면 AI 선생님이 읽고 고쳐 준다
    · 영어일기: 쓴 그대로 → 철자·문법 고침 → [기준] 확인 → 기준에 맞춘 아주 쉬운 글
@@ -10276,7 +10404,7 @@ function screenDiag(){
     ['화면 버전', APP_VERSION],
     ['화면 크기', window.innerWidth+' × '+window.innerHeight],
     ['모은 별 / 지갑', totalStars()+' / '+walletStars()],
-    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 스페셜 '+specStars()+' + 원서 '+origStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
+    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 미매말 '+specStars()+' + 원서 '+origStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
     ['브라우저', navigator.userAgent]
   ];
   app.innerHTML =

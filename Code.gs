@@ -277,6 +277,21 @@ var OCR_PROMPTS = {
     '④ awkward 는 어색해서 다듬은 문장마다 하나(최대 8개). 앞뒤가 맞지 않는 문장(예: "왜냐하면 ~ 재미있다" → "왜냐하면 ~ 재미있기 때문이다"), 너무 길게 이어진 문장, 같은 말이 되풀이되는 문장, 뜻이 흐린 문장을 찾는다. 없으면 빈 배열. ' +
     '⑤ why·praise·tip 은 초등 3학년이 알 수 있는 쉬운 말로 짧게. ' +
     '⑥ 한글 글이 아니거나 글씨를 읽을 수 없으면 {"error":"UNREADABLE"} 만.',
+  report:
+    '첫 이미지는 영어 원서를 읽고 쓰는 Book Report 학습지 사진입니다(Title 칸에 책 제목이 손글씨로 적혀 있을 수 있음). 그 뒤의 이미지가 있으면 그 책의 본문 사진입니다. ' +
+    '한국 초등학교 3학년 학생이 빈칸에 따라 쓸 수 있도록, 학습지의 빈칸을 아주 쉬운 영어로 채워 JSON으로만 답하세요.\n' +
+    '형식: {"paperTitle":"학습지 Title 칸에 손으로 적힌 글자 그대로(비어 있으면 빈 문자열)","title":"책 제목","src":"pages 또는 memory","blanks":[{"q":"칸 제목 그대로","pre":"빈칸 앞에 인쇄된 글","post":"빈칸 뒤에 인쇄된 글","answer":"빈칸에 쓸 말","ko":"완성된 문장의 한국어 뜻"}],' +
+    '"summary":["문장1","문장2"],"summaryKo":"summary 의 한국어 뜻(문장마다 줄바꿈)"}\n' +
+    '규칙: ① title 은 학습지 Title 칸에 손으로 적힌 제목, 없으면 아래 [책 제목]. 둘 다 없으면 {"error":"NO_TITLE"} 만 — 학습지에 인쇄된 낱말(예: Maisy)만 보고 제목을 짐작하지 않는다. 철자가 조금 틀렸으면 바른 책 제목으로 고친다. ' +
+    '② 학습지에 인쇄된 칸을 위에서 아래 순서대로 하나씩 blanks 에 담는다(Title 칸과 SUMMARY 칸은 제외). q 는 칸 제목 그대로(예: "WHO (Who is in the story?)"). ' +
+    '한 칸에 빈 줄이 두 개면(예: "Maisy ____" 와 "because ____") 줄마다 따로 담고 q 는 같은 제목을 쓴다. ' +
+    '③ pre·post 는 그 줄에 이미 인쇄된 글 그대로(없으면 빈 문자열). answer 에는 빈칸에 쓸 말만 넣고 pre·post 의 글을 되풀이하지 않는다. pre + answer + post 를 이으면 문법이 맞는 한 문장이 되어야 한다. 문장 끝이면 answer 에 마침표를 넣는다. ' +
+    '④ answer 는 초등 3학년이 아는 아주 쉬운 낱말로 짧게(10낱말 이내). 어려운 낱말·긴 문장·관계사절은 쓰지 않는다. ' +
+    '⑤ SUMMARY 칸이 있으면 summary 에 이야기 줄거리를 아주 쉬운 짧은 문장 4~5개로(한 문장 8낱말 안팎, 처음-가운데-끝 순서). 없으면 빈 배열. ' +
+    '⑥ 책 본문 사진이 있으면 그 내용만 근거로 채우고 src 는 "pages". 없으면 제목으로 알고 있는 그 책의 실제 내용으로 채우고 src 는 "memory". ' +
+    '⑦ 본문 사진이 없고 그 책의 내용을 확실히 모르면 지어내지 말고 {"error":"UNKNOWN_BOOK","title":"읽은 제목"} 만. ' +
+    '⑧ 학생이 이미 써 놓은 글이 있어도 무시하고 바른 답을 채운다. ko·summaryKo 는 쉬운 한국어. ' +
+    '⑨ Book Report 학습지가 아니거나 읽을 수 없으면 {"error":"UNREADABLE"} 만.',
   hw:
     '이미지는 영어 학원 선생님이 올린 숙제 안내 글(메신저/밴드 화면)입니다. 숙제 항목을 읽어 JSON으로만 답하세요.\n' +
     '형식: {"title":"글 제목(예: 11/12 숙제)","items":[{"t":"숙제 내용","due":"11/17","how":"내는 방법","note":"딸린 설명"}],"notice":["번호 없는 안내 문장"]}\n' +
@@ -350,10 +365,18 @@ function ocrScan(req) {
     d2.original = text;
     return { ok: true, data: d2, model: g2.model };
   }
-  parts.push({ text: OCR_PROMPTS[kind] });
+  parts.push({ text: OCR_PROMPTS[kind] + (kind === 'report' ? '\n[책 제목] ' + (String(req.title || '').replace(/[\r\n]+/g, ' ').slice(0, 120) || '(따로 적지 않음)') : '') });
 
   var g = _geminiJSON(parts, 8000);
   if (!g.ok) return { error: g.error };
+  if (kind === 'report' && g.data && typeof g.data === 'object') {
+    var rd = g.data;
+    if (rd.items && rd.items.length && !rd.blanks) rd = rd.items[0] || {};
+    /* 제목이 종이에도 없고 따로 적지도 않았으면 채우지 않는다(지어낸 책으로 채우는 것을 막는다) */
+    if (!rd.error && !String(rd.paperTitle || '').trim() && !String(req.title || '').trim()) rd = { error: 'NO_TITLE' };
+    if (!rd.error) rd.src = imgs.length > 1 ? 'pages' : 'memory';
+    return { ok: true, data: rd, model: g.model };
+  }
   return { ok: true, data: g.data, model: g.model };
 }
 
