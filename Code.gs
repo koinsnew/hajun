@@ -58,6 +58,7 @@ function doPost(e) {
   else if (action === 'ppSet')  out = ppSet(body);
   else if (action === 'hwSet')  out = hwSet(body);
   else if (action === 'wrAdd')  out = wrAdd(body);
+  else if (action === 'report') out = bookReport(body);
   else if (action === 'kill')   out = killIds(body);
   else if (action === 'wrDel')  out = wrDel(body);
   else if (action === 'hwCheck') out = hwCheck(body);
@@ -943,4 +944,67 @@ function killIds(req) {
     if (raw) { try { var o = JSON.parse(raw); if (_stripDead(o)) _store().setProperty(PROP_KEY, JSON.stringify(o)); } catch (e) {} }
     return { ok: true, n: list.length };
   } finally { try { if (lock) lock.releaseLock(); } catch (e) {} }
+}
+
+/* ===== 📗 북리포트 — 책 제목만 받아 Book Report 빈칸을 채운다 (사진 없음) =====
+ * 종이의 빈칸은 늘 같다: WHO / WHEN / WHERE / WHAT / HOW & WHY / SUMMARY
+ * 하루 호출 수는 사진 읽기(OCR_DAILY_MAX)와 같이 센다. */
+var REPORT_PROMPT =
+  '한국 초등학교 3학년 학생이 영어 그림책(원서)을 읽고 Book Report 학습지의 빈칸을 채우려고 합니다. 아래 [책 제목]의 책을 떠올려, 그 책의 실제 내용으로 빈칸에 쓸 말을 JSON으로만 답하세요.\n' +
+  '형식: {"known":true,"title":"바른 책 제목","hero":"주인공 이름(한 낱말, 예: Maisy)","who":"","when":"","where":"","what":"","how":"","why":"",' +
+  '"ko":{"who":"","when":"","where":"","what":"","how":"","why":""},"summary":["문장1","문장2","문장3","문장4","문장5"],"summaryKo":"summary 의 한국어 뜻(문장마다 줄바꿈)"}\n' +
+  '학습지의 문장 틀(밑줄이 빈칸):\n' +
+  ' WHO: "____ in the story."  → who 는 반드시 "등장인물 이름들 + is/are" 꼴(예: "Maisy and her friends are", "Buzz and Fly Guy are")\n' +
+  ' WHEN: "The story happens ____"  → when (예: "in the morning.")\n' +
+  ' WHERE: "The story happens at ____"  → where (예: "the library.")\n' +
+  ' WHAT: "(hero) ____"  → what 은 주인공이 한 일(예: "looks for a book about fish.")\n' +
+  ' HOW: "(hero) ____"  → how 는 주인공의 기분(예: "is happy")\n' +
+  ' WHY: "because ____"  → why 는 그 기분의 까닭(예: "she finds a good book.")\n' +
+  '규칙: ① 틀에 인쇄된 글(in the story / The story happens / The story happens at / 주인공 이름 / because)은 답에 되풀이하지 않는다. 틀 + 답을 이으면 문법이 맞는 한 문장이 되어야 한다. 문장 끝에는 마침표(how 는 뒤에 because 가 이어지므로 마침표 없이). ' +
+  '② 초등 3학년이 아는 아주 쉬운 낱말로 짧게(답 하나에 10낱말 이내). 어려운 낱말·긴 문장·관계사절은 쓰지 않는다. ' +
+  '③ summary 는 이야기 줄거리를 처음-가운데-끝 순서로 아주 쉬운 짧은 문장 5개(한 문장 8낱말 안팎). ' +
+  '④ 반드시 그 책에 실제로 나오는 인물·장소·사건만 쓴다. 책에 때(아침·저녁 등)가 분명히 나오지 않으면 when 은 "one day." 로 쓴다. ' +
+  '⑤ title 은 철자·대소문자를 바로잡은 책 제목. ko 의 각 값은 틀과 답을 이은 완성된 문장 전체의 쉬운 한국어 뜻(예: who → "메이지와 친구들이 이야기에 나와요."). summaryKo 도 쉬운 한국어. ' +
+  '⑥ 그 책의 내용을 확실히 알지 못하면 지어내지 말고 {"known":false} 만 답한다.\n[책 제목] ';
+function bookReport(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var title = String(req.title || '').replace(/[\r\n]+/g, ' ').trim().slice(0, 120);
+  if (title.length < 2) return { error: 'NO_TITLE' };
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'OCR_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= OCR_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+  var g = _geminiJSON([{ text: REPORT_PROMPT + title }], 4000);
+  if (!g.ok) return { error: g.error };
+  var d = g.data || {};
+  if (d.items && d.items.length && !d.who) d = d.items[0] || {};
+  function S(v) { return String(v == null ? '' : v).trim(); }
+  if (d.known === false || !S(d.who) || !S(d.what)) return { ok: true, data: { error: 'UNKNOWN_BOOK', title: title }, model: g.model };
+  var hero = S(d.hero) || 'The main character', ko = d.ko || {};
+  /* 모델이 틀의 글을 되풀이하거나 마침표를 빠뜨려도 바른 문장이 되게 다듬는다 */
+  function cut(v, re) { return S(v).replace(re, '').trim(); }
+  function dot(v) { v = S(v); return v && !/[.!?]$/.test(v) ? v + '.' : v; }
+  var esc = hero.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), heroRe = new RegExp('^' + esc + '\\s+', 'i');
+  var who = cut(d.who, /\s*in the story\.?$/i).replace(/[.!?]+$/, '');
+  if (/^(is|are)\b/i.test(who)) who = hero + ' is';
+  else if (!/\b(is|are)$/i.test(who)) who += (/\band\b|,/i.test(who) ? ' are' : ' is');
+  d.who = who;
+  d.when = dot(cut(d.when, /^the story happens\s+/i));
+  d.where = dot(cut(cut(d.where, /^the story happens\s+/i), /^at\s+/i));
+  d.what = dot(cut(d.what, heroRe));
+  d.how = cut(d.how, heroRe).replace(/[.!?]+$/, '');
+  d.why = dot(cut(d.why, /^because\s+/i));
+  var blanks = [
+    { q: 'WHO (Who is in the story?)', pre: '', post: 'in the story.', answer: S(d.who), ko: S(ko.who) },
+    { q: 'WHEN (When does the story happen?)', pre: 'The story happens', post: '', answer: S(d.when), ko: S(ko.when) },
+    { q: 'WHERE (Where does the story happen?)', pre: 'The story happens at', post: '', answer: S(d.where), ko: S(ko.where) },
+    { q: 'WHAT (What happens in the story?)', pre: hero, post: '', answer: S(d.what), ko: S(ko.what) },
+    { q: 'HOW (How does ' + hero + ' feel?) & WHY', pre: hero, post: '', answer: S(d.how), ko: S(ko.how) },
+    { q: 'HOW (How does ' + hero + ' feel?) & WHY', pre: 'because', post: '', answer: S(d.why), ko: S(ko.why) }
+  ].filter(function (b) { return b.answer; });
+  return { ok: true, model: g.model, data: { title: S(d.title) || title, src: 'memory', blanks: blanks,
+    summary: (d.summary || []).map(S).filter(function (x) { return x; }).slice(0, 6), summaryKo: S(d.summaryKo) } };
 }
