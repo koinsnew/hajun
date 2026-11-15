@@ -903,7 +903,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 13:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 13:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1472,7 +1472,7 @@ var FK_CURL_GAIN = 5.5;    /* 손가락을 둥글게 밀었을 때 공이 휘는
 /* 단계: 골 하나 넣으면 다음 단계. 2단계부터는 통과할 때마다 ⭐1 (FK_STAGE_STAR_CAP개까지). 마지막은 수비벽 7명.
    [수비벽 수, 골키퍼, 거리(m), 좌우로 벗어나는 폭(m), 골키퍼 빠르기 배율] */
 var FK_STAGES = [[0,false,16,1.5,1], [0,true,17,2.5,0.85], [3,true,19,4,0.9], [4,true,21,5,0.95], [5,true,23,6,1.0], [6,true,25,7,1.05], [7,true,26,7.5,1.1]];
-var FK_STAGE_STAR_CAP = 5; /* 단계 통과로 받는 별 상한 (한 번 도전) */
+var FK_STAGE_STAR_CAP = 6; /* 단계 통과로 받는 별 상한 (한 번 도전) — 2~7단계 6개 */
 /* 레벨에 따라 열리는 단계: [이 레벨까지, 열린 단계 수] — Lv.9까지 3단계, 19까지 4, 29까지 5, 39까지 6, 40부터 7단계(수비벽 7명) */
 var FK_OPEN = [[9,3],[19,4],[29,5],[39,6],[999,7]];
 function fkOpen(lv){
@@ -4213,6 +4213,15 @@ function fkHeroHtml(){
   var lv = heroLv(), p = playerAt(lv);
   return '<span class="fk-av" aria-hidden="true">'+playerSVG(lv, false)+ppImg(lv, false)+'</span><span class="fk-who"><small>키커 Lv.'+lv+'</small>'+esc(p.n)+' '+p.flag+'</span>';
 }
+/* 👨 아빠 보너스: 비밀번호를 넣으면 프리킥 기회를 한 번 준다 (누를 때마다 비밀번호) */
+function fkDadBonus(){
+  beep([700],.06);
+  var back = function(){ screenHome(); startFKGame(); };
+  dadGate(function(){
+    PROG.fkTix = fkTix() + 1; PROG.fkDadGift = (PROG.fkDadGift || 0) + 1; saveProgress();
+    starSound(); screenHome(); startFKGame(); toast('🎟️ 프리킥 기회 +1!');
+  }, back, '프리킥 기회를 한 번 주려면 아빠 비밀번호가 필요해요');
+}
 function startFKGame(){
   beep([700,900],.06);
   var n = fkTix(), g = lvProg(), best = PROG.fkBestStage || 0, lv = heroLv(), p = playerAt(lv), NS = fkOpen(), nx = fkNextOpenLv();
@@ -4230,9 +4239,11 @@ function startFKGame(){
         '<button class="btn primary wide" id="ok" style="font-size:20px;padding:16px;margin-bottom:9px">프리킥 차러 가기! ⚽</button>'
       : '<div class="card" style="margin-bottom:12px;color:var(--berry-ink)">🎟️ 프리킥 기회를 다 썼어요.<br>'+
           (g.max ? '최고 레벨이에요!' : '⭐ <b>'+g.left+'개</b> 더 모아 <b>레벨 업</b>하면 또 찰 수 있어요!')+'</div>')+
-    '<button class="btn wide" id="no">다음에 할래요</button>'
+    '<button class="btn wide" id="no" style="margin-bottom:9px">다음에 할래요</button>'+
+    '<button class="btn wide" id="fkdad" style="font-size:15px;min-height:44px">👨 아빠 보너스 (기회 +1)</button>'
   );
   ov.querySelector('#no').onclick = function(){ beep([500],.06); ov.remove(); };
+  ov.querySelector('#fkdad').onclick = function(){ ov.remove(); fkDadBonus(); };
   if(ov.querySelector('#ok')) ov.querySelector('#ok').onclick = function(){
     PROG.fkTix = fkTix() - 1; saveProgress();
     ov.remove(); screenFKGame();
@@ -4322,8 +4333,10 @@ function screenFKGame(){
           '<br>🏆 최고 기록 <b>'+best+'단계 통과</b></p>'+
         (n > 0 ? '<button class="btn primary wide" id="retry" style="margin-bottom:10px">🔁 한 번 더 (기회 '+n+'번)</button>'
                : '<div class="card" style="margin-bottom:12px">🎟️ '+(g.max ? '기회를 다 썼어요.' : '⭐ <b>'+g.left+'개</b> 더 모아 레벨 업하면 또 찰 수 있어요!')+'</div>')+
-        '<button class="btn go wide" id="home">🏠 홈으로</button>'+
+        '<button class="btn go wide" id="home" style="margin-bottom:10px">🏠 홈으로</button>'+
+        '<button class="btn wide" id="fkdad2" style="font-size:15px;min-height:44px">👨 아빠 보너스 (기회 +1)</button>'+
       '</div>';
+    document.getElementById('fkdad2').onclick = fkDadBonus;
     if(document.getElementById('retry')) document.getElementById('retry').onclick = startFKGame;
     document.getElementById('home').onclick = screenHome;
     checkLevelUp();
