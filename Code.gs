@@ -35,6 +35,7 @@ function doGet(e) {
   else if (action === 'ppMap')     out = { ok: true, map: _ppMap() };
   else if (action === 'hw')        out = { ok: true, hw: _hw() };
   else if (action === 'wr')        out = { ok: true, list: _wrRead() };
+  else if (action === 'dead')      out = { ok: true, ids: Object.keys(_dead()) };
   else if (action === 'ping')      out = { ok: true };
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, p.callback);
@@ -57,6 +58,7 @@ function doPost(e) {
   else if (action === 'ppSet')  out = ppSet(body);
   else if (action === 'hwSet')  out = hwSet(body);
   else if (action === 'wrAdd')  out = wrAdd(body);
+  else if (action === 'kill')   out = killIds(body);
   else if (action === 'wrDel')  out = wrDel(body);
   else if (action === 'hwCheck') out = hwCheck(body);
   else if (action === 'imgPut') out = origPutImg(body);
@@ -93,6 +95,7 @@ function getProgress() {
     var o = JSON.parse(raw);
     if (!o.stars) o.stars = {};
     o.pphoto = _ppMap();   // 선수 사진 목록은 따로 지킨 것을 넣어 준다
+    _stripDead(o);         // 다른 기기에서 지운 것은 내려주지 않는다
     return o;
   } catch (e) {
     return { stars: {}, name: '', rate: 0.8 };
@@ -100,6 +103,7 @@ function getProgress() {
 }
 function saveProgress(obj) {
   if (!obj || typeof obj !== 'object') return false;
+  _stripDead(obj);                       // 지운 것은 다시 저장하지 않는다(옛 화면을 켜 둔 기기가 되살리지 못하게)
   var pm = _ppMap();                     // (처음이면 예전 목록을 먼저 옮겨 둔다)
   if (obj.pphoto) {                      // 선수 사진 목록은 진도와 따로 지킨다. 목록에 없는 레벨만 받아 둔다(옛 화면에서 넣은 사진)
     var add = false;
@@ -853,4 +857,44 @@ function _wrRules(rules) {
   var a = (rules || []).slice(0, 12).map(function (t) { return String(t || '').slice(0, 80).trim(); }).filter(function (t) { return t; });
   if (!a.length) return '\n[기준]\n(없음 — checks 는 빈 배열, easy 는 fixed 를 더 쉬운 문장으로 다듬은 글)';
   return '\n[기준]\n' + a.map(function (t, i) { return (i + 1) + '. ' + t; }).join('\n');
+}
+
+/* ===== 🗑 지운 것 목록 (모든 기기 공용) =====
+ * 진도는 '마지막에 저장한 기기 것'이 통째로 덮어쓴다. 그래서 한 기기에서 단어장을 지워도,
+ * 옛 화면을 켜 둔 다른 기기가 저장하면 지운 것이 되살아났다.
+ * → 지운 항목의 id 를 여기 따로 적어 두고, 진도를 내려줄 때·저장할 때마다 그 id 를 걸러 낸다. */
+var DEAD_PROP = 'DEAD_IDS';
+var DEAD_MAX = 300;
+function _dead() {
+  var raw = PropertiesService.getScriptProperties().getProperty(DEAD_PROP) || '';
+  var o = {};
+  raw.split(',').forEach(function (id) { if (id) o[id] = 1; });
+  return o;
+}
+function _stripDead(o) {
+  var d = _dead(), hit = false;
+  if (!o || typeof o !== 'object') return false;
+  for (var k in o) {
+    if (Object.prototype.toString.call(o[k]) !== '[object Array]') continue;
+    var f = o[k].filter(function (x) { return !(x && typeof x === 'object' && x.id && d[x.id]); });
+    if (f.length !== o[k].length) { o[k] = f; hit = true; }
+  }
+  return hit;
+}
+function killIds(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var add = (req.ids || []).map(function (x) { return String(x || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40); }).filter(function (x) { return x; });
+  if (!add.length) return { error: 'NO_ID' };
+  var lock = null;
+  try { lock = LockService.getScriptLock(); lock.waitLock(8000); } catch (e) { lock = null; }
+  try {
+    var sp = PropertiesService.getScriptProperties();
+    var list = (sp.getProperty(DEAD_PROP) || '').split(',').filter(function (x) { return x && add.indexOf(x) < 0; }).concat(add);
+    if (list.length > DEAD_MAX) list = list.slice(list.length - DEAD_MAX);
+    sp.setProperty(DEAD_PROP, list.join(','));
+    /* 서버에 저장된 진도에서도 바로 지운다 */
+    var raw = _store().getProperty(PROP_KEY);
+    if (raw) { try { var o = JSON.parse(raw); if (_stripDead(o)) _store().setProperty(PROP_KEY, JSON.stringify(o)); } catch (e) {} }
+    return { ok: true, n: list.length };
+  } finally { try { if (lock) lock.releaseLock(); } catch (e) {} }
 }

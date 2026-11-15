@@ -542,6 +542,35 @@
   .wr-rrow span{flex:none;width:26px;text-align:center;font-family:'Jua',sans-serif;font-size:17px}
   .wr-rrow input{flex:1;min-width:0;padding:12px;border-radius:12px;border:2px solid var(--line);font:inherit;font-size:17px;background:#fff;color:var(--ink)}
   .wr-rrow .btn{min-width:46px;min-height:46px;padding:6px}
+  /* ── 브릭스 읽기 ── */
+  .rd-dots{display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:0 0 10px}
+  .rd-dot{width:30px;height:30px;border-radius:50%;border:2px solid #2B2A33;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:1}
+  .rd-dot.on{background:#2F9E44;border-color:#2F7D3A;color:#fff;font-size:16px}
+  .rd-dot.now{background:#FFE066;box-shadow:0 0 0 3px rgba(255,212,59,.5)}
+  .rd-mode{display:flex;align-items:center;gap:8px;border-radius:14px;padding:9px 12px;margin:0 0 10px;font-size:17px;border:2px solid #2457C5;background:#EEF3FF;color:#1B3C8C}
+  .rd-mode.solo{border-color:#2F7D3A;background:#EEF9F1;color:#1E5C2B}
+  .rd-ko{margin-left:auto;min-height:38px;padding:4px 12px;font-size:14px}
+  .rd-page{background:#FFFDF7;border:2px solid #2B2A33;border-radius:18px;padding:10px 12px;margin-bottom:150px;box-shadow:3px 4px 0 rgba(43,42,51,.16)}
+  .rd-s{display:flex;gap:9px;align-items:flex-start;padding:9px 6px;border-radius:12px;border-bottom:1px dashed var(--line)}
+  .rd-s:last-child{border-bottom:0}
+  .rd-s.cur{background:#FFF3BF;box-shadow:inset 0 0 0 2px #E8A200}
+  .rd-s.done{opacity:.55}
+  .rd-n{flex:none;width:26px;height:26px;border-radius:50%;background:#EFE7D2;display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:14px;margin-top:4px}
+  .rd-s.done .rd-n{background:#2F9E44;color:#fff}
+  .rd-en{flex:1;min-width:0;font-family:'Patrick Hand','Gowun Dodum',sans-serif;font-size:26px;line-height:1.45}
+  .rd-w{border-radius:6px;padding:0 2px;cursor:pointer}
+  .rd-w.hi{background:#FFD43B}
+  .rd-w.tap{background:#A5D8FF}
+  .rd-kor{display:block;font-family:'Gowun Dodum',sans-serif;font-size:15px;color:var(--ink-soft);line-height:1.5;margin-top:2px}
+  .rd-bar{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,249,238,.96);border-top:2px solid #2B2A33}
+  .rd-bar > *{max-width:640px;margin-left:auto;margin-right:auto}
+  .rd-go{position:relative;overflow:hidden;font-size:21px !important;padding:16px !important;min-height:62px;display:block}
+  .rd-go:disabled{opacity:1;background:#C9D3E6 !important;color:#4A5568 !important;box-shadow:none !important}
+  .rd-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(36,87,197,.28)}
+  .rd-lab{position:relative}
+  .rd-again{margin-top:8px;min-height:44px;font-size:15px;display:block}
+  .rd-wait{display:flex;align-items:center;justify-content:center;gap:14px;min-height:62px;border-radius:16px;background:#2B2A33;color:#fff}
+  .rd-wait b{font-family:'Jua',sans-serif;font-weight:400;font-size:20px}
   .hw-empty{font-size:16px;color:var(--ink-soft);padding:2px 4px 12px;line-height:1.5}
   .today-sub{font-family:'Jua',sans-serif;font-size:16px;color:var(--ink-soft);margin:6px 2px 8px}
   .hwe{margin-bottom:12px}
@@ -951,7 +980,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 20:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 21:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1984,7 +2013,7 @@ function ppSync(){
   });
 }
 function ppLoadAll(noSync){
-  if(!noSync){ ppSync(); updCheck(); }
+  if(!noSync){ ppSync(); updCheck(); deadSync(); progRefresh(); }
   var keys = [], m = PROG.pphoto || {};
   Object.keys(m).forEach(function(lv){ var k = m[lv]; if(k && !ORIG_MEM[k] && !PP_ASKED[k]){ PP_ASKED[k] = 1; keys.push(k); } });
   if(!keys.length) return;
@@ -2327,12 +2356,13 @@ function utter(text, rate){
 function P(x){ return (typeof x === 'string') ? {t:x} : x; }
 function xesc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 /* 목록에서 🗑 로 바로 지우기: 아빠 비밀번호 → 한 번 더 묻기 → 지우고 목록으로 */
-function listDel(msg, back, doDel){
+function listDel(msg, back, doDel, id){
   beep([500],.06);
   needDad(function(){
     back();
     setTimeout(function(){
       if(!confirm(msg)) return;
+      deadAdd(id);
       doDel(function(){ saveProgress(); toast('🗑'); back(); });
     }, 60);
   }, back, '지우려면 아빠 비밀번호가 필요해요');
@@ -2573,6 +2603,7 @@ function loadProgress(cb){
         else { PROG = p; }
       }
       applyProg();
+      try{ deadApply(); }catch(e){}   /* 다른 기기에서 지운 것은 되살리지 않는다 */
       LOAD_BASE_SCORE = progScore(PROG);   /* 이 값보다 재앙적으로 줄면 서버 저장을 막는다 */
       if(needPush && SERVER_LOADED && !OFFLINE){
         try{ apiPost({action:'save', prog:PROG}, function(){}); }catch(e){}
@@ -3004,8 +3035,8 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="stbig" style="margin:0 0 12px">'+
       '<div class="ico">📖</div>'+
-      '<div class="t"><b>문장 암기</b><small>듣고 '+SENT_TIMES+'번 · \u2b50'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+' · 문장 '+
-        sents().filter(function(x){ return x.done; }).length+'/'+sents().length+' 통과</small></div>'+
+      '<div class="t"><b>브릭스 읽기</b><small>듣고 '+READ_LISTEN+'번 · 혼자 '+(READ_GOAL-READ_LISTEN)+'번 읽기 · '+
+        sents().filter(function(x){ return readCount(x) >= READ_GOAL; }).length+'/'+sents().length+' 다 읽음</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="ogbig" style="margin:0 0 12px">'+
@@ -3213,7 +3244,7 @@ function noteCats(){
     sets: quizzes().map(function(q){
       return {title:q.title, items:(q.items||[]).filter(function(x){ return x && x.w; }).map(function(x){ return {en:x.w, ko:x.k||'', say:x.def||''}; })};   /* 🔊 = 단어를 설명하는 영어 문장(뜻풀이) */
     })});
-  C.push({key:'s', ico:'📖', name:'문장 암기', color:'#C2255C', unit:'문장',
+  C.push({key:'s', ico:'📖', name:'브릭스 읽기', color:'#C2255C', unit:'문장',
     sets: sents().map(function(s){ return {title:s.title, items:(s.items||[]).filter(function(x){ return x && x.en; })}; })});
   C.push({key:'o', ico:'📘', name:'원서 테스트', color:'#2457C5', unit:'문장',
     sets: origList().map(function(o){ return {title:o.t || o.title || '원서', items:(o.items||[]).filter(function(x){ return x && x.en; })}; })});
@@ -4917,7 +4948,7 @@ function screenQuizList(){
   document.getElementById('back').onclick = screenHome;
   document.getElementById('add').onclick = function(){ needDad(function(){ screenQuizEdit(null); }, screenQuizList); };
   on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.ed); if(q) needDad(function(){ screenQuizEdit(q); }, screenQuizList); });
-  on('.qzdel', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.rm); if(q) listDel('“'+q.title+'” 단어장을 지울까요?', screenQuizList, function(done){ PROG.quizzes = quizzes().filter(function(x){ return x.id!==q.id; }); done(); }); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.rm); if(q) listDel('“'+q.title+'” 단어장을 지울까요?', screenQuizList, function(done){ PROG.quizzes = quizzes().filter(function(x){ return x.id!==q.id; }); done(); }, q.id); });
   on('.qzbk', function(){
     var q = quizById(this.dataset.id);
     if(!q) return;
@@ -5007,6 +5038,7 @@ function screenQuizEdit(q){
     };
     if(editing) document.getElementById('del').onclick = function(){
       if(!confirm('\u201c'+q.title+'\u201d \ub2e8\uc5b4\uc7a5\uc744 \uc9c0\uc6b8\uae4c\uc694?')) return;
+      deadAdd(q.id);
       PROG.quizzes = quizzes().filter(function(x){ return x.id!==q.id; });
       saveProgress(); toast('\ud83d\uddd1'); screenQuizList();
     };
@@ -5738,14 +5770,14 @@ function screenSentList(){
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back">←</button>'+
-      '<h2>📖 문장 암기</h2>'+
+      '<h2>📖 브릭스 읽기</h2>'+
       '<div class="pill">⭐ '+sentStars()+'</div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
-      '<div style="font-size:16px">👨 아빠가 만든 문장으로 암기 연습!</div>'+
-      '<div class="muted" style="margin-top:5px">① 문장을 <b>듣고</b> 손가락으로 <b>'+SENT_TIMES+'번 따라 그리기</b><br>'+
-        '② <b>한글 뜻만</b> 보고 영어 문장을 직접 쓰기 → 아빠가 채점<br>'+
-        '다 통과하면 ⭐ '+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개를 뽑아요!</div>'+
+      '<div style="font-size:17px">📖 브릭스 책을 <b>'+READ_GOAL+'번</b> 읽어요!</div>'+
+      '<div class="muted" style="margin-top:5px;line-height:1.7">🎧 처음 <b>'+READ_LISTEN+'번</b>은 한 문장씩 <b>듣고 따라 읽기</b><br>'+
+        '📖 나머지 <b>'+(READ_GOAL-READ_LISTEN)+'번</b>은 <b>혼자 읽기</b><br>'+
+        READ_GOAL+'번을 다 읽으면 ⭐ '+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개를 뽑아요!</div>'+
     '</div>';
   if(!ss.length){
     html += '<div class="card" style="text-align:center"><div style="font-size:44px">📖</div>'+
@@ -5754,8 +5786,8 @@ function screenSentList(){
     ss.forEach(function(s){
       html += '<div class="qzrow">'+
         '<button class="qzbk '+(s.done?'done':'')+'" data-id="'+esc(s.id)+'" style="flex:1">'+
-          '<div class="ico">'+(s.done?'🏆':'📖')+'</div>'+
-          '<div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+'문장'+(s.done?' · ✅ ⭐'+(s.stars||STAR_SENT)+'개 받음':' · ⭐'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
+          '<div class="ico">'+(readCount(s) >= READ_GOAL?'🏆':'📖')+'</div>'+
+          '<div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+'문장 · 읽기 '+Math.min(readCount(s), READ_GOAL)+'/'+READ_GOAL+(s.done?' · ✅ ⭐'+(s.stars||STAR_SENT)+'개 받음':'')+'</small></div>'+
           '<div style="font-size:20px">▶</div>'+
         '</button>'+
         '<button class="qzedit" data-ed="'+esc(s.id)+'" title="아빠가 고치기" aria-label="아빠가 고치기">✏️</button>'+
@@ -5764,20 +5796,20 @@ function screenSentList(){
     });
   }
   html += '<div class="row" style="margin-top:6px">'+
-      '<button class="btn primary" id="add" style="flex:1">➕ 문장 만들기</button>'+
+      '<button class="btn primary" id="add" style="flex:1">➕ 읽을 글 넣기 (📷 사진)</button>'+
     '</div>'+
     '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
-      '문장이 길면 따라 그리기가 힘들어요.<br>짧은 문장부터 시작해보세요!</div>';
+      '아빠가 책 사진을 넣으면 문장을 읽어서 채워 줘요.</div>';
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
   document.getElementById('add').onclick = function(){ needDad(function(){ screenSentEdit(null); }, screenSentList); };
   on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.ed); if(s) needDad(function(){ screenSentEdit(s); }, screenSentList); });
-  on('.qzdel', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.rm); if(s) listDel('“'+s.title+'” 문장 묶음을 지울까요?', screenSentList, function(done){ PROG.sents = sents().filter(function(x){ return x.id!==s.id; }); done(); }); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.rm); if(s) listDel('“'+s.title+'” 문장 묶음을 지울까요?', screenSentList, function(done){ PROG.sents = sents().filter(function(x){ return x.id!==s.id; }); done(); }, s.id); });
   on('.qzbk', function(){
     var s = sentById(this.dataset.id);
     if(!s) return;
     if(!s.items.length){ needDad(function(){ screenSentEdit(s); }, screenSentList); return; }
-    beep([700,900],.06); startSent(s);
+    beep([700,900],.06); startRead(s);
   });
 }
 
@@ -5790,21 +5822,21 @@ function screenSentEdit(s){
   function draw(){
     app.innerHTML =
       '<div class="topbar"><button class="iconbtn" id="back">←</button>'+
-        '<h2>'+(editing?'✏️ 문장 고치기':'➕ 문장 만들기')+'</h2>'+
+        '<h2>'+(editing?'✏️ 읽을 글 고치기':'➕ 읽을 글 넣기')+'</h2>'+
         '<div style="width:44px"></div></div>'+
       '<div class="card frm">'+
         '<div class="qlab">이름</div>'+
-        '<input id="st" placeholder="예: 3학년 1단원 문장" value="'+esc(title)+'">'+
+        '<input id="st" placeholder="예: 브릭스 Unit 15" value="'+esc(title)+'">'+
       '</div>'+
       '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진·PDF로 자동 입력</button>'+
-      '<div class="sechd">문장 목록 <span style="font-size:12px">· 영어 문장 + 한글 뜻</span></div>'+
+      '<div class="sechd">문장 목록 <span style="font-size:12px">· 영어 문장 (한글 뜻은 없어도 돼요)</span></div>'+
       '<div id="rows"></div>'+
       '<button class="btn wide" id="addrow" style="margin-bottom:14px">➕ 문장 한 줄 추가</button>'+
       '<button class="btn primary wide" id="save" style="font-size:18px">💾 저장하기</button>'+
       (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 문장 묶음 지우기</button>' : '')+
       '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
-        '너무 길면 따라 그리기가 힘들어요. <b>한 줄 정도</b>가 좋아요.<br>'+
-        '예: <b>I go to school every day</b> → 나는 매일 학교에 가요</div>';
+        '책 본문 사진을 넣으면 문장마다 한 줄씩 채워져요.<br>'+
+        '하준이는 한 문장씩 듣고 따라 읽어요.</div>';
     document.getElementById('rows').innerHTML = rows.map(function(r,i){
       return '<div class="card frm" style="margin-bottom:10px">'+
         '<div class="qlab">'+(i+1)+'. 영어 문장</div>'+
@@ -5836,15 +5868,16 @@ function screenSentEdit(s){
     on('[data-del]', function(){ collect(); rows.splice(+this.dataset.del,1); draw(); });
     document.getElementById('save').onclick = function(){
       collect();
-      var items = rows.filter(function(r){ return String(r.en).trim() && String(r.ko).trim(); })
-                      .map(function(r){ return {en:String(r.en).trim(), ko:String(r.ko).trim()}; });
+      var items = rows.filter(function(r){ return String(r.en).trim(); })
+                      .map(function(r){ return {en:String(r.en).trim(), ko:String(r.ko || '').trim()}; });
       if(!items.length){ noSound(); toast('문장을 넣어주세요'); return; }
       if(!PROG.sents) PROG.sents = [];
-      if(editing){ s.title = title || '문장 암기'; s.items = items; }
-      else PROG.sents.push({id:'s'+Date.now(), title:title||'문장 암기', items:items, done:false});
+      if(editing){ s.title = title || '브릭스 읽기'; s.items = items; }
+      else PROG.sents.push({id:'s'+Date.now(), title:title||'브릭스 읽기', items:items, done:false, reads:0});
       saveProgress(); okSound(); toast('💾'); screenSentList();
     };
     if(document.getElementById('del')) document.getElementById('del').onclick = function(){
+      deadAdd(s.id);
       PROG.sents = sents().filter(function(x){ return x.id!==s.id; });
       saveProgress(); toast('🗑'); screenSentList();
     };
@@ -6086,7 +6119,7 @@ function screenMimemal(){
   document.getElementById('add').onclick = function(){ needDad(function(){ screenMmEdit(null); }, screenMimemal); };
   if(document.getElementById('play')) document.getElementById('play').onclick = function(){ beep([700,900],.06); startMimemal(); };
   on('.qzedit[data-ed]', function(){ var m=mmById(this.dataset.ed); if(m) needDad(function(){ screenMmEdit(m); }, screenMimemal); });
-  on('.qzdel', function(){ var m=mmById(this.dataset.rm); if(m) listDel('“'+(m.en || '이 문제')+'” 문제를 지울까요?', screenMimemal, function(done){ PROG.mimemal = mimemal().filter(function(x){ return x.id!==m.id; }); done(); }); });
+  on('.qzdel', function(){ var m=mmById(this.dataset.rm); if(m) listDel('“'+(m.en || '이 문제')+'” 문제를 지울까요?', screenMimemal, function(done){ PROG.mimemal = mimemal().filter(function(x){ return x.id!==m.id; }); done(); }, m.id); });
 }
 
 /* 문제 만들기 / 고치기 (아빠) — 사진 찍기 + 정답 문장 */
@@ -6139,6 +6172,7 @@ function screenMmEdit(m){
     };
     if(document.getElementById('del')) document.getElementById('del').onclick = function(){
       if(!confirm('이 문제를 지울까요?')) return;
+      deadAdd(m.id);
       PROG.mimemal = mimemal().filter(function(x){ return x.id!==m.id; });
       saveProgress(); toast('🗑'); screenMimemal();
     };
@@ -7185,7 +7219,7 @@ function screenOrigList(note){
   on('.qzdel', function(ev){ ev.stopPropagation(); var s = origById(this.dataset.rm); if(s) listDel('“'+s.title+'” 원서와 그림을 지울까요? (받은 별은 그대로 남아요)', screenOrigList, function(done){
     var keys = (s.items||[]).map(function(it){ return origKey(s.id, it.id); });
     origImgDel(keys, function(){ origSrvDel(keys, function(){ try{ origDraftDel('draft_'+s.id); }catch(e){} PROG.orig = origList().filter(function(x){ return x.id !== s.id; }); done(); }); });
-  }); });
+  }, s.id); });
   on('.qzbk', function(){
     var s = origById(this.dataset.id);
     if(!s) return;
@@ -7425,6 +7459,7 @@ function screenOrigEdit(set){
       origImgDel(keys, function(){
         origSrvDel(keys, function(){
           clearTimeout(draftTimer); origDraftDel(DKEY);
+          deadAdd(set.id);
           PROG.orig = origList().filter(function(x){ return x.id !== set.id; });
           saveProgress(); toast('🗑'); screenOrigList();
         });
@@ -9386,6 +9421,169 @@ function pendDraw(p, after){
   modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkLevelUp(); }, p.lo, p.hi);
 }
 /* =========================================================
+   📖 브릭스 읽기 — 같이 따라 읽기 (10번 읽기 세기)
+   · 아빠가 책 사진으로 문장을 넣어 두면(✏️ → 📷), 하준이가 10번 읽는다
+   · 1~5번째: 🎧 한 문장씩 들려주고 → 따라 읽기
+   · 6~10번째: 📖 혼자 읽기 (막히는 낱말은 눌러서 들을 수 있다)
+   · 한 번 끝까지 읽을 때마다 읽은 횟수 +1 (s.reads). 10번을 채우면 별 뽑기
+   ========================================================= */
+var READ_GOAL = 10;          /* 다 읽어야 하는 횟수 */
+var READ_LISTEN = 5;         /* 이 가운데 처음 몇 번은 듣고 따라 읽기 */
+var READ_MIN_WORD_MS = 260;  /* 「읽었어요」 버튼이 켜지기까지: 낱말 하나에 이만큼(너무 빨리 넘기지 않게) */
+var READ_MIN_MS = 1200;      /* 아무리 짧은 문장도 이만큼은 기다린다 */
+function readCount(s){ return Math.max(0, Math.min(999, s.reads || 0)); }
+function startRead(s){
+  stopAll();
+  var items = (s.items || []).filter(function(x){ return x && String(x.en || '').trim(); });
+  var i = 0, state = 'ready', showKo = true, timer = null, alive = true;
+  function nth(){ return readCount(s) + 1; }                     /* 지금 읽는 것이 몇 번째인가 */
+  function listenMode(){ return readCount(s) < READ_LISTEN; }
+  function words(k){ return String(items[k].en).trim().split(/\s+/); }
+  function dots(){
+    var h = '', n = readCount(s);
+    for(var k=0;k<READ_GOAL;k++) h += '<span class="rd-dot'+(k < n ? ' on' : (k === n ? ' now' : ''))+'" aria-hidden="true">'+(k < n ? '✔' : (k < READ_LISTEN ? '🎧' : '📖'))+'</span>';
+    return '<div class="rd-dots" role="img" aria-label="'+READ_GOAL+'번 가운데 '+n+'번 읽음">'+h+'</div>';
+  }
+  function leave(){ alive = false; clearTimeout(timer); stopAll(); screenSentList(); }
+  function draw(){
+    if(!alive) return;
+    var lm = listenMode(), n = readCount(s), over = n >= READ_GOAL;
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>📖 '+esc(s.title)+'</h2><div class="pill">'+Math.min(n, READ_GOAL)+'/'+READ_GOAL+'</div></div>'+
+      dots()+
+      '<div class="rd-mode '+(lm ? 'lis' : 'solo')+'"><span>'+(over ? '🏆 '+READ_GOAL+'번을 다 읽었어요! (연습으로 더 읽기)' : lm ? '🎧 <b>'+nth()+'번째</b> — 듣고 따라 읽어요' : '📖 <b>'+nth()+'번째</b> — 혼자 읽어요')+'</span>'+
+        '<button class="btn rd-ko" id="ko" aria-pressed="'+(showKo ? 'true' : 'false')+'">뜻 '+(showKo ? '숨기기' : '보기')+'</button></div>'+
+      '<div class="rd-page" id="page">'+items.map(function(it, k){
+        return '<div class="rd-s'+(k < i ? ' done' : (k === i && state !== 'ready' ? ' cur' : ''))+'" data-k="'+k+'"><span class="rd-n" aria-hidden="true">'+(k < i ? '✔' : (k+1))+'</span><span class="rd-en">'+
+          words(k).map(function(w, wi){ return '<span class="rd-w" data-k="'+k+'" data-w="'+wi+'">'+esc(w)+'</span>'; }).join(' ')+
+          (showKo && it.ko ? '<small class="rd-kor">'+esc(it.ko)+'</small>' : '')+'</span></div>';
+      }).join('')+'</div>'+
+      '<div class="rd-bar" id="bar"></div>';
+    document.getElementById('back').onclick = function(){ if(state === 'ready' || i === 0 || confirm('읽다가 나가면 이번 '+nth()+'번째는 세지 않아요. 나갈까요?')) leave(); };
+    document.getElementById('ko').onclick = function(){ showKo = !showKo; draw(); };
+    on('.rd-w', function(){   /* 낱말을 누르면 그 낱말을 들려준다 (듣는 중이 아닐 때만) */
+      if(state === 'play') return;
+      var w = this.textContent.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, ''); if(w){ this.classList.add('tap'); var el = this; setTimeout(function(){ el.classList.remove('tap'); }, 500); say(w, RATE); }
+    });
+    bar();
+    var cur = document.querySelector('.rd-s.cur'); if(cur && cur.scrollIntoView) try{ cur.scrollIntoView({block:'center', behavior:'smooth'}); }catch(e){}
+  }
+  function bar(){
+    var b = document.getElementById('bar'); if(!b) return;
+    var lm = listenMode();
+    if(state === 'ready'){
+      b.innerHTML = '<button class="btn primary wide rd-go" id="go">'+(lm ? '🎧 듣고 따라 읽기 시작!' : '📖 혼자 읽기 시작!')+'</button>';
+      document.getElementById('go').onclick = function(){ beep([700,900],.06); i = 0; step(); };
+    } else if(state === 'play'){
+      b.innerHTML = '<div class="rd-wait"><span class="sw-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><b>잘 들어 봐요…</b></div>';
+    } else {   /* 'say' = 하준이가 읽을 차례 */
+      b.innerHTML = '<button class="btn primary wide rd-go" id="ok" disabled><span class="rd-fill" id="fill"></span><span class="rd-lab">'+(lm ? '🗣 따라 읽었어요 ▶' : '✅ 읽었어요 ▶')+'</span></button>'+
+        '<button class="btn wide rd-again" id="hear">'+(lm ? '🔊 다시 듣기' : '🔊 잘 모르겠어요 (들어 보기)')+'</button>';
+      var need = Math.max(READ_MIN_MS, words(i).length*READ_MIN_WORD_MS), ok = document.getElementById('ok'), fill = document.getElementById('fill');
+      setTimeout(function(){ if(fill){ fill.style.transition = 'width '+need+'ms linear'; fill.style.width = '100%'; } }, 30);
+      clearTimeout(timer); timer = setTimeout(function(){ if(ok && ok.parentNode){ ok.disabled = false; ok.classList.add('ready'); } }, need);
+      ok.onclick = function(){ if(ok.disabled) return; okSound(); i++; if(i >= items.length) roundDone(); else step(); };
+      document.getElementById('hear').onclick = function(){ play(function(){ state = 'say'; draw(); }); };
+    }
+  }
+  function mark(k, wi){ Array.prototype.forEach.call(document.querySelectorAll('.rd-w.hi'), function(x){ x.classList.remove('hi'); }); if(wi >= 0){ var el = document.querySelector('.rd-w[data-k="'+k+'"][data-w="'+wi+'"]'); if(el) el.classList.add('hi'); } }
+  function play(then){
+    state = 'play'; draw();
+    var k = i;
+    speakWords(words(k), RATE, function(wi){ if(alive) mark(k, wi); }, function(){ if(!alive) return; mark(k, -1); then(); });
+  }
+  function step(){
+    if(listenMode()) play(function(){ state = 'say'; draw(); });
+    else { state = 'say'; draw(); }
+  }
+  function roundDone(){
+    clearTimeout(timer); stopAll();
+    var before = readCount(s);
+    s.reads = before + 1; saveProgress();
+    var n = s.reads, justGoal = before < READ_GOAL && n >= READ_GOAL;
+    starSound(); confetti(justGoal ? 90 : 30);
+    if(justGoal && !s.done) pendAdd({key:'sent:'+s.id, k:'sent', id:s.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📖 '+s.title});
+    var got = null;
+    function render(){
+      var first = justGoal && !s.done && got === null;
+      app.innerHTML =
+        '<div class="result">'+
+          '<div class="big">'+(n >= READ_GOAL ? '🏆' : '🎉')+'</div>'+
+          '<h2>'+(n >= READ_GOAL ? (justGoal ? READ_GOAL+'번 다 읽었어요!' : n+'번째 읽었어요!') : n+'번 읽었어요!')+'</h2>'+
+          dots()+
+          '<p>“'+esc(s.title)+'”<br>'+(n >= READ_GOAL ? '<b>정말 대단해요!</b>' : n === READ_LISTEN ? '<b>이제부터는 혼자 읽어요!</b> 할 수 있어요 💪' : '이제 <b>'+(READ_GOAL - n)+'번</b> 남았어요!')+'</p>'+
+          (got !== null ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+new Array(got+1).join('⭐')+'<br><b>별 '+got+'개</b>를 받았어요!</div>'
+            : first ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6">⭐ 별 <b>'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑을 수 있어요!</div><button class="btn primary wide" id="draw" style="font-size:20px;padding:17px;margin-bottom:10px">⭐ 별 뽑기!</button>' : '')+
+          (first ? '' : '<button class="btn primary wide" id="next" style="font-size:19px;padding:15px;margin-bottom:10px">'+(n >= READ_GOAL ? '🔁 한 번 더 읽기 (연습)' : (n < READ_LISTEN ? '🎧 ' : '📖 ')+(n+1)+'번째 읽기 ▶')+'</button>')+
+          '<button class="btn go wide" id="lst">📖 목록으로</button>'+
+        '</div>';
+      var d = document.getElementById('draw');
+      if(d) d.onclick = function(){ modalStarDraw(function(g){ s.done = true; s.stars = g; pendDone('sent:'+s.id); got = g; render(); checkLevelUp(); }); };
+      var nx = document.getElementById('next'); if(nx) nx.onclick = function(){ beep([700,900],.06); i = 0; state = 'ready'; draw(); step(); };
+      document.getElementById('lst').onclick = function(){ alive = false; screenSentList(); };
+    }
+    render();
+  }
+  if(!items.length){ screenSentList(); return; }
+  draw();
+}
+
+/* =========================================================
+   🗑 지운 것 목록 (모든 기기 공용)
+   진도는 '마지막에 저장한 기기 것'이 통째로 덮어쓴다 → 한 기기에서 지워도, 옛 화면을 켜 둔 다른 기기가 저장하면 되살아났다.
+   → 지운 항목의 id 를 서버가 따로 기억하고(kill / dead), 진도를 주고받을 때마다 그 id 를 걸러 낸다.
+   ========================================================= */
+var DEAD = {}, DEAD_KEY = 'hajun_dead', DEAD_PEND = [], DEAD_SYNC_AT = 0, DEAD_SYNC_MS = 45000;
+try{ (JSON.parse(localStorage.getItem(DEAD_KEY) || '[]') || []).forEach(function(id){ DEAD[id] = 1; }); }catch(e){}
+function deadKeep(){ try{ localStorage.setItem(DEAD_KEY, JSON.stringify(Object.keys(DEAD).slice(-300))); }catch(e){} }
+function deadApply(){
+  var hit = false;
+  for(var k in PROG){
+    if(!Array.isArray(PROG[k])) continue;
+    var f = PROG[k].filter(function(x){ return !(x && typeof x === 'object' && x.id && DEAD[x.id]); });
+    if(f.length !== PROG[k].length){ PROG[k] = f; hit = true; }
+  }
+  return hit;
+}
+function deadAdd(id){
+  if(!id) return;
+  DEAD[id] = 1; deadKeep(); DEAD_PEND.push(id);
+  deadPush();
+}
+function deadPush(cb){
+  if(!DEAD_PEND.length || !hasServer || OFFLINE){ if(cb) cb(); return; }
+  var ids = DEAD_PEND.slice();
+  apiPost({action:'kill', pin:DAD_PIN, ids:ids}, function(j){
+    if(j && j.ok) DEAD_PEND = DEAD_PEND.filter(function(x){ return ids.indexOf(x) < 0; });
+    if(cb) cb();
+  });
+}
+function deadSync(){
+  if(!hasServer || OFFLINE || Date.now() - DEAD_SYNC_AT < DEAD_SYNC_MS) return;
+  DEAD_SYNC_AT = Date.now();
+  deadPush(function(){
+    apiGet('dead', function(j){
+      if(!j || !j.ok || !j.ids) return;
+      j.ids.forEach(function(id){ DEAD[id] = 1; }); deadKeep();
+      if(deadApply()){ try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){} hwRedraw(); }
+    });
+  });
+}
+/* 켜 둔 채 오래 쓰는 기기: 홈에 올 때 서버 진도가 더 새것이면 받아 온다(옛 진도로 덮어쓰지 않게) */
+var PROG_REF_AT = 0, PROG_REF_MS = 60000;
+function progRefresh(){
+  if(!hasServer || OFFLINE || !SERVER_LOADED || Date.now() - PROG_REF_AT < PROG_REF_MS) return;
+  PROG_REF_AT = Date.now();
+  apiGet('load', function(p){
+    if(!p || !hasProgress(p) || !(+p._ts > (+PROG._ts || 0) + 500)) return;
+    if(!document.getElementById('fkbig')) return;   /* 홈에 있을 때만 바꾼다 */
+    PROG = p; applyProg(); deadApply();
+    try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
+    LOAD_BASE_SCORE = Math.max(LOAD_BASE_SCORE || 0, progScore(PROG));
+    hwRedraw();
+  });
+}
+/* =========================================================
    📔 영어일기 · ✍️ 주제글쓰기
    · 하준이가 공책에 쓴 글을 사진으로 찍어 올리면 AI 선생님이 읽고 고쳐 준다
    · 영어일기: 쓴 그대로 → 철자·문법 고침 → [기준] 확인 → 기준에 맞춘 아주 쉬운 글
@@ -9865,7 +10063,7 @@ function screenSettings(){
     '<div class="sheet">'+
       '<h3>📊 진도</h3>'+
       '<div class="muted">모은 별: <b>⭐ '+totalStars()+' / '+maxStars()+'</b> · 캐릭터 <b>Lv.'+heroLv()+' '+esc(heroTitle())+'</b><br>'+
-      '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 단어테스트 '+quizStars()+' · 문장암기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
+      '&nbsp;· 놀이 '+actStars()+' · 테스트 '+testStars()+' · 브릭스 단어 '+quizStars()+' · 브릭스 읽기 '+sentStars()+' · 책 '+bookStars()+' · 스페셜 '+specStars()+' · 원서 '+origStars()+' · 종이책 '+paperStars()+' · 👨아빠 '+bonusStars()+'<br>'+
       '&nbsp;· <b>지금 가진 별 '+walletStars()+'</b> = 모은 별 '+totalStars()+' − 카드로 쓴 '+spentStars()+' (카드 '+cards().length+'장)<br>'+
       '&nbsp;· ⬆️ 레벨 별 <b>'+lvStars()+'</b> (= 모은 별 '+totalStars()+' − 새로 시작할 때 있던 '+(PROG.lvBase||0)+') · 다음 레벨(Lv.'+Math.min(LV_MAX, heroLv()+1)+')은 레벨 별 <b>'+lvNeed(Math.min(LV_MAX, heroLv()+1))+'개</b><br>'+
       '테스트 통과: <b>'+passedCount()+'/'+LEVELS.length+'</b> · 읽은 책: <b>'+books().filter(function(L){ return bookRead(L.id)>0; }).length+'/'+books().length+'</b> · 스페셜: <b>'+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</b><br><br>'+
