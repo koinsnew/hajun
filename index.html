@@ -989,7 +989,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.16 00:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.16 00:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2308,6 +2308,10 @@ var PAPER_PRESET = [
 ];
 var STAR_PAPER = 10;   /* 종이책 완독 1권당 별 */
 function papers(){ return PROG.papers || []; }
+/* 쉐도잉 책꽂이 두 개: '' = 원서 쉐도잉, 'mm' = 미매말 쉐도잉. 책마다 b.sh 에 적어 둔다(없으면 원서 쉐도잉) */
+var SHELF = '';
+function shelfName(s){ return (s === undefined ? SHELF : s) === 'mm' ? '미매말 쉐도잉' : '원서 쉐도잉'; }
+function shelfPapers(s){ if(s === undefined) s = SHELF; return papers().filter(function(b){ return (b.sh || '') === s; }); }
 function paperDone(id){ var b=papers().filter(function(x){ return x.id===id; })[0]; return !!(b && b.done); }
 function paperStars(){ return papers().reduce(function(a,b){ return a + (b.done ? (typeof b.stars==='number' ? b.stars : STAR_PAPER) : 0); }, 0); }
 
@@ -3076,16 +3080,21 @@ function screenHome(){
       '<div class="t"><b>원서 읽기</b><small>📘 책 속 그림 보고 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
-      '<div class="ico">🌟</div>'+
-      '<div class="t"><b>미매말</b><small>👨 아빠 앞에서 · 시 '+
-        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
-        ' · 📕 종이책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
+    '<button class="testbtn" id="rpbig" style="margin:0 0 12px">'+
+      '<div class="ico">📗</div>'+
+      '<div class="t"><b>북리포트</b><small>책 제목만 쓰면 Book Report 빈칸을 채워 줘요</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="ntbig" style="margin:0 0 12px">'+
-      '<div class="ico">📒</div>'+
-      '<div class="t"><b>시험 노트</b><small>단어·문장 듣고 영어·뜻 쓰기 · 아빠 채점'+(notes().length ? ' · 최근 '+noteScore(notes()[notes().length-1])+'점' : '')+'</small></div>'+
+    '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
+      '<div class="ico">🌟</div>'+
+      '<div class="t"><b>원서 쉐도잉</b><small>👨 아빠 앞에서 · 시 '+
+        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
+        ' · 📕 책 '+shelfPapers('').filter(function(b){ return b.done; }).length+'/'+shelfPapers('').length+'</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
+    '<button class="testbtn" id="mmsbig" style="margin:0 0 12px">'+
+      '<div class="ico">🎧</div>'+
+      '<div class="t"><b>미매말 쉐도잉</b><small>👨 아빠 앞에서 · 📕 책 '+shelfPapers('mm').filter(function(b){ return b.done; }).length+'/'+shelfPapers('mm').length+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="dybig" style="margin:0 0 12px">'+
@@ -3093,14 +3102,9 @@ function screenHome(){
       '<div class="t"><b>영어일기</b><small>일기 사진을 올리면 AI 선생님이 고쳐 줘요</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
-    '<button class="testbtn" id="tpbig" style="margin:0 0 12px">'+
-      '<div class="ico">✍️</div>'+
-      '<div class="t"><b>주제글쓰기</b><small>한글 글 사진을 올리면 맞춤법을 고쳐 줘요</small></div>'+
-      '<div style="font-size:22px">▶</div>'+
-    '</button>'+
-    '<button class="testbtn" id="rpbig" style="margin:0 0 12px">'+
-      '<div class="ico">📗</div>'+
-      '<div class="t"><b>북리포트</b><small>책 제목만 쓰면 Book Report 빈칸을 채워 줘요</small></div>'+
+    '<button class="testbtn" id="ntbig" style="margin:0 0 12px">'+
+      '<div class="ico">📒</div>'+
+      '<div class="t"><b>시험 노트</b><small>단어·문장 듣고 영어·뜻 쓰기 · 아빠 채점'+(notes().length ? ' · 최근 '+noteScore(notes()[notes().length-1])+'점' : '')+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '</div>'+
@@ -3148,13 +3152,13 @@ function screenHome(){
   });
   bindRewards();
   document.getElementById('fkbig').onclick = startFKGame;
-  document.getElementById('spbig').onclick = screenSpecials;
+  document.getElementById('spbig').onclick = function(){ SHELF = ''; screenSpecials(); };
+  document.getElementById('mmsbig').onclick = function(){ SHELF = 'mm'; screenSpecials(); };
   document.getElementById('pkbig').onclick = startPKGame;
   document.getElementById('rpbig').onclick = function(){ beep([700],.06); screenReport(); };
   document.getElementById('ogbig').onclick = screenOrigList;
   document.getElementById('ntbig').onclick = screenNoteHome;
   document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
-  document.getElementById('tpbig').onclick = function(){ beep([700],.06); screenWrite('topic'); };
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
@@ -3286,12 +3290,14 @@ function noteCats(){
     var all = []; p.st.forEach(function(s){ all = all.concat(noteSplit(s.l.join(' '))); });
     sp.push({title:p.e+' '+p.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
   });
+  var mmSets = [];
   papers().forEach(function(b){
     if(!b.lines || !b.lines.length) return;
     var all = []; b.lines.forEach(function(l){ all = all.concat(noteSplit(l)); });
-    sp.push({title:(b.e||'📕')+' '+b.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
+    ((b.sh || '') === 'mm' ? mmSets : sp).push({title:(b.e||'📕')+' '+b.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
   });
-  C.push({key:'p', ico:'🌟', name:'미매말', color:'#C92A2A', unit:'문장', sets: sp});
+  C.push({key:'p', ico:'🌟', name:'원서 쉐도잉', color:'#C92A2A', unit:'문장', sets: sp});
+  C.push({key:'m', ico:'🎧', name:'미매말 쉐도잉', color:'#6741D9', unit:'문장', sets: mmSets});
   C.forEach(function(c){ c.sets = c.sets.filter(function(s){ return s.items.length; }); c.sets.forEach(function(s){ s.cat = c.key; s.unit = c.unit; }); });
   return C;
 }
@@ -7844,16 +7850,17 @@ function screenSpecials(){
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back">←</button>'+
-      '<h2>🌟 미매말</h2>'+
-      '<div class="pill">🏆 '+SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+'</div>'+
+      '<h2>'+(SHELF ? '🎧 ' : '🌟 ')+shelfName()+'</h2>'+
+      '<div class="pill">🏆 '+(SHELF ? shelfPapers().filter(function(b){ return b.done; }).length+'/'+shelfPapers().length
+        : SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length)+'</div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
-      '<div style="font-size:16px">👨 아빠 앞에서 시 한 편을 끝까지!</div>'+
-      '<div class="muted" style="margin-top:5px">한 연씩 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>한 편 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
+      '<div style="font-size:16px">👨 아빠 앞에서 '+(SHELF ? '책 한 권' : '시 한 편')+'을 끝까지!</div>'+
+      '<div class="muted" style="margin-top:5px">'+(SHELF ? '한 쪽씩' : '한 연씩')+' 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>'+(SHELF ? '한 권' : '한 편')+' 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
     '</div>';
-  html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
+  if(!SHELF) html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
   SPECIALS.forEach(function(sp){
-    if(specHidden(sp.id)) return;
+    if(SHELF || specHidden(sp.id)) return;
     var done = specPassed(sp.id);
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
       '<button class="spbtn '+(done?'done':'')+'" data-id="'+sp.id+'" style="flex:1;margin:0">'+
@@ -7864,12 +7871,13 @@ function screenSpecials(){
       '<button class="delx" data-delsp="'+sp.id+'" title="숨기기">🗑</button>'+
     '</div>';
   });
-  if(SPECIALS.some(function(x){ return specHidden(x.id); })){
+  if(!SHELF && SPECIALS.some(function(x){ return specHidden(x.id); })){
     html += '<button class="btn wide" id="unhidesp" style="font-size:13px;margin-bottom:8px">↩️ 숨긴 시 다시 보이기</button>';
   }
 
   html += '<div class="sechd">📕 종이책 — <b>진짜 책</b>을 펴놓고 읽어요</div>';
-  papers().forEach(function(b){
+  if(!shelfPapers().length) html += '<div class="card muted" style="text-align:center;margin-bottom:8px">아직 책이 없어요. 아래에서 책을 넣어 주세요.</div>';
+  shelfPapers().forEach(function(b){
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
       '<button class="pbk '+(b.done?'done':'')+'" data-pid="'+esc(b.id)+'" style="flex:1;margin:0">'+
         '<div class="ico">'+b.e+'</div>'+
@@ -7985,6 +7993,7 @@ function screenAddPaper(){
         by: (meta.by||'').trim() || '',
         ko: (meta.ko||'').trim() || '',
         pages: pages, read: 0, done: false,
+        sh: SHELF,
         lines: arr
       });
       saveProgress(); okSound(); toast('📕'); screenSpecials();
@@ -8471,7 +8480,7 @@ function screenSpecial(sp){
       app.innerHTML =
         '<div class="result">'+
           '<div class="big">🏆</div>'+
-          '<h2>미매말 통과!</h2>'+
+          '<h2>원서 쉐도잉 통과!</h2>'+
           '<p>'+esc(sp.t)+'<br>'+esc(sp.ko)+'<br><b>'+(sp.st.length*4)+'줄을 다 읽었어요!</b></p>'+
           (justGot!==null
             ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+
@@ -10392,7 +10401,7 @@ function screenDiag(){
     ['화면 버전', APP_VERSION],
     ['화면 크기', window.innerWidth+' × '+window.innerHeight],
     ['모은 별 / 지갑', totalStars()+' / '+walletStars()],
-    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 미매말 '+specStars()+' + 원서 '+origStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
+    ['별 내역', '놀이 '+actStars()+' + 레벨업 '+testStars()+' + 책 '+bookStars()+' + 시 '+specStars()+' + 원서 '+origStars()+' + 종이책 '+paperStars()+' + 단어 '+quizStars()+' + 문장 '+sentStars()+' + 아빠 '+bonusStars()+' − 쓴 별 '+spentStars()],
     ['브라우저', navigator.userAgent]
   ];
   app.innerHTML =
