@@ -881,7 +881,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 09:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 10:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2222,7 +2222,21 @@ function utter(text, rate){
 /* --- 공통 --- */
 function P(x){ return (typeof x === 'string') ? {t:x} : x; }
 function xesc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+/* SAY_SEQ: 읽기를 시작하거나 멈출 때마다 올라간다. AI 소리는 받아 오는 데 몇 초 걸리므로,
+   기다리는 사이에 다른 읽기가 시작됐으면(번호가 달라졌으면) 늦게 온 소리는 틀지 않는다 → 소리가 겹치지 않는다 */
+var SAY_SEQ = 0, SAY_WAIT_T = 0;
+var SAY_WAIT_MS = 500;      /* 이 시간 넘게 기다리면 '소리 준비 중' 알림을 보여 준다 */
+function sayWait(on){
+  clearTimeout(SAY_WAIT_T);
+  var o = document.getElementById('saywait'); if(o) o.remove();
+  if(!on) return;
+  SAY_WAIT_T = setTimeout(function(){
+    var d = document.createElement('div'); d.id = 'saywait'; d.className = 'hwsay'; d.setAttribute('role', 'status'); d.textContent = '🔊 소리를 준비하고 있어요…';
+    document.body.appendChild(d);
+  }, SAY_WAIT_MS);
+}
 function stopAll(){
+  SAY_SEQ++; sayWait(false);
   if(window.speechSynthesis) speechSynthesis.cancel();
   if(curAudio){ try{ curAudio.pause(); }catch(e){} curAudio=null; }
 }
@@ -2238,6 +2252,7 @@ function ssmlOf(parts, gap){
   return '<speak>'+out+'</speak>';
 }
 function playB64(b64, onEnd, onTime, pr, mime){
+  if(curAudio){ try{ curAudio.pause(); }catch(e){} curAudio = null; }   /* 한 번에 하나만 */
   var a = new Audio('data:'+(mime || 'audio/mp3')+';base64,'+b64);
   curAudio = a;
   if(pr && pr !== 1){ try{ a.preservesPitch = true; a.playbackRate = pr; }catch(e){} }
@@ -2267,14 +2282,18 @@ function aiFetch(ssml, rate, marks, cb, nat){
   var ck = ssml+'|'+vo+'|'+rate+'|'+marks;
   if(acache.has(ck)){ cb(acache.get(ck)); return; }
   if(!hasServer || (AI_GEM && !nat)){ cb(null); return; }   /* Gemini 는 낱소리(음소)를 못 읽는다 → 기기 음성 */
+  if(apend[ck]){ apend[ck].push(cb); return; }   /* 같은 소리를 이미 받아 오는 중 — 한 번만 받는다 */
+  apend[ck] = [cb];
   var req = {action:'tts', ssml:ssml, voice:vo, rate:rate, marks:marks};
   if(nat){ req.text = nat; req.fb = /Chirp/i.test(AIVOICE) ? 'en-US-Neural2-F' : AIVOICE; }
   apiPost(req, function(r){
-    if(!r || r.error || !r.audio){ cb(null); return; }
-    if(acache.size > (AI_GEM ? GEM_CACHE_MAX : 400)) acache.clear();
-    acache.set(ck, r); cb(r);
+    var cbs = apend[ck] || []; delete apend[ck];
+    var res = (!r || r.error || !r.audio) ? null : r;
+    if(res){ if(acache.size > (AI_GEM ? GEM_CACHE_MAX : 400)) acache.clear(); acache.set(ck, res); }
+    cbs.forEach(function(f){ try{ f(res); }catch(e){} });
   });
 }
+var apend = {};
 function useAI(){ return TTSMODE==='ai' && AI_OK && hasServer; }
 
 /* --- 조각들을 차례로 읽어준다 (AI면 한 덩어리 SSML, 아니면 기기 음성) --- */
@@ -2283,7 +2302,10 @@ function sayParts(parts, rate){
   stopAll();
   var r = rate || RATE;
   if(useAI()){
+    var my = SAY_SEQ; sayWait(true);
     aiFetch(ssmlOf(parts), r, false, function(res){
+      if(my !== SAY_SEQ) return;   /* 기다리는 사이 다른 읽기가 시작됨 → 이 소리는 틀지 않는다 */
+      sayWait(false);
       if(res) playB64(res.audio, null, null, res.rate === false ? r : 1, res.mime); else devParts(parts, r);
     }, natOK(parts) ? plainOf(parts) : null);
   } else devParts(parts, r);
@@ -2301,7 +2323,10 @@ function speakWords(words, rate, onWord, onEnd){
   var r = rate || RATE;
   if(useAI()){
     var ssml = '<speak>'+words.map(function(w,i){ return '<mark name="w'+i+'"/>'+xesc(w); }).join(' ')+'</speak>';
+    var my = SAY_SEQ; sayWait(true);
     aiFetch(ssml, r, true, function(res){
+      if(my !== SAY_SEQ) return;
+      sayWait(false);
       if(!res){ devWords(words, r, onWord, onEnd); return; }
       var mk = (res.marks||[]).map(function(m){ return {i:parseInt(String(m.markName).slice(1),10), t:m.timeSeconds||0}; })
                               .sort(function(a,b){ return a.t-b.t; });
