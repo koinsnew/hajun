@@ -894,7 +894,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 11:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 12:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1457,13 +1457,17 @@ var PK_REACH = 3.5;        /* 페널티킥: 골키퍼가 방향을 맞혔을 때
    각 쌍은 Lv.0 값 → Lv.50 값. 숫자를 바꾸시려면 아래만 고치세요. */
 var FK_LIVES = 3;          /* 이만큼 놓치면 끝 */
 var FK_GOAL_STAR = 1;      /* 골 하나에 받는 별 */
+var FK_GOAL_PT = 10;       /* 골 하나 점수 */
+var FK_TARGET_PT = 25;     /* 과녁(골대 안 동그라미)을 맞혀 넣으면 덤 점수 */
+var FK_TARGET_R = 0.5;     /* 과녁 크기(반지름 m) */
 var FK_STAR_CAP = 5;       /* 한 번 도전에서 받을 수 있는 별 상한 (끝없이 차는 게임이라 막아 둔다) */
 var FK_AFTER0 = 0.6, FK_AFTER50 = 1.1;   /* 날아가는 공을 좌우로 밀어 휘는 힘 */
 /* 골을 넣을수록 어려워진다: g = 지금까지 넣은 골 수 → 자리·골키퍼·수비벽 */
 function fkStage(g){
   var wall = g < 4 ? 0 : g < 6 ? 2 : g < 9 ? 3 : g < 14 ? 4 : 5;
   var dist = Math.min(27, 16 + g*0.75), spread = Math.min(8, 1.5 + g*0.6);
-  return {dist: dist + Math.random()*1.5, x: (Math.random()*2 - 1)*spread, keeper: g >= 2, wall: wall, kmul: Math.min(1.35, 0.8 + g*0.035)};
+  return {dist: dist + Math.random()*1.5, x: (Math.random()*2 - 1)*spread, keeper: g >= 2, wall: wall, kmul: Math.min(1.35, 0.8 + g*0.035),
+    target: {x: (Math.random()*2 - 1)*2.6, y: 0.6 + Math.random()*1.25, r: FK_TARGET_R, pt: FK_TARGET_PT, move: g >= 6 ? 1.1 : 0, amp: 0.6}};
 }
 function fkStageTxt(c){ return (!c.keeper ? '빈 골대' : !c.wall ? '골키퍼 등장' : '골키퍼 + 수비벽 '+c.wall+'명'); }
 function fkAfter(){ return fkMix(FK_AFTER0, FK_AFTER50); }
@@ -3718,7 +3722,7 @@ function kick3d(cv, mode, onResult){
     var wc = add([b0[0], 0, b0[2]], wn, WD), nWall = FKM ? (cfg ? cfg.wall : 4) : 0;
     var back = FKM ? 6.2 : 6.6;
     st = {n:n, phase:'aim', t:0, ball0:b0, ball:b0.slice(), bdir:bdir, right:right, ws:ws, wn:wn, wt:wt, wc:wc, nWall:nWall,
-          whalf: nWall*WGAP/2, kx0: FKM ? (nWall ? -ws*0.9 : 0) : 0, keeper: !(FKM && cfg && !cfg.keeper), kmul: (cfg && cfg.kmul) || 1, ku: Math.random(), at: null,
+          whalf: nWall*WGAP/2, kx0: FKM ? (nWall ? -ws*0.9 : 0) : 0, target: (FKM && cfg && cfg.target) || null, keeper: !(FKM && cfg && !cfg.keeper), kmul: (cfg && cfg.kmul) || 1, ku: Math.random(), at: null,
           C0: add(add(b0, bdir, back), [0,1,0], FKM ? 1.9 : 1.75), T0: [0, 1.25, 0],
           shot:null, res:null, shake:0, cheer:0, spin:0, trail:[], hint:0, rp:0, done:false, netAmp:0, netAt:null};
     preview = null; aimPts = null; down = null;
@@ -3916,29 +3920,33 @@ function kick3d(cv, mode, onResult){
 
   /* ── 그리기 ── */
   function drawWorld(tShot, cheer){
-    var g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#081226'); g.addColorStop(0.5, '#1D3557'); g.addColorStop(1, '#1D3557');
+    var DAY = FKM;   /* 프리킥은 낮 경기, 페널티킥은 밤 경기 */
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    if(DAY){ g.addColorStop(0, '#4FA8F0'); g.addColorStop(0.45, '#BFE6FF'); g.addColorStop(1, '#BFE6FF'); }
+    else { g.addColorStop(0, '#081226'); g.addColorStop(0.5, '#1D3557'); g.addColorStop(1, '#1D3557'); }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     /* 관중석 4면 */
-    poly([[-75,0,-18],[75,0,-18],[75,17,-26],[-75,17,-26]], '#17243F');
-    poly([[-75,0,72],[75,0,72],[75,17,80],[-75,17,80]], '#17243F');
-    poly([[-56,0,-18],[-56,0,72],[-64,17,72],[-64,17,-18]], '#131F38');
-    poly([[56,0,-18],[56,0,72],[64,17,72],[64,17,-18]], '#131F38');
+    var SA = DAY ? '#2C6FC4' : '#17243F', SB = DAY ? '#255FAB' : '#131F38';
+    poly([[-75,0,-18],[75,0,-18],[75,17,-26],[-75,17,-26]], SA);
+    poly([[-75,0,72],[75,0,72],[75,17,80],[-75,17,80]], SA);
+    poly([[-56,0,-18],[-56,0,72],[-64,17,72],[-64,17,-18]], SB);
+    poly([[56,0,-18],[56,0,72],[64,17,72],[64,17,-18]], SB);
     for(var i=0;i<crowd.length;i++){
       var c = crowd[i], q = P(c.p); if(!q) continue;
       var hop = cheer > 0 ? Math.abs(Math.sin(st.hint*9 + c.ph))*0.5*cheer : Math.sin(st.hint*1.3 + c.ph)*0.04;
       var r = Math.max(1.2, q.s*0.34);
-      ctx.fillStyle = c.c; ctx.globalAlpha = 0.8; ctx.fillRect(q.x - r/2, q.y - r - hop*q.s, r, r*1.25);
+      ctx.fillStyle = c.c; ctx.globalAlpha = DAY ? 0.95 : 0.8; ctx.fillRect(q.x - r/2, q.y - r - hop*q.s, r, r*1.25);
     }
     ctx.globalAlpha = 1;
     /* 조명 */
-    [[-50,22,-24],[50,22,-24],[-50,22,78],[50,22,78]].forEach(function(L){
+    if(!DAY) [[-50,22,-24],[50,22,-24],[-50,22,78],[50,22,78]].forEach(function(L){
       var q = P(L); if(!q) return;
       var rg = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, q.s*9); rg.addColorStop(0, 'rgba(255,250,220,.95)'); rg.addColorStop(0.25, 'rgba(255,250,220,.28)'); rg.addColorStop(1, 'rgba(255,250,220,0)');
       ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(q.x, q.y, q.s*9, 0, 6.3); ctx.fill();
     });
     /* 잔디 + 줄무늬 */
-    poly([[-56,0,-18],[56,0,-18],[56,0,72],[-56,0,72]], '#2B8540');
-    for(var z=-16; z<72; z+=8) poly([[-56,0,z],[56,0,z],[56,0,z+4],[-56,0,z+4]], '#339649');
+    poly([[-56,0,-18],[56,0,-18],[56,0,72],[-56,0,72]], DAY ? '#3AA24A' : '#2B8540');
+    for(var z=-16; z<72; z+=8) poly([[-56,0,z],[56,0,z],[56,0,z+4],[-56,0,z+4]], DAY ? '#48B85A' : '#339649');
     /* 광고판 */
     var AC = ['#C92A2A','#F4F1E8','#1971C2','#F59F00'];
     for(var x=-48, k=0; x<48; x+=8, k++){ poly([[x,0,-6.5],[x+8,0,-6.5],[x+8,1,-6.5],[x,1,-6.5]], AC[k%4]); poly([[x,0,60],[x+8,0,60],[x+8,1,60],[x,1,60]], AC[(k+2)%4]); }
@@ -4046,6 +4054,7 @@ function kick3d(cv, mode, onResult){
     var ents = [], k;
     ents.push({z: toCam([0, 1, -ND])[2], f: drawNet});
     ents.push({z: toCam([0, 1, 0])[2], f: drawFrame});
+    if(st.target) ents.push({z: toCam([0, 1, -0.4])[2], f: drawTarget});
     for(k=0;k<st.nWall;k++){ (function(k){
       var p = add(st.wc, st.wt, (k - (st.nWall-1)/2)*WGAP); p[1] = wallJump(tShot);
       ents.push({z: toCam(p)[2], f: function(){ drawMan({p:p, kit:WALLKIT.kit, shorts:WALLKIT.shorts, sock:WALLKIT.sock, skin:SKN[k%4], hair:k%2?'#3B2A1A':'#1B1B1B', stripe:WALLKIT.stripe, cross:true, back: cam.f[2] > 0}); }});
@@ -4063,8 +4072,20 @@ function kick3d(cv, mode, onResult){
     ents.sort(function(a, b){ return b.z - a.z; });
     for(k=0;k<ents.length;k++) if(ents[k].z > NEAR) ents[k].f();
   }
+  /* 🎯 과녁: 골대 안의 동그라미. 여기를 맞혀 넣으면 덤 점수 */
+  function targetAt(){ var T = st.target; return [T.x + (T.move ? Math.sin(st.hint*T.move)*T.amp : 0), T.y, -0.15]; }
+  function drawTarget(){
+    var T = st.target, c = targetAt(), q = P(c); if(!q) return;
+    var r = T.r*q.s, hit = st.tHit ? Math.max(0, 1 - (st.hint - st.tHit)*1.6) : 0, pulse = 1 + Math.sin(st.hint*5)*0.04 + hit*0.5;
+    ctx.save(); ctx.translate(q.x, q.y); ctx.scale(pulse, pulse);
+    ctx.fillStyle = hit ? '#FFD43B' : '#2FB344'; ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.3); ctx.fill();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = Math.max(1.5, r*0.13); ctx.beginPath(); ctx.arc(0, 0, r*0.86, 0, 6.3); ctx.stroke();
+    if(r > 7){ ctx.fillStyle = '#FFFFFF'; ctx.font = '400 '+Math.round(r*0.95)+'px Jua, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(T.pt), 0, r*0.06); }
+    ctx.restore();
+  }
   function drawAim(){
     var bs = P(st.ball0); if(!bs) return;
+    if(FKM){ ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(bs.x, bs.y + bs.s*0.09, bs.s*0.34, bs.s*0.12, 0, 0, 6.3); ctx.stroke(); }
     if(preview){
       for(var i=4;i<preview.length;i+=5){
         var p = preview[i].p, q = P(p), g = P([p[0], 0.01, p[2]]);
@@ -4146,7 +4167,9 @@ function kick3d(cv, mode, onResult){
     var sim = st.shot.sim, ev = st.ev || (st.ev = {}), rp = st.phase === 'replay';
     if(sim.hitT !== null && t >= sim.hitT && !ev.hit){ ev.hit = 1; st.shake = 1; if(!rp){ try{ beep(sim.kind === 'post' || sim.kind === 'bar' ? [1250, 900] : [240, 160], .06); }catch(e){} } }
     if(sim.netT !== null && t >= sim.netT && !ev.net){ ev.net = 1; st.netAmp = 0.55; st.netAt = ballAt(sim.tr, sim.netT); }
-    if(st.res.goal && sim.cross && t >= sim.cross.t && !ev.goal){ ev.goal = 1; st.cheer = 1; if(!rp){ try{ pkCrowd(2.6); }catch(e){} } }
+    if(st.res.goal && sim.cross && t >= sim.cross.t && !ev.goal){ ev.goal = 1; st.cheer = 1;
+      if(!rp){ try{ pkCrowd(2.6); }catch(e){}
+        if(st.target){ var tc = targetAt(), ddx = sim.cross.x - tc[0], ddy = sim.cross.y - tc[1]; if(Math.sqrt(ddx*ddx + ddy*ddy) <= st.target.r + BR){ st.res.bonus = st.target.pt; st.tHit = st.hint; try{ beep([900,1200,1500],.07); }catch(e){} } } } }
   }
   reset(0, FKM ? window.FK_CFG0 : null);
   raf = requestAnimationFrame(frame);
@@ -4155,6 +4178,7 @@ function kick3d(cv, mode, onResult){
     curve: function(dx){ afterTouch(dx); return st.shot && st.shot.c; },
     stop: function(){ alive = false; cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); },
     kickAt: function(tx, ty, pw, curl, flick){ kick(tx, ty, pw === undefined ? 0.6 : pw, curl || 0, flick || 0); return st.res; },
+    target: function(){ return st.target ? targetAt().concat([st.target.r]) : null; },
     state: function(){ return {phase: st.phase, ball0: st.ball0.slice(), ws: st.ws, kx0: st.kx0, res: st.res, kind: st.shot && st.shot.kind}; }
   };
 }
@@ -4162,12 +4186,12 @@ function kick3d(cv, mode, onResult){
 /* ── ⚽ 프리킥 게임 화면 ── */
 function startFKGame(){
   beep([700,900],.06);
-  var n = fkTix(), g = lvProg(), best = PROG.fkBest || 0;
+  var n = fkTix(), g = lvProg(), best = PROG.fkBestPt || 0;
   var ov = openMod(
     '<div style="font-size:52px">⚽</div>'+
     '<h2>프리킥 게임</h2>'+
-    '<p>골을 넣을수록 <b>더 어려워져요!</b><br>빈 골대 → 골키퍼 → 수비벽…<br><b>'+FK_LIVES+'번</b> 놓치면 끝! 몇 골까지 갈 수 있을까요?</p>'+
-    (best ? '<div class="card" style="margin-bottom:10px">🏆 내 최고 기록 <b>'+best+'골</b></div>' : '')+
+    '<p>골을 넣을수록 <b>더 어려워져요!</b><br>빈 골대 → 골키퍼 → 수비벽…<br>골 <b>'+FK_GOAL_PT+'점</b>, 🎯 과녁을 맞히면 <b>+'+FK_TARGET_PT+'점</b>!<br><b>'+FK_LIVES+'번</b> 놓치면 끝!</p>'+
+    (best ? '<div class="card" style="margin-bottom:10px">🏆 내 최고 기록 <b>'+best+'점</b></div>' : '')+
     '<div class="card pklv">'+fkLvTxt()+'</div>'+
     (n > 0
       ? '<div class="card" style="margin-bottom:12px">🎟️ 프리킥 기회 <b>'+n+'번</b> 남았어요.<br><span class="muted">레벨이 오를 때마다 한 번씩 더 생겨요 · 골 넣으면 ⭐ (한 번에 '+FK_STAR_CAP+'개까지)</span></div>'+
@@ -4197,18 +4221,18 @@ function fkSay(r){
 }
 /* 끝없이 차기: 골을 넣으면 다음 단계(더 멀리·골키퍼·수비벽), FK_LIVES번 놓치면 끝 */
 function screenFKGame(){
-  var goals = 0, lives = FK_LIVES, stars = 0, game = null, cfg = fkStage(0), busy = false;
+  var goals = 0, score = 0, lives = FK_LIVES, stars = 0, game = null, cfg = fkStage(0), busy = false;
   app.innerHTML =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back" aria-label="그만하기">←</button>'+
       '<h2>⚽ 프리킥</h2>'+
-      '<div class="pill" id="pkpill">🏆 '+(PROG.fkBest || 0)+'</div>'+
+      '<div class="pill" id="pkpill">🏆 '+(PROG.fkBestPt || 0)+'</div>'+
     '</div>'+
     '<div class="pkboard" id="score"></div>'+
     '<div class="pkfield" id="field"><canvas id="fkcv" role="img" aria-label="프리킥 경기장. 공을 골대 쪽으로 쭉 밀어서 슛!"></canvas>'+
       '<div class="pkgoalflash" id="flash">GOAL!</div></div>'+
     '<div class="pkmsg" id="msg" role="status">공을 <b>골대 쪽으로 쭉</b> 밀어서 슛! ⚽</div>'+
-    '<div class="pktip">👆 길게 밀면 높게 · <b>공이 날아갈 때 좌우로 밀면 휘어요!</b><br>'+fkLvTxt()+'</div>';
+    '<div class="pktip">👆 길게 밀면 높게 · <b>공이 날아갈 때 좌우로 밀면 휘어요!</b> · 🎯 과녁을 맞히면 +'+FK_TARGET_PT+'점<br>'+fkLvTxt()+'</div>';
   document.getElementById('back').onclick = function(){
     if(confirm('프리킥을 그만둘까요? 쓴 기회는 돌아오지 않아요.')){ if(game) game.stop(); screenHome(); }
   };
@@ -4222,11 +4246,12 @@ function screenFKGame(){
     if(res.goal){
       goals++; PROG.fkGoals = (PROG.fkGoals || 0) + 1;
       if(stars < FK_STAR_CAP){ stars += FK_GOAL_STAR; PROG.fkStar = fkStars() + FK_GOAL_STAR; }
-      if(goals > (PROG.fkBest || 0)) PROG.fkBest = goals;
+      score += FK_GOAL_PT + (res.bonus || 0);
+      if(score > (PROG.fkBestPt || 0)) PROG.fkBestPt = score;
       flash.classList.remove('show'); void flash.offsetWidth; flash.classList.add('show'); confetti(24);
     } else lives--;
     saveProgress();
-    msg.innerHTML = fkSay(res);
+    msg.innerHTML = (res.bonus ? '<b class="pkg">🎯 과녁 명중! +'+res.bonus+'점!</b> ' : '')+fkSay(res);
     board();
     setTimeout(function(){
       if(!document.getElementById('fkcv')) return;
@@ -4243,22 +4268,22 @@ function screenFKGame(){
     var h = '';
     for(var i=0; i<FK_LIVES; i++) h += '<span class="pkdot '+(i < lives ? 'g' : 'm')+'" aria-hidden="true">'+(i < lives ? '❤' : '✕')+'</span>';
     document.getElementById('score').innerHTML =
-      '<div class="pkteam"><span>골</span><b>'+goals+'</b></div>'+
+      '<div class="pkteam"><span>점수</span><b>'+score+'</b></div>'+
       '<div class="pkdots" role="img" aria-label="남은 기회 '+lives+'번">'+h+'</div>'+
       '<div class="pkneed">⭐ +'+stars+'</div>';
-    document.getElementById('pkpill').textContent = '🏆 '+Math.max(PROG.fkBest || 0, goals);
+    document.getElementById('pkpill').textContent = '🏆 '+Math.max(PROG.fkBestPt || 0, score);
   }
   function finish(){
-    var best = PROG.fkBest || 0, rec = goals > 0 && goals >= best;
+    var best = PROG.fkBestPt || 0, rec = score > 0 && score >= best;
     if(goals){ starSound(); confetti(40 + Math.min(60, goals*8)); } else { noSound(); }
     var n = fkTix(), g = lvProg();
     app.innerHTML =
       '<div class="result">'+
         '<div class="big">'+(rec ? '🏆' : goals ? '⚽' : '😅')+'</div>'+
         '<h2>'+(rec ? '새 기록!' : goals ? '멋진 프리킥!' : '아쉬워요!')+'</h2>'+
-        '<p><b style="font-size:26px">'+goals+'골</b> 넣었어요!'+
+        '<p><b style="font-size:26px">'+score+'점</b> ('+goals+'골)'+
           (stars ? '<br><b style="color:var(--melon-ink)">⭐ 별 '+stars+'개를 받았어요!</b>' : '')+
-          '<br>🏆 최고 기록 <b>'+best+'골</b></p>'+
+          '<br>🏆 최고 기록 <b>'+best+'점</b></p>'+
         '<div class="card" style="margin-bottom:12px;font-size:15px;line-height:1.7">'+(goals ? fkStageTxt(fkStage(goals))+' 단계까지 갔어요!' : '레벨이 오르면 킥이 더 좋아져요. 다음에 또 도전!')+'</div>'+
         (n > 0 ? '<button class="btn primary wide" id="retry" style="margin-bottom:10px">🔁 한 번 더 (기회 '+n+'번)</button>'
                : '<div class="card" style="margin-bottom:12px">🎟️ '+(g.max ? '기회를 다 썼어요.' : '⭐ <b>'+g.left+'개</b> 더 모아 레벨 업하면 또 찰 수 있어요!')+'</div>')+
