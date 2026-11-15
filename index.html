@@ -989,7 +989,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 23:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 23:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1886,8 +1886,16 @@ function bigHero(lv){ return '<div style="display:flex;justify-content:center;ma
    (지갑의 별·가방은 그대로. 레벨만 새로 시작) */
 function lvStars(){
   if(typeof PROG.lvBase !== 'number'){ PROG.lvBase = totalStars(); PROG.lvSeen = LV_START; }   /* 다음 저장 때 같이 저장된다 */
-  return Math.max(0, totalStars() - PROG.lvBase);
+  /* 레벨은 절대 내려가지 않는다: 지금까지 가장 높았던 레벨 별(PROG.lvHi) 아래로는 안 내려간다.
+     (무엇을 지우든, 어디서 별이 줄든 레벨은 그대로) */
+  return Math.max(0, totalStars() - PROG.lvBase, +PROG.lvHi || 0);
 }
+function lvHiKeep(){
+  if(typeof PROG.lvBase !== 'number') return;
+  var s = 0; try{ s = Math.max(0, totalStars() - PROG.lvBase); }catch(e){ return; }
+  if(!(+PROG.lvHi >= s)) PROG.lvHi = s;
+}
+function lvHiMerge(o){ if(o && typeof o.lvBase === 'number' && o.lvBase === PROG.lvBase && +o.lvHi > (+PROG.lvHi || 0)) PROG.lvHi = +o.lvHi; }
 var LV_START = 0;   /* 시작 레벨 (별 0개일 때) — Lv.0 = 하준이 자기 카드 */
 function heroLv(){ return Math.max(LV_START, lvOf(lvStars())); }
 function heroTitle(){ return HERO[heroLv()].t; }
@@ -2612,7 +2620,7 @@ function loadProgress(cb){
         else { PROG = p; }
       }
       applyProg();
-      try{ goneMerge(p); goneMerge(readLocal()); }catch(e){}   /* 어느 쪽 진도를 쓰든, 지운 것의 별 보관함은 합친다 */
+      try{ var _lc = readLocal(); goneMerge(p); goneMerge(_lc); lvHiMerge(p); lvHiMerge(_lc); }catch(e){}   /* 어느 쪽 진도를 쓰든, 지운 것의 별 보관함은 합친다 */
       try{ deadApply(); }catch(e){}   /* 다른 기기에서 지운 것은 되살리지 않는다 */
       LOAD_BASE_SCORE = progScore(PROG);   /* 이 값보다 재앙적으로 줄면 서버 저장을 막는다 */
       if(needPush && SERVER_LOADED && !OFFLINE){
@@ -2639,6 +2647,7 @@ function bootFail(e){
 var saveTimer=null;
 function saveProgress(){
   PROG.rate = RATE;
+  try{ lvHiKeep(); }catch(e){}     /* 가장 높았던 레벨 별을 적어 둔다(레벨이 내려가지 않게) */
   PROG._ts = Date.now();          /* 최신본 판별용 시각 (기기 간 동기화) */
   /* 서버가 되든 안 되든 기기에 먼저 저장한다 */
   try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
@@ -7901,7 +7910,8 @@ function screenSpecials(){
     var id = this.dataset.delpb;
     var b = papers().filter(function(x){ return x.id===id; })[0];
     needDad(function(){
-      if(!confirm('“'+(b?b.t:'이 책')+'”를 정말 삭제할까요?\n읽은 기록도 함께 지워집니다.')) return;
+      if(!confirm('“'+(b?b.t:'이 책')+'”를 정말 삭제할까요?\n읽은 기록은 지워지지만, 받은 별과 레벨은 그대로 남아요.')) return;
+      deadAdd(id);   /* 받은 별은 보관함으로 → 별·레벨 그대로 */
       PROG.papers = papers().filter(function(x){ return x.id!==id; });
       saveProgress(); toast('🗑'); screenSpecials();
     }, screenSpecials);
@@ -9607,7 +9617,8 @@ function progRefresh(){
     if(!p || !hasProgress(p)) return;
     if(!(+p._ts > (+PROG._ts || 0) + 500)){
       /* 이 기기 진도가 더 새것이어도, 서버 보관함에만 있는 별은 받아 둔다 */
-      if(goneMerge(p)){ try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){} if(document.getElementById('fkbig')) hwRedraw(); }
+      var _h0 = +PROG.lvHi || 0; lvHiMerge(p);
+      if(goneMerge(p) || (+PROG.lvHi || 0) > _h0){ try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){} if(document.getElementById('fkbig')) hwRedraw(); }
       return;
     }
     if(!document.getElementById('fkbig')) return;   /* 홈에 있을 때만 바꾼다 */

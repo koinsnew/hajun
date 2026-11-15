@@ -904,6 +904,8 @@ function _goneKeep(obj) {
       if (!obj.gone || typeof obj.gone !== 'object') obj.gone = {};
       for (var gk in pr.gone) obj.gone[gk] = Math.max(+obj.gone[gk] || 0, +pr.gone[gk] || 0);
     }
+    /* 가장 높았던 레벨 별(lvHi)도 줄지 않게 지킨다 → 어느 기기가 저장해도 레벨은 안 내려간다 */
+    if (pr && typeof pr.lvBase === 'number' && pr.lvBase === obj.lvBase && +pr.lvHi > (+obj.lvHi || 0)) obj.lvHi = +pr.lvHi;
   } catch (e) {}
 }
 function _stripDead(o) {
