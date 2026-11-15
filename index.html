@@ -980,7 +980,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 22:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 22:25';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2603,6 +2603,7 @@ function loadProgress(cb){
         else { PROG = p; }
       }
       applyProg();
+      try{ goneMerge(p); goneMerge(readLocal()); }catch(e){}   /* 어느 쪽 진도를 쓰든, 지운 것의 별 보관함은 합친다 */
       try{ deadApply(); }catch(e){}   /* 다른 기기에서 지운 것은 되살리지 않는다 */
       LOAD_BASE_SCORE = progScore(PROG);   /* 이 값보다 재앙적으로 줄면 서버 저장을 막는다 */
       if(needPush && SERVER_LOADED && !OFFLINE){
@@ -2777,6 +2778,14 @@ function comboHtml(best, got){
    → 지울 때 그 별을 여기 옮겨 적는다. 받은 별은 지워도 그대로 남는다. */
 function goneStars(){ var g = PROG.gone || {}, n = 0; for(var k in g){ n += (+g[k] || 0); } return n; }
 function goneAdd(id, n){ if(!id || !(n > 0)) return; if(!PROG.gone || typeof PROG.gone !== 'object') PROG.gone = {}; PROG.gone[id] = Math.max(+PROG.gone[id] || 0, n); }
+/* 서버(또는 다른 저장본)의 보관함을 이 기기 보관함에 합친다 — 같은 id 는 큰 값. 줄어드는 일은 없다 */
+function goneMerge(o){
+  var hit = false;
+  if(o && o.gone && typeof o.gone === 'object'){
+    for(var k in o.gone){ var n = +o.gone[k] || 0; if(n > (+((PROG.gone || {})[k]) || 0)){ goneAdd(k, n); hit = true; } }
+  }
+  return hit;
+}
 function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + goneStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
@@ -9589,7 +9598,12 @@ function progRefresh(){
   if(!hasServer || OFFLINE || !SERVER_LOADED || Date.now() - PROG_REF_AT < PROG_REF_MS) return;
   PROG_REF_AT = Date.now();
   apiGet('load', function(p){
-    if(!p || !hasProgress(p) || !(+p._ts > (+PROG._ts || 0) + 500)) return;
+    if(!p || !hasProgress(p)) return;
+    if(!(+p._ts > (+PROG._ts || 0) + 500)){
+      /* 이 기기 진도가 더 새것이어도, 서버 보관함에만 있는 별은 받아 둔다 */
+      if(goneMerge(p)){ try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){} if(document.getElementById('fkbig')) hwRedraw(); }
+      return;
+    }
     if(!document.getElementById('fkbig')) return;   /* 홈에 있을 때만 바꾼다 */
     PROG = p; applyProg(); deadApply();
     try{ localStorage.setItem('phonics', JSON.stringify(PROG)); }catch(e){}
