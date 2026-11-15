@@ -903,7 +903,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 13:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 13:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1461,7 +1461,7 @@ function pkLvBonus(){
 }
 var PK_REACH = 3.5;        /* 페널티킥: 골키퍼가 방향을 맞혔을 때 손이 닿는 거리(m). 이보다 먼 구석은 방향을 읽혀도 골 */
 /* ── ⚽ 프리킥 게임 ──
-   레벨이 오를 때마다 기회 1번. 6단계(빈 골대 → 골키퍼 → 수비벽 3·4·5·6명), FK_LIVES번 놓치면 끝.
+   레벨이 오를 때마다 기회 1번. 7단계(빈 골대 → 골키퍼 → 수비벽 3·4·5·6·7명) 가운데 레벨에 맞게 열린 단계까지, FK_LIVES번 놓치면 끝.
    2단계부터 통과할 때마다 ⭐1(모두 5개) + 과녁을 맞히면 덤 ⭐1(FK_BONUS_CAP개까지).
    레벨이 높을수록: 킥이 정확해지고(FK_ERR), 더 많이 휘고(FK_CURL), 골키퍼가 덜 막고(FK_KEEP), 공이 갈 길이 더 길게 보인다(FK_GUIDE).
    각 쌍은 Lv.0 값 → Lv.50 값. 숫자를 바꾸시려면 아래만 고치세요. */
@@ -1469,15 +1469,29 @@ var FK_LIVES = 3;          /* 이만큼 놓치면 끝 */
 var FK_BONUS_CAP = 3;      /* ⭐ 과녁 덤 별은 한 번 도전에 이만큼까지 */
 var FK_TARGET_R = 0.5;     /* 과녁 크기(반지름 m) */
 var FK_CURL_GAIN = 5.5;    /* 손가락을 둥글게 밀었을 때 공이 휘는 정도 (클수록 잘 휜다) */
-/* 단계: 골 하나 넣으면 다음 단계. 2단계부터는 통과할 때마다 ⭐1 (모두 5개). 마지막은 수비벽 6명.
+/* 단계: 골 하나 넣으면 다음 단계. 2단계부터는 통과할 때마다 ⭐1 (FK_STAGE_STAR_CAP개까지). 마지막은 수비벽 7명.
    [수비벽 수, 골키퍼, 거리(m), 좌우로 벗어나는 폭(m), 골키퍼 빠르기 배율] */
-var FK_STAGES = [[0,false,16,1.5,1], [0,true,17,2.5,0.85], [3,true,19,4,0.9], [4,true,21,5,0.95], [5,true,23,6,1.0], [6,true,25,7,1.05]];
+var FK_STAGES = [[0,false,16,1.5,1], [0,true,17,2.5,0.85], [3,true,19,4,0.9], [4,true,21,5,0.95], [5,true,23,6,1.0], [6,true,25,7,1.05], [7,true,26,7.5,1.1]];
+var FK_STAGE_STAR_CAP = 5; /* 단계 통과로 받는 별 상한 (한 번 도전) */
+/* 레벨에 따라 열리는 단계: [이 레벨까지, 열린 단계 수] — Lv.9까지 3단계, 19까지 4, 29까지 5, 39까지 6, 40부터 7단계(수비벽 7명) */
+var FK_OPEN = [[9,3],[19,4],[29,5],[39,6],[999,7]];
+function fkOpen(lv){
+  lv = lv === undefined ? heroLv() : lv;
+  for(var i=0;i<FK_OPEN.length;i++) if(lv <= FK_OPEN[i][0]) return Math.min(FK_STAGES.length, FK_OPEN[i][1]);
+  return FK_STAGES.length;
+}
+/* 다음 단계가 열리는 레벨 (다 열렸으면 0) */
+function fkNextOpenLv(){
+  var lv = heroLv();
+  for(var i=0;i<FK_OPEN.length-1;i++) if(lv <= FK_OPEN[i][0]) return FK_OPEN[i][0] + 1;
+  return 0;
+}
 function fkStage(i){
   var S = FK_STAGES[Math.max(0, Math.min(FK_STAGES.length-1, i))];
   return {i:i, wall:S[0], keeper:S[1], dist:S[2] + Math.random()*1.2, x:(Math.random()*2 - 1)*S[3], kmul:S[4],
     target: {x: (Math.random()*2 - 1)*2.6, y: 0.6 + Math.random()*1.25, r: FK_TARGET_R, pt: '★+1', move: i >= 4 ? 1.1 : 0, amp: 0.6}};
 }
-function fkStageTxt(c){ return (!c.keeper ? '빈 골대' : !c.wall ? '골키퍼 등장' : '수비벽 '+c.wall+'명'+(c.i >= FK_STAGES.length-1 ? ' (마지막!)' : '')); }
+function fkStageTxt(c){ return (!c.keeper ? '빈 골대' : !c.wall ? '골키퍼 등장' : '수비벽 '+c.wall+'명'+(c.i >= fkOpen()-1 ? ' (마지막!)' : '')); }
 
 var FK_ERR0 = 1.0,  FK_ERR50 = 0.08;      /* 노린 곳에서 빗나가는 정도(m) — 작을수록 정확 */
 var FK_CURL0 = 0.7, FK_CURL50 = 1.3;    /* 감아차기 세기 */
@@ -4201,15 +4215,16 @@ function fkHeroHtml(){
 }
 function startFKGame(){
   beep([700,900],.06);
-  var n = fkTix(), g = lvProg(), best = PROG.fkBestStage || 0, lv = heroLv(), p = playerAt(lv), NS = FK_STAGES.length;
+  var n = fkTix(), g = lvProg(), best = PROG.fkBestStage || 0, lv = heroLv(), p = playerAt(lv), NS = fkOpen(), nx = fkNextOpenLv();
+  var names = FK_STAGES.map(function(S, i){ var t = !S[1] ? '빈 골대' : !S[0] ? '골키퍼' : '수비벽 '+S[0]+'명'; return i < NS ? '<b>'+(i+1)+'.</b> '+t : '<span style="opacity:.45">🔒 '+t+'</span>'; }).join(' → ');
   var ov = openMod(
     '<div style="font-size:52px">⚽</div>'+
     '<h2>프리킥 게임</h2>'+
-    '<p><b>'+NS+'단계</b>를 넘어 보세요!<br>빈 골대 → 골키퍼 → 수비벽 3·4·5·<b>6명</b><br>2단계부터 넘을 때마다 <b>⭐1개</b>, 🎯 과녁을 맞히면 <b>⭐+1</b>!<br><b>'+FK_LIVES+'번</b> 놓치면 끝!</p>'+
+    '<p><b>'+NS+'단계</b>까지 열려 있어요!<br><span style="font-size:14px;line-height:1.7">'+names+'</span><br>'+(nx ? '<b>Lv.'+nx+'</b>이 되면 다음 단계가 열려요.<br>' : '')+'2단계부터 넘을 때마다 <b>⭐1개</b>, 🎯 과녁을 맞히면 <b>⭐+1</b>!<br><b>'+FK_LIVES+'번</b> 놓치면 끝!</p>'+
     '<div class="card" style="margin-bottom:10px;text-align:left"><div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;background:#16263D;border-radius:12px;padding:8px 10px">'+fkHeroHtml()+'</div>'+
       fkLvBars()+
       '<div class="muted" style="margin-top:8px;font-size:13px">레벨이 오를수록 킥이 좋아져서 더 잘 들어가요!</div></div>'+
-    (best ? '<div class="card" style="margin-bottom:10px">🏆 내 최고 기록 <b>'+(best >= NS ? '모든 단계 통과!' : best+'단계 통과')+'</b></div>' : '')+
+    (best ? '<div class="card" style="margin-bottom:10px">🏆 내 최고 기록 <b>'+best+'단계 통과</b></div>' : '')+
     (n > 0
       ? '<div class="card" style="margin-bottom:12px">🎟️ 프리킥 기회 <b>'+n+'번</b> 남았어요.<br><span class="muted">레벨이 오를 때마다 한 번씩 더 생겨요</span></div>'+
         '<button class="btn primary wide" id="ok" style="font-size:20px;padding:16px;margin-bottom:9px">프리킥 차러 가기! ⚽</button>'
@@ -4238,7 +4253,7 @@ function fkSay(r){
 }
 /* 6단계: 골 하나 넣으면 다음 단계. FK_LIVES번 놓치면 끝. 2단계부터 통과 ⭐1, 과녁 덤 ⭐1 */
 function screenFKGame(){
-  var NS = FK_STAGES.length, stage = 0, lives = FK_LIVES, stars = 0, bonus = 0, game = null, cfg = fkStage(0), busy = false;
+  var NS = fkOpen(), stage = 0, lives = FK_LIVES, stars = 0, bonus = 0, game = null, cfg = fkStage(0), busy = false;
   app.innerHTML =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back" aria-label="그만하기">←</button>'+
@@ -4260,10 +4275,11 @@ function screenFKGame(){
     var msg = document.getElementById('msg'), flash = document.getElementById('flash');
     if(!msg) return;
     PROG.fkShots = (PROG.fkShots || 0) + 1;
-    var got = 0;
+    var got = 0, sgot = false;
     if(res.goal){
       PROG.fkGoals = (PROG.fkGoals || 0) + 1;
-      if(stage >= 1){ got++; stars++; }                                   /* 2단계부터 통과 ⭐1 */
+      sgot = stage >= 1 && stars < FK_STAGE_STAR_CAP;
+      if(sgot){ got++; stars++; }                                         /* 2단계부터 통과 ⭐1 */
       if(res.bonus && bonus < FK_BONUS_CAP){ got++; bonus++; }            /* 과녁 덤 ⭐1 */
       if(got) PROG.fkStar = fkStars() + got;
       stage++;
@@ -4271,7 +4287,7 @@ function screenFKGame(){
       flash.classList.remove('show'); void flash.offsetWidth; flash.classList.add('show'); confetti(24);
     } else lives--;
     saveProgress();
-    msg.innerHTML = (res.goal && res.bonus ? '<b class="pkg">🎯 과녁 명중! '+(bonus <= FK_BONUS_CAP && got > (stage >= 2 ? 1 : 0) ? '⭐+1!' : '')+'</b> ' : '')+fkSay(res)+(res.goal && stage >= 2 ? ' <b class="pkg">⭐+1</b>' : '');
+    msg.innerHTML = (res.goal && res.bonus ? '<b class="pkg">🎯 과녁 명중! '+(got > (sgot ? 1 : 0) ? '⭐+1!' : '')+'</b> ' : '')+fkSay(res)+(res.goal && sgot ? ' <b class="pkg">⭐+1</b>' : '');
     board();
     setTimeout(function(){
       if(!document.getElementById('fkcv')) return;
@@ -4279,7 +4295,7 @@ function screenFKGame(){
       cfg = fkStage(stage); busy = false;
       game.reset(stage, cfg);
       msg.innerHTML = res.goal
-        ? '<b>'+(stage+1)+'단계 · '+fkStageTxt(cfg)+'</b> — '+(stage >= 1 ? '넘으면 ⭐1!' : '넘어 보자!')+' ⚽'
+        ? '<b>'+(stage+1)+'단계 · '+fkStageTxt(cfg)+'</b> — '+(stage >= 1 && stars < FK_STAGE_STAR_CAP ? '넘으면 ⭐1!' : '넘어 보자!')+' ⚽'
         : (lives === 1 ? '🔥 <b>마지막 기회!</b> ' : '')+'<b>'+(stage+1)+'단계</b> 다시 한 번! ⚽';
     }, res.kind === 'top' ? 4300 : res.goal ? 1700 : 1900);
   });
@@ -4300,10 +4316,10 @@ function screenFKGame(){
     app.innerHTML =
       '<div class="result">'+
         '<div class="big">'+(win ? '🏆' : stage ? '⚽' : '😅')+'</div>'+
-        '<h2>'+(win ? '모든 단계 통과!' : stage ? stage+'단계 통과!' : '아쉬워요!')+'</h2>'+
-        '<p>'+(win ? '수비벽 6명까지 뚫었어요! 최고예요!' : stage ? '다음은 <b>'+fkStageTxt(fkStage(stage))+'</b> 단계였어요.' : '레벨이 오르면 킥이 더 좋아져요. 다음에 또 도전!')+
+        '<h2>'+(win ? NS+'단계 모두 통과!' : stage ? stage+'단계 통과!' : '아쉬워요!')+'</h2>'+
+        '<p>'+(win ? (fkNextOpenLv() ? '열린 단계를 다 넘었어요! <b>Lv.'+fkNextOpenLv()+'</b>이 되면 다음 단계가 열려요.' : '수비벽 7명까지 뚫었어요! 최고예요!') : stage ? '다음은 <b>'+fkStageTxt(fkStage(stage))+'</b> 단계였어요.' : '레벨이 오르면 킥이 더 좋아져요. 다음에 또 도전!')+
           (total ? '<br><b style="color:var(--melon-ink)">⭐ 별 '+total+'개를 받았어요!</b>'+(bonus ? ' <span class="muted">(과녁 덤 '+bonus+'개)</span>' : '') : '')+
-          '<br>🏆 최고 기록 <b>'+(best >= NS ? '모든 단계 통과' : best+'단계 통과')+'</b></p>'+
+          '<br>🏆 최고 기록 <b>'+best+'단계 통과</b></p>'+
         (n > 0 ? '<button class="btn primary wide" id="retry" style="margin-bottom:10px">🔁 한 번 더 (기회 '+n+'번)</button>'
                : '<div class="card" style="margin-bottom:12px">🎟️ '+(g.max ? '기회를 다 썼어요.' : '⭐ <b>'+g.left+'개</b> 더 모아 레벨 업하면 또 찰 수 있어요!')+'</div>')+
         '<button class="btn go wide" id="home">🏠 홈으로</button>'+
