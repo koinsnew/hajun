@@ -989,7 +989,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.16 00:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.16 00:55';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2246,36 +2246,7 @@ function screenDex(){
    한 연씩 소리 없이 보여주고, 하준이가 읽고, 아빠가 ⭕를 눌러야 넘어간다.
    시를 더 넣으려면 SPECIALS 배열에 같은 모양으로 추가하면 된다.
    ========================================================= */
-var SPECIALS = [
-{ id:'tooth', t:'MY WIGGLY TOOTH', ko:'내 흔들리는 이', e:'🦷',
-  by:'하준이를 위해 새로 지은 시',
-  st:[
-    {e:'🪥', l:['I brush. I brush.','I brush all day.','Oh, no! My tooth','just moved that way!']},
-    {e:'😮', l:['My tooth is loose.','It will not sit.','My other teeth','stay put. They fit.']},
-    {e:'👉', l:['I push it left.','I push it right.','It wiggles, wiggles,','holds on tight.']},
-    {e:'🥕', l:['Can I still crunch','a carrot stick?','Or must I eat','soft food, and quick?']},
-    {e:'🐯', l:['Do tigers wiggle','teeth like mine?','Do bears and foxes','think it is fine?']},
-    {e:'🤪', l:['I laugh. I hum.','I skip. I hop.','That silly tooth','will not drop!']},
-    {e:'🍽️', l:['Then at my lunch','I take a bite.','My tooth pops out!','Out of sight!']},
-    {e:'🎉', l:['Hooray! Hooray!','It is out at last!','Hooray! Hooray!','That went so fast!']},
-    {e:'😁', l:['A little hole','is in my grin.','But wait and see —','a new tooth in!']},
-    {e:'🧚', l:['Tonight my tooth','goes under my head.','The tooth fairy comes','when I am in bed.']}
-  ] },
-{ id:'dentist', t:'MIN GOES TO THE DENTIST', ko:'민이 치과에 가요', e:'🪥',
-  by:'하준이를 위해 새로 지은 시',
-  st:[
-    {e:'🦷', l:['My friend is Min.','Min has a tooth.','It wobbles, wobbles.','That is the truth!']},
-    {e:'😨', l:['"I am scared!"','says Min to me.','"What will the','dentist see?"']},
-    {e:'🐕', l:['I take Min\'s hand.','Pop comes too.','Pop says, "Woof!','We are here for you."']},
-    {e:'🚗', l:['We ride the car.','We hop right out.','Min is quiet.','I want to shout!']},
-    {e:'🪑', l:['A big blue chair','goes up and down.','Min sits still.','Min starts to frown.']},
-    {e:'🥼', l:['The dentist smiles.','"Hello there, Min!','Just open wide','and let me in."']},
-    {e:'✨', l:['She counts the teeth.','One, two, three, four.','"This one is loose.','It is out the door!"']},
-    {e:'🎉', l:['One little pull —','and it is done!','"Was that it?" says Min.','"That was fun!"']},
-    {e:'🦷', l:['Min holds the tooth','up in the light.','A tiny thing,','so small and white.']},
-    {e:'😁', l:['Now Min can smile.','Now Min can play.','"I like the dentist!"','Min will say.']}
-  ] }
-];
+var SPECIALS = [];   /* 앱에 들어 있던 시는 모두 뺐다(2026-11). 예전에 시로 받은 별은 PROG.spec 에 남아 그대로 센다 */
 function specPassed(id){ return !!(PROG.spec && PROG.spec[id] && PROG.spec[id].passed); }
 
 /* =========================================================
@@ -2719,8 +2690,8 @@ function normProg(){
   PROG.quizzes.forEach(function(q){ if(q.done && typeof q.stars!=='number') q.stars = STAR_QUIZ; });
   PROG.sents.forEach(function(x){ if(x.done && typeof x.stars!=='number') x.stars = STAR_SENT; });
   /* 옛 스페셜: 통과했는데 뽑은 별 기록이 없으면 예전 고정값(10)으로 */
-  if(PROG.spec) SPECIALS.forEach(function(sp){
-    var r=PROG.spec[sp.id];
+  if(PROG.spec) Object.keys(PROG.spec).forEach(function(sid){
+    var r=PROG.spec[sid];
     if(r && r.passed && typeof r.stars!=='number') r.stars = STAR_SPEC;
   });
   if(!PROG.papers) PROG.papers = PAPER_PRESET.map(function(b){
@@ -2763,7 +2734,7 @@ var STAR_SPEC = 10;   /* 스페셜 테스트 통과 1편당 */
 function actStars(){ var s=0; LEVELS.forEach(function(L){ s+=levelStars(L); }); return s; }
 function testStars(){ return passedCount() * STAR_TEST; }
 function bookStars(){ return books().filter(function(L){ return bookRead(L.id)>0; }).length * STAR_BOOK; }
-function specStars(){ return SPECIALS.reduce(function(a,x){ var r=PROG.spec && PROG.spec[x.id]; return a + (r && r.passed ? (r.stars||STAR_SPEC) : 0); }, 0); }
+function specStars(){ var s = PROG.spec || {}, n = 0; for(var k in s){ var r = s[k]; if(r && r.passed) n += (r.stars||STAR_SPEC); } return n; }   /* 시 목록이 없어져도 받은 별은 그대로 */
 /* 아빠가 주는 별 (심부름·약속 지키기 등) */
 var DAD_PIN = '7084';      /* 아빠 비밀번호 — 바꾸시려면 이 줄만 고치세요 */
 var MAX_BONUS = 5;         /* 한 번에 줄 수 있는 최대 별 — 바꾸시려면 이 숫자만 */
@@ -3087,9 +3058,7 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
       '<div class="ico">🌟</div>'+
-      '<div class="t"><b>원서 쉐도잉</b><small>👨 아빠 앞에서 · 시 '+
-        SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length+
-        ' · 📕 책 '+shelfPapers('').filter(function(b){ return b.done; }).length+'/'+shelfPapers('').length+'</small></div>'+
+      '<div class="t"><b>원서 쉐도잉</b><small>👨 아빠 앞에서 · 📕 책 '+shelfPapers('').filter(function(b){ return b.done; }).length+'/'+shelfPapers('').length+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="mmsbig" style="margin:0 0 12px">'+
@@ -7851,14 +7820,14 @@ function screenSpecials(){
     '<div class="topbar">'+
       '<button class="iconbtn" id="back">←</button>'+
       '<h2>'+(SHELF ? '🎧 ' : '🌟 ')+shelfName()+'</h2>'+
-      '<div class="pill">🏆 '+(SHELF ? shelfPapers().filter(function(b){ return b.done; }).length+'/'+shelfPapers().length
+      '<div class="pill">🏆 '+((SHELF || !SPECIALS.length) ? shelfPapers().filter(function(b){ return b.done; }).length+'/'+shelfPapers().length
         : SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length)+'</div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
-      '<div style="font-size:16px">👨 아빠 앞에서 '+(SHELF ? '책 한 권' : '시 한 편')+'을 끝까지!</div>'+
-      '<div class="muted" style="margin-top:5px">'+(SHELF ? '한 쪽씩' : '한 연씩')+' 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>'+(SHELF ? '한 권' : '한 편')+' 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
+      '<div style="font-size:16px">👨 아빠 앞에서 '+((SHELF || !SPECIALS.length) ? '책 한 권' : '시 한 편')+'을 끝까지!</div>'+
+      '<div class="muted" style="margin-top:5px">'+((SHELF || !SPECIALS.length) ? '한 쪽씩' : '한 연씩')+' 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>'+((SHELF || !SPECIALS.length) ? '한 권' : '한 편')+' 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
     '</div>';
-  if(!SHELF) html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
+  if(!SHELF && SPECIALS.length) html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
   SPECIALS.forEach(function(sp){
     if(SHELF || specHidden(sp.id)) return;
     var done = specPassed(sp.id);
