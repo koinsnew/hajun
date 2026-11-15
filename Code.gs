@@ -312,6 +312,13 @@ var OCR_PROMPTS = {
     '형식: {"title":"이름 추정(없으면 빈 문자열)","items":[{"en":"English sentence","ko":"자연스러운 한글 해석"}]}\n' +
     '규칙: 문장은 이미지 그대로(오탈자 고치지 말 것), 문장 하나가 한 항목. 한글 해석이 이미지에 있으면 그것을 쓰고 없으면 초등학생 눈높이로 번역. ' +
     '이미지에 없는 문장을 지어내지 마세요. 여러 이미지는 순서대로 이어서 담으세요.',
+  pbook:
+    '이미지는 영어 그림책(원서)의 쪽을 순서대로 찍은 사진입니다. 이미지 하나가 책의 한 쪽(또는 한 장면)이고, 순서는 [이미지 1], [이미지 2]… 입니다. JSON으로만 답하세요.\n' +
+    '형식: {"title":"책 제목(표지에 보이면, 없으면 빈 문자열)","by":"지은이/출판사(보이면)","pages":["[이미지 1]의 영어 본문","[이미지 2]의 영어 본문"]}\n' +
+    '규칙: ① pages 의 칸 수는 이미지 수와 정확히 같아야 한다. 이미지마다 한 칸, 순서 그대로. ' +
+    '② 각 칸에는 그 이미지에 보이는 영어 본문 문장을 읽는 순서대로 모두 이어서 쓴다(펼침면이면 왼쪽 쪽 다음 오른쪽 쪽). 쪽번호·출판 정보·그림 속 낙서는 제외. ' +
+    '③ 글이 없는 이미지(그림만)는 빈 문자열 "". 표지 이미지도 한 칸을 차지하며 그 칸에는 책 제목만 쓴다. ' +
+    '④ 글자는 보이는 그대로 옮기고, 읽을 수 없는 글자는 추측하지 말고 가능한 만큼만.',
   paper:
     '이미지는 영어 그림책/종이책 사진입니다. 이미지 한 장은 한 쪽 또는 펼침면(두 쪽)입니다. JSON으로만 답하세요.\n' +
     '형식: {"title":"책 제목(표지에 보이면, 없으면 빈 문자열)","by":"지은이/출판사(보이면)","pages":["1쪽 영어 본문","2쪽 영어 본문"]}\n' +
@@ -370,6 +377,13 @@ function ocrScan(req) {
 
   var g = _geminiJSON(parts, 8000);
   if (!g.ok) return { error: g.error };
+  if (kind === 'pbook' && g.data && typeof g.data === 'object') {   // 쪽 글의 칸 수를 이미지 수에 맞춘다
+    var pd = g.data;
+    if (pd.items && pd.items.length && !pd.pages) pd = pd.items[0] || {};
+    var pg = (pd.pages || []).map(function (x) { return String(x == null ? '' : x); }).slice(0, imgs.length);
+    while (pg.length < imgs.length) pg.push('');
+    return { ok: true, data: { title: String(pd.title || ''), by: String(pd.by || ''), pages: pg }, model: g.model };
+  }
   if (kind === 'report' && g.data && typeof g.data === 'object') {
     var rd = g.data;
     if (rd.items && rd.items.length && !rd.blanks) rd = rd.items[0] || {};

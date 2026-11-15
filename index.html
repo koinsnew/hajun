@@ -501,6 +501,17 @@
   .wr-intro{margin-bottom:12px;font-size:17px;line-height:1.6}
   .wr-rules{margin-bottom:14px;font-size:16px}
   .wr-rules ol{margin:8px 0 0;padding-left:24px;line-height:1.8}
+  .pb-pic{margin:8px 0 4px;min-height:80px}
+  .pb-pic img{display:block;max-width:100%;max-height:52vh;margin:0 auto;border:2px solid #2B2A33;border-radius:12px;background:#fff}
+  .pbnav{gap:6px}
+  .pbnav .btn{white-space:nowrap;font-size:15px;padding-left:4px;padding-right:4px;min-height:48px}
+  .pbnav .btn:disabled{opacity:.4}
+  .pb-load{padding:26px 8px;color:var(--ink-soft);font-size:15px}
+  .ogrw{display:flex;gap:8px;margin:0 0 12px}
+  .ogrw .btn{flex:1;min-height:50px;font-size:17px}
+  .ognav{display:flex;gap:8px;margin-top:8px}
+  .ognav .btn{flex:1;min-height:46px;font-size:16px}
+  .ognav .btn:disabled{opacity:.4}
   .rp-lab{display:block;font-size:15px;color:var(--ink-soft);margin:2px 2px 6px}
   .rp-in{display:block;width:100%;box-sizing:border-box;min-height:52px;margin:0 0 12px;padding:10px 14px;border:2px solid #2B2A33;border-radius:14px;background:#fff;font:inherit;font-size:18px;color:var(--ink)}
   .rp-in:focus{outline:3px solid #2457C5;outline-offset:2px}
@@ -989,7 +1000,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.16 00:55';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.16 02:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2282,7 +2293,7 @@ function papers(){ return PROG.papers || []; }
 /* 쉐도잉 책꽂이 두 개: '' = 원서 쉐도잉, 'mm' = 미매말 쉐도잉. 책마다 b.sh 에 적어 둔다(없으면 원서 쉐도잉) */
 var SHELF = '';
 function shelfName(s){ return (s === undefined ? SHELF : s) === 'mm' ? '미매말 쉐도잉' : '원서 쉐도잉'; }
-function shelfPapers(s){ if(s === undefined) s = SHELF; return papers().filter(function(b){ return (b.sh || '') === s; }); }
+function shelfPapers(s){ return papers(); }   /* 원서 읽기는 책꽂이 하나 (예전 두 책꽂이의 책을 모두 보여 준다) */
 function paperDone(id){ var b=papers().filter(function(x){ return x.id===id; })[0]; return !!(b && b.done); }
 function paperStars(){ return papers().reduce(function(a,b){ return a + (b.done ? (typeof b.stars==='number' ? b.stars : STAR_PAPER) : 0); }, 0); }
 
@@ -3048,7 +3059,7 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="ogbig" style="margin:0 0 12px">'+
       '<div class="ico">📘</div>'+
-      '<div class="t"><b>원서 읽기</b><small>📘 책 속 그림 보고 문장 쓰기 · 원서 '+origList().filter(function(o){ return o.done; }).length+'/'+origList().length+' · ⭐1~'+STAR_ORIG+'</small></div>'+
+      '<div class="t"><b>원서 읽기</b><small>책 그림과 문장을 보며 읽기 · 책 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="rpbig" style="margin:0 0 12px">'+
@@ -3058,12 +3069,12 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
       '<div class="ico">🌟</div>'+
-      '<div class="t"><b>원서 쉐도잉</b><small>👨 아빠 앞에서 · 📕 책 '+shelfPapers('').filter(function(b){ return b.done; }).length+'/'+shelfPapers('').length+'</small></div>'+
+      '<div class="t"><b>원서 쉐도잉</b><small>그림만 보고 읽기·쓰기 · '+origShelf('').filter(function(o){ return o.done; }).length+'/'+origShelf('').length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="mmsbig" style="margin:0 0 12px">'+
       '<div class="ico">🎧</div>'+
-      '<div class="t"><b>미매말 쉐도잉</b><small>👨 아빠 앞에서 · 📕 책 '+shelfPapers('mm').filter(function(b){ return b.done; }).length+'/'+shelfPapers('mm').length+'</small></div>'+
+      '<div class="t"><b>미매말 쉐도잉</b><small>그림만 보고 읽기·쓰기 · '+origShelf('mm').filter(function(o){ return o.done; }).length+'/'+origShelf('mm').length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '<button class="testbtn" id="dybig" style="margin:0 0 12px">'+
@@ -3121,11 +3132,11 @@ function screenHome(){
   });
   bindRewards();
   document.getElementById('fkbig').onclick = startFKGame;
-  document.getElementById('spbig').onclick = function(){ SHELF = ''; screenSpecials(); };
-  document.getElementById('mmsbig').onclick = function(){ SHELF = 'mm'; screenSpecials(); };
+  document.getElementById('spbig').onclick = function(){ OG_SHELF = ''; screenOrigList(); };
+  document.getElementById('mmsbig').onclick = function(){ OG_SHELF = 'mm'; screenOrigList(); };
   document.getElementById('pkbig').onclick = startPKGame;
   document.getElementById('rpbig').onclick = function(){ beep([700],.06); screenReport(); };
-  document.getElementById('ogbig').onclick = screenOrigList;
+  document.getElementById('ogbig').onclick = function(){ SHELF = ''; screenSpecials(); };
   document.getElementById('ntbig').onclick = screenNoteHome;
   document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
   document.getElementById('qzbig').onclick = screenQuizList;
@@ -3251,22 +3262,22 @@ function noteCats(){
     })});
   C.push({key:'s', ico:'📖', name:'브릭스 읽기', color:'#C2255C', unit:'문장',
     sets: sents().map(function(s){ return {title:s.title, items:(s.items||[]).filter(function(x){ return x && x.en; })}; })});
-  C.push({key:'o', ico:'📘', name:'원서 읽기', color:'#2457C5', unit:'문장',
-    sets: origList().map(function(o){ return {title:o.t || o.title || '원서', items:(o.items||[]).filter(function(x){ return x && x.en; })}; })});
+  C.push({key:'o', ico:'🌟', name:'원서 쉐도잉', color:'#2457C5', unit:'문장',
+    sets: origShelf('').map(function(o){ return {title:o.t || o.title || '원서', items:(o.items||[]).filter(function(x){ return x && x.en; })}; })});
+  C.push({key:'m', ico:'🎧', name:'미매말 쉐도잉', color:'#6741D9', unit:'문장',
+    sets: origShelf('mm').map(function(o){ return {title:o.t || o.title || '미매말', items:(o.items||[]).filter(function(x){ return x && x.en; })}; })});
   var sp = [];
   SPECIALS.forEach(function(p){
     if(specHidden(p.id)) return;
     var all = []; p.st.forEach(function(s){ all = all.concat(noteSplit(s.l.join(' '))); });
     sp.push({title:p.e+' '+p.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
   });
-  var mmSets = [];
   papers().forEach(function(b){
     if(!b.lines || !b.lines.length) return;
     var all = []; b.lines.forEach(function(l){ all = all.concat(noteSplit(l)); });
-    ((b.sh || '') === 'mm' ? mmSets : sp).push({title:(b.e||'📕')+' '+b.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
+    sp.push({title:(b.e||'📕')+' '+b.t, items:all.map(function(t){ return {en:t.trim(), ko:''}; })});
   });
-  C.push({key:'p', ico:'🌟', name:'원서 쉐도잉', color:'#C92A2A', unit:'문장', sets: sp});
-  C.push({key:'m', ico:'🎧', name:'미매말 쉐도잉', color:'#6741D9', unit:'문장', sets: mmSets});
+  C.push({key:'p', ico:'📘', name:'원서 읽기', color:'#C92A2A', unit:'문장', sets: sp});
   C.forEach(function(c){ c.sets = c.sets.filter(function(s){ return s.items.length; }); c.sets.forEach(function(s){ s.cat = c.key; s.unit = c.unit; }); });
   return C;
 }
@@ -6342,6 +6353,10 @@ function scanImages(kind, onResult){
               else if(x.en || x.word) d.items.push(x);
             });
           }
+          if(kind === 'pbook'){   /* 원서 읽기: 사진 한 장 = 한 쪽. 쪽 글과 쪽 그림의 개수를 맞춘다 */
+            d.pages = (d.pages || []).slice(0, out.length); while(d.pages.length < out.length) d.pages.push('');
+            acc.imgs = (acc.imgs || []).concat(out);
+          }
           if(!acc.title && d.title) acc.title = d.title;
           if(!acc.by && d.by) acc.by = d.by;
           if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
@@ -6357,12 +6372,12 @@ function scanImages(kind, onResult){
 }
 
 /* ── 쪽 목록 (읽을 책 추가 · 책 문장 넣기 공용) — ▲▼ 순서 바꾸기 / 🗑 지우기 ── */
-function pageRowsHtml(lines){
+function pageRowsHtml(lines, par){
   var n = lines.length;
   return lines.map(function(ln,i){
     return '<div class="card frm" style="margin-bottom:8px;padding:10px">'+
       '<div class="row" style="align-items:center;gap:6px">'+
-        '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:38px">'+(i+1)+'쪽</div>'+
+        '<div class="qlab" style="margin:0;flex:0 0 auto;min-width:38px">'+(i+1)+'쪽'+(par && par[i] ? '<br>🖼️' : '')+'</div>'+
         '<textarea class="pgin" data-pg="'+i+'" rows="'+Math.max(1,Math.min(5,Math.ceil(String(ln||'').length/26)))+'" style="flex:1;margin:0;min-width:0;padding:10px;border:2px solid var(--line);border-radius:12px;font:inherit;font-size:15px;resize:vertical;line-height:1.4" placeholder="이 쪽의 영어 문장 (비워도 돼요)">'+esc(ln)+'</textarea>'+
         '<div style="display:flex;flex-direction:column;gap:3px;flex:0 0 auto">'+
           '<button class="pgmv" data-up="'+i+'" title="위로" '+(i===0?'disabled ':'')+'style="width:34px;height:24px;border:0;border-radius:8px;background:#E7EEFB;font-size:12px;'+(i===0?'opacity:.3':'')+'">▲</button>'+
@@ -6374,13 +6389,29 @@ function pageRowsHtml(lines){
   }).join('');
 }
 /* collect(): 입력값을 lines에 반영, rerender(): 다시 그리기 */
-function bindPageRows(lines, collect, rerender){
-  on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); var t=lines[i-1]; lines[i-1]=lines[i]; lines[i]=t; rerender(); });
-  on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=lines.length-1) return; collect(); var t=lines[i+1]; lines[i+1]=lines[i]; lines[i]=t; rerender(); });
-  on('[data-delpg]', function(){ collect(); lines.splice(+this.dataset.delpg, 1); if(!lines.length) lines.push(''); rerender(); });
+function bindPageRows(lines, collect, rerender, par){
+  function fit(){ if(par){ while(par.length < lines.length) par.push(''); par.length = lines.length; } }
+  function sw(a, b){ var t = lines[a]; lines[a] = lines[b]; lines[b] = t; if(par){ t = par[a]; par[a] = par[b]; par[b] = t; } }
+  on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); fit(); sw(i-1, i); rerender(); });
+  on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=lines.length-1) return; collect(); fit(); sw(i, i+1); rerender(); });
+  on('[data-delpg]', function(){ collect(); fit(); var k=+this.dataset.delpg; lines.splice(k, 1); if(par) par.splice(k, 1); if(!lines.length){ lines.push(''); if(par) par.push(''); } rerender(); });
 }
 /* 사진으로 읽은 쪽들을 lines 뒤에 이어 붙인다. 배열을 제자리에서 바꾼다 */
 function linesHaveText(lines){ return lines.some(function(x){ return String(x||'').trim(); }); }
+function mergeScannedPages(lines, got, par, gotPar){
+  /* 이미 쓴 쪽은 그대로 두고 그 뒤에 이어 붙인다 (끝의 빈 칸만 걷어낸다 — 그림이 있는 쪽은 글이 없어도 둔다) */
+  var base = lines.slice(), pb = par ? par.slice(0, base.length) : null;
+  if(pb) while(pb.length < base.length) pb.push('');
+  while(base.length && !String(base[base.length-1]||'').trim() && !(pb && pb[base.length-1])){ base.pop(); if(pb) pb.pop(); }
+  var res = base.concat(got);
+  lines.length = 0;
+  Array.prototype.push.apply(lines, res.length ? res : ['']);
+  if(par){
+    var gp = (gotPar || []).slice(0, got.length); while(gp.length < got.length) gp.push('');
+    var pr = pb.concat(gp); par.length = 0; Array.prototype.push.apply(par, pr.length ? pr : ['']);
+  }
+  return base.length;   /* 새로 들어간 첫 쪽 앞의 쪽 수 */
+}
 function scanBtnHtml(lines){
   return '<button class="btn wide" id="scan" style="margin-bottom:6px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">'+
     (linesHaveText(lines) ? '📷 사진·PDF 더 추가해서 이어 입력' : '📷 책 사진·PDF로 자동 입력')+'</button>'+
@@ -6393,7 +6424,8 @@ function scanBtnHtml(lines){
 function scrollToPage(i){
   setTimeout(function(){ var el=document.querySelector('.pgin[data-pg="'+i+'"]'); if(el && el.scrollIntoView) el.scrollIntoView({block:'center'}); }, 80);
 }
-function mergeScannedPages(lines, got){
+/* (옛 자리) */
+function _mergeScannedPagesOld(lines, got){
   /* 이미 쓴 쪽은 그대로 두고 그 뒤에 이어 붙인다 (끝의 빈 칸만 걷어낸다) */
   var base = lines.slice();
   while(base.length && !String(base[base.length-1]||'').trim()) base.pop();
@@ -6582,6 +6614,11 @@ var PDFJS_SRCS = [
 ];
 
 function origList(){ return PROG.orig || []; }
+/* 쉐도잉 책꽂이 두 개: '' = 원서 쉐도잉, 'mm' = 미매말 쉐도잉 (묶음마다 s.sh). OG_READ: 읽기 시험이면 true, 쓰기 시험이면 false */
+var OG_SHELF = '', OG_READ = false;
+try{ OG_READ = localStorage.getItem('hajun_ogread') === '1'; }catch(e){}
+function ogName(s){ return (s === undefined ? OG_SHELF : s) === 'mm' ? '미매말 쉐도잉' : '원서 쉐도잉'; }
+function origShelf(s){ if(s === undefined) s = OG_SHELF; return origList().filter(function(o){ return (o.sh || '') === s; }); }
 function origById(id){ return origList().filter(function(s){ return s.id===id; })[0]; }
 function origStars(){ return origList().reduce(function(a,s){ return a + (s.done ? (s.stars||STAR_ORIG) : 0); }, 0); }
 function origKey(setId, itemId){ return 'o_'+setId+'_'+itemId; }
@@ -7183,19 +7220,23 @@ window.addEventListener('popstate', function(){
 function screenOrigList(note){
   clearConfetti();
   if(typeof note !== 'string') note = '';   /* onclick 으로 불릴 때 들어오는 이벤트는 무시 */
-  var os = origList();
+  var os = origShelf();
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back" aria-label="뒤로">←</button>'+
-      '<h2>📘 원서 읽기</h2>'+
-      '<div class="pill">⭐ '+origStars()+'</div>'+
+      '<h2>'+(OG_SHELF ? '🎧 ' : '🌟 ')+ogName()+'</h2>'+
+      '<div class="pill">⭐ '+origShelf().reduce(function(a, s){ return a + (s.done ? (s.stars||STAR_ORIG) : 0); }, 0)+'</div>'+
     '</div>'+
     (note ? '<div class="ognotice" role="status">'+esc(note)+'</div>' : '')+
-    '<details class="ogrules"><summary><span>📘 원서 그림을 보고 <b>영어 문장</b> 쓰기!</span><span class="ogrules-q">❓ 규칙</span></summary>'+
+    '<details class="ogrules"><summary><span>🖼️ <b>그림만 보고</b> 영어 문장 읽기·쓰기!</span><span class="ogrules-q">❓ 규칙</span></summary>'+
       '<div class="kidtxt">그림을 보고 문장을 쓰고, 다 쓰면 👨 아빠가 채점해요.<br>⭕면 다음 그림, ❌면 정답과 비교하고 <b>그 그림은 나중에 다시</b> 써요.<br>'+
         '<b>전체 시험</b>을 다 통과하면 ⭐ 1~'+STAR_ORIG+'개 (다시 도전은 ⭐ '+STAR_ORIG_RE_LO+'~'+STAR_ORIG_RE_HI+'개)를 뽑아요!<br>'+
         '<b>연습</b>은 고른 그림만 하고, 정답을 볼 수 있어요.</div>'+
-    '</details>';
+    '</details>'+
+    '<div class="ogrw" role="group" aria-label="시험 방법 고르기">'+
+      '<button class="btn'+(OG_READ ? '' : ' primary')+'" id="rwW" aria-pressed="'+(OG_READ ? 'false' : 'true')+'">✍️ 쓰기 시험</button>'+
+      '<button class="btn'+(OG_READ ? ' primary' : '')+'" id="rwR" aria-pressed="'+(OG_READ ? 'true' : 'false')+'">🗣 읽기 시험</button>'+
+    '</div>';
   if(!os.length){
     html += '<div class="card" style="text-align:center"><div style="font-size:44px">📘</div>'+
       '<div class="muted" style="margin-top:6px">아직 원서가 없어요.<br>아빠가 맨 아래 「👨 아빠: 원서 추가」로 넣어 줄 거예요!</div></div>';
@@ -7218,6 +7259,8 @@ function screenOrigList(note){
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
   origSyncUp();
+  document.getElementById('rwW').onclick = function(){ OG_READ = false; try{ localStorage.setItem('hajun_ogread', '0'); }catch(e){} beep([600],.05); screenOrigList(); };
+  document.getElementById('rwR').onclick = function(){ OG_READ = true; try{ localStorage.setItem('hajun_ogread', '1'); }catch(e){} beep([600],.05); screenOrigList(); };
   document.getElementById('add').onclick = function(){ needDad(function(){ screenOrigEdit(null); }, screenOrigList); };
   on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var s = origById(this.dataset.ed); if(s) needDad(function(){ screenOrigEdit(s); }, screenOrigList); });
   on('.qzdel', function(ev){ ev.stopPropagation(); var s = origById(this.dataset.rm); if(s) listDel('“'+s.title+'” 원서와 그림을 지울까요? (받은 별은 그대로 남아요)', screenOrigList, function(done){
@@ -7446,7 +7489,7 @@ function screenOrigEdit(set){
           return m;
         });
         if(editing){ set.t = t; set.e = (st.e||'').trim() || '📘'; set.items = meta; }
-        else PROG.orig.push({id: sid, e: (st.e||'').trim() || '📘', t: t, items: meta, done: false, stars: 0});
+        else PROG.orig.push({id: sid, e: (st.e||'').trim() || '📘', t: t, items: meta, done: false, stars: 0, sh: OG_SHELF});
         saveProgress(); okSound(); toast('📘');
         clearTimeout(draftTimer); origDraftDel(DKEY);
         var msgs = [];
@@ -7539,7 +7582,7 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
     app.innerHTML = head() +
       '<div id="stW">'+
         '<div class="card ogcard">'+
-          '<div class="traceBig">'+(fails[cur.id] ? (full ? '아까 그 그림! 이번엔 할 수 있어 💪' : '한 번 더! 이번엔 할 수 있어 💪') : '그림을 보고 <b>영어 문장</b>을 써 보세요!')+'</div>'+
+          '<div class="traceBig">'+(fails[cur.id] ? (full ? '아까 그 그림! 이번엔 할 수 있어 💪' : '한 번 더! 이번엔 할 수 있어 💪') : (OG_READ ? '그림을 보고 <b>영어 문장</b>을 소리 내어 말해요!' : '그림을 보고 <b>영어 문장</b>을 써 보세요!'))+'</div>'+
           '<div class="ogpic">'+
             (url ? '<img src="'+url+'" alt="'+esc(set.t)+' '+(i+1)+'번 그림">'
                  : '<div class="ogpic-miss">🖼️ 그림을 불러오지 못했어요'+(cur.ko?'<br><b>🇰🇷 '+esc(cur.ko)+'</b>':'')+'</div>')+
@@ -7553,7 +7596,11 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
             (full ? '' : '<button class="btn" id="peek" aria-pressed="false">👁 정답 보기</button>')+
           '</div>'+
         '</div>'+
-        '<div class="ogbar"><button class="btn primary wide ogdone" id="done">✋ 다 썼어요! 아빠 불러요</button></div>'+
+        '<div class="ogbar"><button class="btn primary wide ogdone" id="done">'+(OG_READ ? '✋ 다 읽었어요! 아빠 불러요' : '✋ 다 썼어요! 아빠 불러요')+'</button></div>'+
+        '<div class="ognav">'+
+          '<button class="btn" id="navP"'+(i === 0 ? ' disabled' : '')+'>◀ 앞 그림</button>'+
+          '<button class="btn" id="navN"'+(i >= items.length-1 ? ' disabled' : '')+'>다음 그림 ▶</button>'+
+        '</div>'+
       '</div>'+
       '<div id="stG" hidden>'+
         '<div class="card ogcard">'+
@@ -7570,8 +7617,21 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
         '</div>'+
       '</div>';
     bindB();
+    /* ◀ 앞 그림 / 다음 그림 ▶ — 시험에서는 '다음'으로 넘긴 그림을 맨 뒤로 보내 나중에 다시 한다(건너뛰어 통과하지 못하게) */
+    document.getElementById('navP').onclick = function(){ if(i <= 0) return; stopAll(); beep([420],.05); i--; ask(); window.scrollTo(0, 0); };
+    document.getElementById('navN').onclick = function(){
+      if(i >= items.length-1) return; stopAll(); beep([520],.05);
+      if(full){ var mv = items.splice(i, 1)[0]; items.push(mv); } else i++;
+      ask(); window.scrollTo(0, 0);
+    };
     var cv = document.getElementById('cv');
     var pad = makeSentCanvas(cv, cur.en, false, 240);
+    if(OG_READ){   /* 읽기 시험: 쓰는 칸 없이 그림만 보고 말한다 → 아빠가 듣고 채점 */
+      ['tip','undo','clr'].forEach(function(id){ var el = document.getElementById(id); if(el) el.hidden = true; });
+      var dw = app.querySelector('.drawWrap'); if(dw) dw.hidden = true;
+      var mn = document.getElementById('mine'); if(mn){ mn.hidden = true; if(mn.previousElementSibling) mn.previousElementSibling.hidden = true; }
+      var mo = document.getElementById('more'); if(mo) mo.textContent = '🗣 한 번 더 읽을래요 (하준이에게 돌려주기)';
+    }
     Array.prototype.forEach.call(app.querySelectorAll('[data-say]'), function(b){
       b.onclick = function(){ speakWords(words, +b.dataset.say === 1 ? RATE : 0.6, function(){}); };
     });
@@ -7595,14 +7655,14 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
     var inkBase = inkCount();
     function inked(){ var n = inkCount(); return n < 0 || n > inkBase + 40; }
     document.getElementById('done').onclick = function(){
-      if(!inked()){
+      if(!OG_READ && !inked()){
         noSound();
         var tp = document.getElementById('tip');
         tp.innerHTML = '✏️ 먼저 아래 칸에 <b>영어 문장</b>을 써 주세요!'; tp.classList.add('ogwarn');
         return;
       }
       stopAll(); okSound();
-      document.getElementById('mine').src = cv.toDataURL('image/png');
+      if(!OG_READ) document.getElementById('mine').src = cv.toDataURL('image/png');
       document.getElementById('stW').hidden = true;
       document.getElementById('stG').hidden = false;
       window.scrollTo(0, 0);
@@ -7714,7 +7774,7 @@ function startOrig(set, ids, preImgs, startAt, fails0, mode){
       app.innerHTML =
         '<div class="result">'+
           '<div class="big">🏆</div>'+
-          '<h2>원서 읽기 통과!</h2>'+
+          '<h2>'+ogName()+' 통과!</h2>'+
           '<p>'+esc(set.t)+'<br><b>그림 '+items.length+'개를 다 썼어요!</b></p>'+
         firstHtml()+
           (justGot!==null
@@ -7819,13 +7879,12 @@ function screenSpecials(){
   var html =
     '<div class="topbar">'+
       '<button class="iconbtn" id="back">←</button>'+
-      '<h2>'+(SHELF ? '🎧 ' : '🌟 ')+shelfName()+'</h2>'+
-      '<div class="pill">🏆 '+((SHELF || !SPECIALS.length) ? shelfPapers().filter(function(b){ return b.done; }).length+'/'+shelfPapers().length
-        : SPECIALS.filter(function(x){ return specPassed(x.id); }).length+'/'+SPECIALS.length)+'</div>'+
+      '<h2>📘 원서 읽기</h2>'+
+      '<div class="pill">🏆 '+papers().filter(function(b){ return b.done; }).length+'/'+papers().length+'</div>'+
     '</div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
-      '<div style="font-size:16px">👨 아빠 앞에서 '+((SHELF || !SPECIALS.length) ? '책 한 권' : '시 한 편')+'을 끝까지!</div>'+
-      '<div class="muted" style="margin-top:5px">'+((SHELF || !SPECIALS.length) ? '한 쪽씩' : '한 연씩')+' 소리 없이 보여줘요.<br>하준이가 읽고, 아빠가 ⭕를 눌러야 다음으로 넘어가요.<br>'+((SHELF || !SPECIALS.length) ? '한 권' : '한 편')+' 통과하면 별 <b style="color:var(--mango-ink)">1~'+STAR_SPEC+'개</b>를 뽑아요!</div>'+
+      '<div style="font-size:16px">📘 책 그림과 문장을 보며 <b>끊기지 않게</b> 읽어요!</div>'+
+      '<div class="muted" style="margin-top:5px">모르는 단어를 누르면 <b>소리</b>와 <b>뜻</b>이 아래에 나와요.<br>한 권을 다 읽으면 별 <b style="color:var(--mango-ink)">1~'+STAR_PAPER+'개</b>를 뽑아요!</div>'+
     '</div>';
   if(!SHELF && SPECIALS.length) html += '<div class="sechd">🌟 앱 안의 시 — 화면으로 읽어요</div>';
   SPECIALS.forEach(function(sp){
@@ -7844,7 +7903,7 @@ function screenSpecials(){
     html += '<button class="btn wide" id="unhidesp" style="font-size:13px;margin-bottom:8px">↩️ 숨긴 시 다시 보이기</button>';
   }
 
-  html += '<div class="sechd">📕 종이책 — <b>진짜 책</b>을 펴놓고 읽어요</div>';
+  html += '<div class="sechd">📘 읽을 책</div>';
   if(!shelfPapers().length) html += '<div class="card muted" style="text-align:center;margin-bottom:8px">아직 책이 없어요. 아래에서 책을 넣어 주세요.</div>';
   shelfPapers().forEach(function(b){
     html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
@@ -7859,7 +7918,7 @@ function screenSpecials(){
   });
   html += '<button class="btn wide" id="addp" style="margin-top:4px">➕ 읽을 책 추가하기</button>'+
     '<div class="muted" style="text-align:center;margin-top:8px;line-height:1.6">'+
-      '도서관에서 빌린 책을 등록하세요.<br>앱은 <b>쪽수와 별만</b> 세고, 하준이는 <b>종이책</b>을 읽어요.</div>';
+      '책 <b>사진이나 PDF</b>를 넣으면 쪽마다 <b>그림과 영어 문장</b>이 그대로 보여요.</div>';
 
   app.innerHTML = html;
   document.getElementById('back').onclick = screenHome;
@@ -7889,6 +7948,7 @@ function screenSpecials(){
     needDad(function(){
       if(!confirm('“'+(b?b.t:'이 책')+'”를 정말 삭제할까요?\n읽은 기록은 지워지지만, 받은 별과 레벨은 그대로 남아요.')) return;
       deadAdd(id);   /* 받은 별은 보관함으로 → 별·레벨 그대로 */
+      if(b) pbDelKeys(b.id, b.pi);
       PROG.papers = papers().filter(function(x){ return x.id!==id; });
       saveProgress(); toast('🗑'); screenSpecials();
     }, screenSpecials);
@@ -7904,6 +7964,7 @@ function specHidden(id){ return (PROG.hiddenSpecs||[]).indexOf(id) >= 0; }
 function screenAddPaper(){
   var meta = {t:'', by:'', ko:'', e:'📕'};
   var lines = ['', '', ''];   /* 쪽별 문장 — 칸 개수가 곧 쪽수가 된다 */
+  var pim = ['', '', ''];     /* 쪽별 그림 id (사진·PDF로 넣은 쪽만) */
   function draw(){
     app.innerHTML =
       '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>➕ 읽을 책 추가</h2><div style="width:44px"></div></div>'+
@@ -7922,7 +7983,7 @@ function screenAddPaper(){
       '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.6">'+
         '쪽마다 그 쪽의 영어 문장을 넣으세요. <b>넣은 칸 수가 쪽수</b>예요.<br>'+
         '비워둔 쪽은 문장 없이 쪽수만 세어져요 (책을 보며 읽기).</div>';
-    document.getElementById('pgrows').innerHTML = pageRowsHtml(lines);
+    document.getElementById('pgrows').innerHTML = pageRowsHtml(lines, pim);
     function collect(){
       meta.t = document.getElementById('pt').value;
       meta.by = document.getElementById('pb').value;
@@ -7931,20 +7992,20 @@ function screenAddPaper(){
       Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; });
     }
     document.getElementById('back').onclick = screenSpecials;
-    document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); draw(); };
+    document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); pim.push(''); draw(); };
     document.getElementById('scan').onclick = function(){
       collect();
-      scanImages('paper', function(d){
+      scanImages('pbook', function(d){ pbStash(d.imgs || [], function(pids){
         var got = (d.pages||[]).map(function(x){ return String(x==null?'':x).replace(/\s+/g,' ').trim(); });
-        if(!got.length && !d.title){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        if(!got.length){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
         if(!String(meta.t||'').trim() && d.title) meta.t = String(d.title).trim();
         if(!String(meta.by||'').trim() && d.by) meta.by = String(d.by).trim();
-        var at = got.length ? mergeScannedPages(lines, got) : 0;
+        var at = got.length ? mergeScannedPages(lines, got, pim, pids) : 0;
         okSound(); draw(); if(got.length) scrollToPage(at);
-        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n쪽 순서와 글자가 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.\n더 남은 사진은 「사진·PDF 더 추가해서 이어 입력」으로 넣으세요.'); }, 200);
-      });
+        setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽었어요. (지금 모두 '+lines.length+'쪽)\n쪽마다 그림(🖼️)과 글이 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.'); }, 200);
+      }); });
     };
-    bindPageRows(lines, collect, draw);
+    bindPageRows(lines, collect, draw, pim);
     document.getElementById('save').onclick = function(){
       collect();
       var t = (meta.t||'').trim();
@@ -7952,26 +8013,90 @@ function screenAddPaper(){
       var arr = lines.map(function(x){ return String(x||'').replace(/\s+/g,' ').trim(); });
       /* 끝쪽부터 빈 칸은 잘라내되, 최소 1쪽은 남긴다 (쪽수 = 칸 개수) */
       var last = arr.length-1;
-      while(last>0 && !arr[last]) last--;
+      while(pim.length < arr.length) pim.push('');
+      while(last>0 && !arr[last] && !pim[last]) last--;
       arr = arr.slice(0, last+1);
       var pages = arr.length;
+      var nid = 'p'+Date.now(), npi = pim.slice(0, pages);
       PROG.papers.push({
-        id: 'p'+Date.now(),
+        id: nid,
         e: (meta.e||'').trim() || '📕',
         t: t,
         by: (meta.by||'').trim() || '',
         ko: (meta.ko||'').trim() || '',
         pages: pages, read: 0, done: false,
-        sh: SHELF,
+        pi: npi,
         lines: arr
       });
-      saveProgress(); okSound(); toast('📕'); screenSpecials();
+      saveProgress();
+      pbUpload(nid, npi, function(failN){
+        okSound(); toast('📕'); screenSpecials();
+        if(failN) setTimeout(function(){ alert('책은 등록됐지만 그림 '+failN+'장을 서버에 올리지 못했어요.\n이 기기에서는 보이고, 다른 기기에서는 그 쪽 그림이 안 보일 수 있어요.'); }, 200);
+      });
     };
   }
   draw();
 }
 
 /* 종이책 읽기 — 한 쪽씩, 아빠가 ⭕ 해야 넘어간다. 진도는 저장된다. */
+/* ── 원서 읽기: 책 쪽 그림 ──
+   책을 사진·PDF로 넣으면 쪽마다 그림을 같이 보관한다(b.pi[쪽] = 그림 id, 없으면 '').
+   그림은 원서 쉐도잉과 같은 저장소(구글 드라이브 + 이 기기 IndexedDB)에 'o_pp_책id_그림id' 로 둔다. */
+var PB_IMG_SIDE = 1100, PB_IMG_QUALITY = 0.72;   /* 보관하는 쪽 그림의 긴 변(px)·품질 */
+var PB_PEND = {};                                /* 아직 서버에 안 올린 그림 (그림 id → dataURL) */
+function pbKey(bookId, imgId){ return 'o_pp_'+bookId+'_'+imgId; }
+function pbShrink(b64, cb){
+  var im = new Image();
+  im.onload = function(){
+    try{
+      var s = Math.min(1, PB_IMG_SIDE/Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(im.width*s)); c.height = Math.max(1, Math.round(im.height*s));
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      cb(c.toDataURL('image/jpeg', PB_IMG_QUALITY));
+    }catch(e){ cb(''); }
+  };
+  im.onerror = function(){ cb(''); };
+  im.src = 'data:image/jpeg;base64,'+b64;
+}
+function pbStash(list, cb){   /* AI에게 보낸 쪽 사진들 → 줄여서 임시 보관, 그림 id 목록을 돌려준다 */
+  var ids = [], k = 0;
+  (function next(){
+    if(k >= list.length) return cb(ids);
+    var id = origNewId()+'x'+k;
+    pbShrink(list[k++], function(u){ if(u){ PB_PEND[id] = u; ids.push(id); } else ids.push(''); next(); });
+  })();
+}
+function pbUpload(bookId, pi, cb){   /* 임시 보관한 그림만 서버·기기에 올린다 */
+  var todo = (pi || []).filter(function(id){ return id && PB_PEND[id]; }), k = 0, failN = 0;
+  if(!todo.length) return cb(0);
+  var ov = document.createElement('div'); ov.className = 'wr-ov';
+  ov.innerHTML = '<div class="wr-ovbox"><div style="font-size:46px">📘</div>'+
+    '<span class="sw-bars" aria-hidden="true" style="margin:10px auto 6px;justify-content:center"><i></i><i></i><i></i><i></i><i></i></span>'+
+    '<div id="pbMsg" class="wr-ovmsg">책 그림을 저장하고 있어요…</div><div class="muted">화면을 닫지 말고 기다려 주세요.</div></div>';
+  document.body.appendChild(ov);
+  (function next(){
+    if(k >= todo.length){ if(ov.parentNode) ov.parentNode.removeChild(ov); return cb(failN); }
+    var m = document.getElementById('pbMsg'); if(m) m.textContent = '책 그림 저장 '+(k+1)+'/'+todo.length;
+    var id = todo[k++], key = pbKey(bookId, id), u = PB_PEND[id];
+    origImgPut(key, u, function(){
+      origSrvPut(key, u, function(j){ if(!j || !j.ok) failN++; delete PB_PEND[id]; next(); });
+    });
+  })();
+}
+function pbLoad(b, i, cb){
+  var id = (b.pi || [])[i]; if(!id) return cb('');
+  if(PB_PEND[id]) return cb(PB_PEND[id]);
+  var key = pbKey(b.id, id);
+  origImgGet(key, function(u){
+    if(u) return cb(u);
+    origSrvGet([key], function(j){ var v = j && j.ok && j.imgs && j.imgs[key]; if(v) origImgPut(key, v); cb(v || ''); });
+  });
+}
+function pbDelKeys(bookId, ids, cb){
+  var keys = (ids || []).filter(Boolean).map(function(id){ return pbKey(bookId, id); });
+  if(!keys.length) return cb && cb();
+  origImgDel(keys, function(){ origSrvDel(keys, function(){ if(cb) cb(); }); });
+}
 function screenPaper(b){
   /* 완독한 책은 처음부터 다시 읽게, 아니면 이어서 */
   var i = b.done ? 0 : Math.min(b.read, b.pages-1);
@@ -7979,7 +8104,7 @@ function screenPaper(b){
     app.innerHTML =
       '<div class="topbar">'+
         '<button class="iconbtn" id="back">←</button>'+
-        '<h2>'+b.e+' 종이책 읽기</h2>'+
+        '<h2>'+b.e+' 원서 읽기</h2>'+
         '<div class="pill">'+(i+1)+'/'+b.pages+'</div>'+
       '</div>'+
       (b.done ? '<div class="card" style="margin-bottom:10px;background:#FFF8E6;text-align:center;padding:10px">'+
@@ -7987,8 +8112,7 @@ function screenPaper(b){
       '<div class="bar"><i style="width:'+Math.round(i/b.pages*100)+'%"></i></div>'+
       '<div class="card" style="text-align:center">'+
         '<div class="muted" style="font-size:13px">'+esc(b.t)+'<br>'+esc(b.by)+'</div>'+
-        '<div class="dad" style="margin-top:10px">👨 아빠가 듣고 눌러주세요</div>'+
-        '<div class="pgnum">'+(i+1)+'</div>'+
+        ((b.pi||[])[i] ? '<div class="pb-pic" id="pbpic"><div class="pb-load">🖼️ 그림을 불러오는 중…</div></div>' : '<div class="pgnum">'+(i+1)+'</div>')+
         (function(){
           var ln = (b.lines||[])[i];
           if(ln){
@@ -8000,9 +8124,10 @@ function screenPaper(b){
                 '<button class="btn primary" id="sayL">🔊 듣기</button>'+
                 '<button class="btn" id="slowL">🐢</button>'+
               '</div>'+
-              '<div style="font-size:15px;margin-top:8px">책을 보며 <b>소리내어</b> 따라 읽어요'+
-              '<br><span style="font-size:13px;color:#666">모르는 단어를 누르면 소리와 한글 발음이 나와요</span></div>';
+              '<div style="font-size:15px;margin-top:8px"><b>끊기지 않게</b> 소리 내어 읽어요'+
+              '<br><span style="font-size:13px;color:#666">모르는 단어를 누르면 소리와 뜻이 아래에 나와요</span></div>';
           }
+          if((b.pi||[])[i]) return '<div class="muted" style="margin-top:8px">이 쪽은 글이 없어요. 그림을 보고 넘어가요.</div>';
           return '<div style="font-size:17px;margin-top:4px">쪽을 펴서 <b>소리내어</b> 읽어요</div>'+
             '<div class="readtip" style="margin-top:12px">📕 화면이 아니라 <b>책</b>을 보세요!<br>'+
               '<span style="font-size:13px">이 쪽은 문장이 등록 안 됐어요. 쪽수와 별만 세어줘요.</span></div>';
@@ -8012,9 +8137,10 @@ function screenPaper(b){
         '<button class="btn no" id="no">❌ 다시 읽을래</button>'+
         '<button class="btn go" id="ok">⭕ 잘 읽었어요</button>'+
       '</div>'+
-      '<div class="row" style="margin-top:10px">'+
+      '<div class="row pbnav" style="margin-top:10px">'+
         '<button class="btn" id="prev" style="flex:1"'+(i===0?' disabled':'')+'>◀ 앞쪽</button>'+
         '<button class="btn" id="jump" style="flex:1">↪ 쪽 고르기</button>'+
+        '<button class="btn" id="nextp" style="flex:1"'+(i>=b.pages-1?' disabled':'')+'>다음 쪽 ▶</button>'+
       '</div>'+
       '<button class="btn wide" id="edlines" style="margin-top:8px;font-size:14px">✏️ 책 문장 넣기/고치기 (아빠)</button>'+
       '<div class="muted" style="text-align:center;margin-top:10px">여기까지 읽은 건 저장돼요. 다음에 이어서 하면 됩니다.</div>';
@@ -8037,7 +8163,12 @@ function screenPaper(b){
         };
       });
     }
-    document.getElementById('prev').onclick = function(){ if(i>0){ stopAll(); i--; beep([420],.05); draw(); } };
+    document.getElementById('prev').onclick = function(){ if(i>0){ stopAll(); i--; beep([420],.05); draw(); window.scrollTo(0, 0); } };
+    document.getElementById('nextp').onclick = function(){ if(i<b.pages-1){ stopAll(); i++; beep([520],.05); draw(); window.scrollTo(0, 0); } };
+    if((b.pi||[])[i]){ var pgAt = i; pbLoad(b, i, function(u){
+      var box = document.getElementById('pbpic'); if(!box || pgAt !== i) return;
+      box.innerHTML = u ? '<img src="'+u+'" alt="'+esc(b.t)+' '+(i+1)+'쪽 그림">' : '<div class="pb-load">🖼️ 그림을 불러오지 못했어요</div>';
+    }); }
     document.getElementById('jump').onclick = function(){
       var v = prompt('몇 쪽부터 할까요? (1~'+b.pages+')', String(i+1));
       var n = parseInt(v,10);
@@ -8048,13 +8179,14 @@ function screenPaper(b){
     document.getElementById('ok').onclick = function(){
       okSound(); toast('⭕'); stopAll();
       if(i+1 > b.read){ b.read = i+1; saveProgress(); }
-      if(i < b.pages-1){ i++; draw(); } else finish();
+      if(i < b.pages-1){ i++; draw(); window.scrollTo(0, 0); } else finish();
     };
   }
   /* 아빠가 책 문장을 쪽마다 따로 입력/수정한다 (쪽 수만큼 입력칸) */
   function editLines(){
-    var lines = (b.lines||[]).slice();
+    var lines = (b.lines||[]).slice(), pim = (b.pi||[]).slice(), pi0 = (b.pi||[]).slice();
     while(lines.length < b.pages) lines.push('');
+    while(pim.length < lines.length) pim.push('');
     if(!lines.length) lines = [''];
     function render(){
       app.innerHTML =
@@ -8068,32 +8200,36 @@ function screenPaper(b){
         '<div id="pgrows"></div>'+
         '<button class="btn wide" id="addpg" style="margin-bottom:14px">➕ 쪽 추가</button>'+
         '<button class="btn primary wide" id="save">💾 저장하기</button>';
-      document.getElementById('pgrows').innerHTML = pageRowsHtml(lines);
+      document.getElementById('pgrows').innerHTML = pageRowsHtml(lines, pim);
       function collect(){ Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; }); }
       document.getElementById('back').onclick = function(){ draw(); };
-      document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); render(); };
-      bindPageRows(lines, collect, render);
+      document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); pim.push(''); render(); };
+      bindPageRows(lines, collect, render, pim);
       document.getElementById('scan').onclick = function(){
         collect();
-        scanImages('paper', function(d){
+        scanImages('pbook', function(d){ pbStash(d.imgs || [], function(pids){
           var got = (d.pages||[]).map(function(x){ return String(x==null?'':x).replace(/\s+/g,' ').trim(); });
           if(!got.length){ noSound(); alert('사진에서 책 내용을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
-          var at = mergeScannedPages(lines, got);
+          var at = mergeScannedPages(lines, got, pim, pids);
           okSound(); render(); scrollToPage(at);
-          setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽어서 '+(at?(at+1)+'쪽부터 이어 ':'')+'채웠어요. (지금 모두 '+lines.length+'쪽)\n확인하고 고친 뒤 「저장하기」를 눌러 주세요.'); }, 200);
-        });
+          setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽었어요. (지금 모두 '+lines.length+'쪽)\n확인하고 고친 뒤 「저장하기」를 눌러 주세요.'); }, 200);
+        }); });
       };
       document.getElementById('save').onclick = function(){
         collect();
         var arr = lines.map(function(x){ return String(x||'').replace(/\s+/g,' ').trim(); });
         /* 끝쪽부터 빈 칸은 잘라내되 최소 1쪽 남긴다. 쪽수 = 칸 개수 */
         var last = arr.length-1;
-        while(last>0 && !arr[last]) last--;
+        while(pim.length < arr.length) pim.push('');
+        while(last>0 && !arr[last] && !pim[last]) last--;
         arr = arr.slice(0, last+1);
         b.lines = arr;
         b.pages = arr.length;            /* 쪽수 자동 갱신 */
         if(b.read > b.pages) b.read = b.pages;
-        saveProgress(); okSound(); toast('💾'); draw();
+        b.pi = pim.slice(0, arr.length);
+        pbDelKeys(b.id, pi0.filter(function(id){ return id && b.pi.indexOf(id) < 0; }));   /* 지운 쪽의 그림은 서버에서도 지운다 */
+        saveProgress();
+        pbUpload(b.id, b.pi, function(){ okSound(); toast('💾'); draw(); });
       };
     }
     render();
@@ -9486,7 +9622,10 @@ function startRead(s){
       b.innerHTML = '<div class="rd-wait"><span class="sw-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><b>잘 들어 봐요…</b></div>';
     } else {   /* 'say' = 하준이가 읽을 차례 */
       b.innerHTML = '<button class="btn primary wide rd-go" id="ok" disabled><span class="rd-fill" id="fill"></span><span class="rd-lab">'+(lm ? '🗣 따라 읽었어요 ▶' : '✅ 읽었어요 ▶')+'</span></button>'+
-        '<button class="btn wide rd-again" id="hear">'+(lm ? '🔊 다시 듣기' : '🔊 잘 모르겠어요 (들어 보기)')+'</button>';
+        '<button class="btn wide rd-again" id="hear">'+(lm ? '🔊 다시 듣기' : '🔊 잘 모르겠어요 (들어 보기)')+'</button>'+
+        '<div class="ognav"><button class="btn" id="rdP"'+(i === 0 ? ' disabled' : '')+'>◀ 앞 문장</button><button class="btn" id="rdN"'+(i >= items.length-1 ? ' disabled' : '')+'>다음 문장 ▶</button></div>';
+      document.getElementById('rdP').onclick = function(){ if(i <= 0) return; clearTimeout(timer); stopAll(); beep([420],.05); i--; step(); };
+      document.getElementById('rdN').onclick = function(){ if(i >= items.length-1) return; clearTimeout(timer); stopAll(); beep([520],.05); i++; step(); };
       var need = Math.max(READ_MIN_MS, words(i).length*READ_MIN_WORD_MS), ok = document.getElementById('ok'), fill = document.getElementById('fill');
       setTimeout(function(){ if(fill){ fill.style.transition = 'width '+need+'ms linear'; fill.style.width = '100%'; } }, 30);
       clearTimeout(timer); timer = setTimeout(function(){ if(ok && ok.parentNode){ ok.disabled = false; ok.classList.add('ready'); } }, need);
