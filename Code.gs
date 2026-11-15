@@ -34,6 +34,7 @@ function doGet(e) {
   else if (action === 'ocrStatus') out = { enabled: _hasOcrKey() };
   else if (action === 'ppMap')     out = { ok: true, map: _ppMap() };
   else if (action === 'hw')        out = { ok: true, hw: _hw() };
+  else if (action === 'wr')        out = { ok: true, list: _wrRead() };
   else if (action === 'ping')      out = { ok: true };
   else out = { error: 'UNKNOWN_ACTION' };
   return _reply(out, p.callback);
@@ -55,6 +56,8 @@ function doPost(e) {
   else if (action === 'hand')   out = handRead(body);
   else if (action === 'ppSet')  out = ppSet(body);
   else if (action === 'hwSet')  out = hwSet(body);
+  else if (action === 'wrAdd')  out = wrAdd(body);
+  else if (action === 'wrDel')  out = wrDel(body);
   else if (action === 'hwCheck') out = hwCheck(body);
   else if (action === 'imgPut') out = origPutImg(body);
   else if (action === 'imgGet') out = origGetImgs(body);
@@ -246,6 +249,29 @@ function _ocrKey() { return PropertiesService.getScriptProperties().getProperty(
 function _hasOcrKey() { var k = _ocrKey(); return !!(k && k !== 'YOUR_KEY'); }
 
 var OCR_PROMPTS = {
+  diary:
+    '아래 [학생이 쓴 글]은 한국 초등학교 3학년 학생이 손으로 쓴 영어 일기를 그대로 옮긴 것입니다. 선생님처럼 읽고 JSON으로만 답하세요.\n' +
+    '형식: {"original":"학생이 쓴 그대로","fixed":"철자·문법만 고친 글","fixes":[{"from":"틀린 부분","to":"고친 부분","why":"이유"}],"count":문장수,' +
+    '"checks":[{"rule":"기준 글 그대로","ok":true,"note":"한 줄 설명"}],"easy":"기준을 모두 지킨 쉬운 글","ko":"easy 의 한국어 뜻","praise":"칭찬 한마디"}\n' +
+    '규칙: ① original 은 틀린 철자·대소문자까지 보이는 그대로 옮기고 절대 고치지 않는다. 날짜·제목 줄도 그대로. 문장(줄)마다 줄바꿈(\\n). ' +
+    '② fixed 는 학생의 문장과 내용을 그대로 두고 철자·대소문자·문장부호·문법만 고친다. 문장을 새로 만들지 않는다. 문장마다 줄바꿈. ' +
+    '③ fixes 는 고친 곳마다 하나(최대 15개). from·to 는 그 낱말이나 짧은 구절만. why 는 한국어로 초등 3학년이 알 수 있게 아주 짧게. 고칠 곳이 없으면 빈 배열. ' +
+    '④ count 는 fixed 의 문장 수(날짜·제목 줄 제외). ' +
+    '⑤ checks 는 아래 [기준]을 순서대로 하나씩, rule 은 기준 글 그대로. 학생이 쓴 글(fixed)이 그 기준을 지켰으면 ok:true. note 는 한국어 한 줄(예: "4문장이에요. 한 문장만 더!", "because 를 잘 썼어요"). ' +
+    '⑥ easy 는 학생이 쓴 내용을 바탕으로 [기준]을 모두 지키도록 다시 쓴 글. 초등 3학년이 아는 아주 쉬운 낱말과 짧고 단순한 문장(한 문장 10낱말 안팎)만 쓴다. ' +
+    '학생이 쓰지 않은 일을 지어내지 말고, 기준을 채우는 데 꼭 필요한 만큼만 자연스럽게 덧붙인다. 날짜·제목은 넣지 않는다. 문장마다 줄바꿈. ' +
+    '⑦ ko 는 easy 를 문장마다 줄바꿈해 옮긴 쉬운 한국어. praise 는 학생이 잘한 점을 한국어로 한 문장. ' +
+    '⑧ 영어 일기가 아니거나 글씨를 읽을 수 없으면 {"error":"UNREADABLE"} 만.',
+  topic:
+    '아래 [학생이 쓴 글]은 한국 초등학교 3학년 학생이 손으로 쓴 한글 글(주제 글쓰기)을 그대로 옮긴 것입니다. 선생님처럼 읽고 JSON으로만 답하세요.\n' +
+    '형식: {"title":"제목(없으면 빈 문자열)","original":"학생이 쓴 그대로","fixed":"고친 글","fixes":[{"from":"틀린 부분","to":"고친 부분","why":"이유"}],' +
+    '"awkward":[{"from":"어색한 문장","to":"다듬은 문장","why":"이유"}],"praise":"칭찬 한마디","tip":"다음에 더 잘 쓰는 방법 한 가지"}\n' +
+    '규칙: ① original 은 틀린 맞춤법·띄어쓰기까지 보이는 그대로 옮기고 절대 고치지 않는다. 문단마다 줄바꿈(\\n). ' +
+    '② fixed 는 학생의 생각·내용·말투를 그대로 두고, 틀린 맞춤법·띄어쓰기·문장부호를 고치고, 뜻이 잘 통하지 않거나 어색한 문장만 꼭 필요한 만큼 다듬는다. 새 내용을 보태지 않는다. 문단 줄바꿈 유지. ' +
+    '③ fixes 는 맞춤법·띄어쓰기를 고친 곳마다 하나(최대 20개). from·to 는 그 낱말이나 짧은 구절만. ' +
+    '④ awkward 는 어색해서 다듬은 문장마다 하나(최대 8개). 앞뒤가 맞지 않는 문장(예: "왜냐하면 ~ 재미있다" → "왜냐하면 ~ 재미있기 때문이다"), 너무 길게 이어진 문장, 같은 말이 되풀이되는 문장, 뜻이 흐린 문장을 찾는다. 없으면 빈 배열. ' +
+    '⑤ why·praise·tip 은 초등 3학년이 알 수 있는 쉬운 말로 짧게. ' +
+    '⑥ 한글 글이 아니거나 글씨를 읽을 수 없으면 {"error":"UNREADABLE"} 만.',
   hw:
     '이미지는 영어 학원 선생님이 올린 숙제 안내 글(메신저/밴드 화면)입니다. 숙제 항목을 읽어 JSON으로만 답하세요.\n' +
     '형식: {"title":"글 제목(예: 11/12 숙제)","items":[{"t":"숙제 내용","due":"11/17","how":"내는 방법","note":"딸린 설명"}],"notice":["번호 없는 안내 문장"]}\n' +
@@ -302,6 +328,23 @@ function ocrScan(req) {
     parts.push({ text: '[이미지 ' + (i + 1) + ']' });
     parts.push({ inline_data: { mime_type: 'image/jpeg', data: String(b64) } });
   });
+  /* 글쓰기(영어일기·주제글쓰기)는 두 번에 나눠 한다: ① 쓴 그대로 옮겨 적기 → ② 그 글을 고치기.
+     한 번에 시키면 옮겨 적을 때 벌써 고쳐 버려서, 아이가 실제로 틀린 곳을 놓친다. */
+  if (kind === 'diary' || kind === 'topic') {
+    parts.push({ text: WR_READ_PROMPT[kind] });
+    var g1 = _geminiJSON(parts, 4000);
+    if (!g1.ok) return { error: g1.error };
+    var d1 = g1.data || {};
+    if (d1.items && d1.items.length) d1 = d1.items[0] || {};
+    var text = String(d1.text || '').trim();
+    if (d1.error || !text) return { ok: true, data: { error: 'UNREADABLE' }, model: g1.model };
+    var g2 = _geminiJSON([{ text: OCR_PROMPTS[kind] + (kind === 'diary' ? _wrRules(req.rules) : '') + '\n[학생이 쓴 글]\n' + text }], 8000);
+    if (!g2.ok) return { error: g2.error };
+    var d2 = g2.data || {};
+    if (d2.items && d2.items.length && !d2.fixed) d2 = d2.items[0] || {};
+    d2.original = text;
+    return { ok: true, data: d2, model: g2.model };
+  }
   parts.push({ text: OCR_PROMPTS[kind] });
 
   var g = _geminiJSON(parts, 8000);
@@ -751,4 +794,63 @@ function hwCheck(req) {
   if (hit) _hwSave(o);
   try { if (lock) lock.releaseLock(); } catch (e) {}
   return { ok: true, hw: o };
+}
+
+/* ===== ✍️ 글쓰기 기록 (영어일기 · 주제글쓰기) =====
+ * AI가 고쳐 준 결과(글자만)를 드라이브의 파일 하나에 모아 둔다 → 어느 기기에서나 지난 글을 다시 볼 수 있다.
+ * 진도와 따로 둔다(진도는 마지막에 저장한 기기 것이 덮어쓰므로). */
+var WR_FILE = 'wr_log.json';
+var WR_KEEP = 60;           // 이만큼만 남기고 오래된 것부터 지운다
+function _wrRead() {
+  try {
+    var f = _origFolder(false); if (!f) return [];
+    var it = f.getFilesByName(WR_FILE);
+    if (!it.hasNext()) return [];
+    var a = JSON.parse(it.next().getBlob().getDataAsString() || '[]');
+    return a && a.length ? a : [];
+  } catch (e) { return []; }
+}
+function _wrWrite(list) {
+  var f = _origFolder(true), old = f.getFilesByName(WR_FILE);
+  while (old.hasNext()) old.next().setTrashed(true);
+  f.createFile(Utilities.newBlob(JSON.stringify(list), 'application/json', WR_FILE));
+}
+function wrAdd(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  var e = req.entry;
+  if (!e || !e.id || !e.kind || !e.r) return { error: 'BAD_ENTRY' };
+  if (JSON.stringify(e).length > 30000) return { error: 'TOO_BIG' };
+  var lock = null;
+  try { lock = LockService.getScriptLock(); lock.waitLock(8000); } catch (x) { lock = null; }
+  try {
+    var list = _wrRead().filter(function (x) { return x.id !== e.id; });
+    list.push(e);
+    if (list.length > WR_KEEP) list = list.slice(list.length - WR_KEEP);
+    _wrWrite(list);
+    return { ok: true, n: list.length };
+  } catch (x) { return { error: 'DRIVE ' + String(x).slice(0, 200) }; }
+  finally { try { if (lock) lock.releaseLock(); } catch (x) {} }
+}
+function wrDel(req) {
+  if (!_pinOk(req)) return { error: 'BAD_PIN' };
+  try {
+    var list = _wrRead().filter(function (x) { return x.id !== String(req.id); });
+    _wrWrite(list);
+    return { ok: true, n: list.length };
+  } catch (x) { return { error: 'DRIVE ' + String(x).slice(0, 200) }; }
+}
+/* ① 쓴 그대로 옮겨 적기 */
+var WR_READ_PROMPT = {
+  diary: '이미지는 초등학생이 손으로 쓴 영어 일기입니다. 보이는 글자를 한 글자도 고치지 말고 그대로 옮겨 적으세요. ' +
+    '틀린 철자·대소문자·문장부호·문법도 틀린 그대로 둡니다(절대 바르게 고치지 않습니다). 줄바꿈은 원문의 줄대로. ' +
+    'JSON으로만: {"text":"옮겨 적은 글"}. 영어 일기가 아니거나 읽을 수 없으면 {"error":"UNREADABLE"}.',
+  topic: '이미지는 초등학생이 손으로 쓴 한글 글입니다. 보이는 글자를 한 글자도 고치지 말고 그대로 옮겨 적으세요. ' +
+    '틀린 맞춤법·띄어쓰기·조사·문장부호도 틀린 그대로 둡니다(절대 바르게 고치지 않습니다. 예: "조아한다", "했는대", "할수있어서"는 그대로). 줄바꿈은 원문의 줄대로. ' +
+    'JSON으로만: {"text":"옮겨 적은 글"}. 한글 글이 아니거나 읽을 수 없으면 {"error":"UNREADABLE"}.'
+};
+/* 영어일기 기준(아빠가 더하거나 뺄 수 있다) → 프롬프트 끝에 붙인다 */
+function _wrRules(rules) {
+  var a = (rules || []).slice(0, 12).map(function (t) { return String(t || '').slice(0, 80).trim(); }).filter(function (t) { return t; });
+  if (!a.length) return '\n[기준]\n(없음 — checks 는 빈 배열, easy 는 fixed 를 더 쉬운 문장으로 다듬은 글)';
+  return '\n[기준]\n' + a.map(function (t, i) { return (i + 1) + '. ' + t; }).join('\n');
 }

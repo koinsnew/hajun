@@ -495,6 +495,51 @@
   @keyframes swbar{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
   @keyframes swin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
   @media (prefers-reduced-motion: reduce){ .sw-bars i{animation-duration:1.6s} .saywait{animation:none} }
+  /* ── 영어일기 · 주제글쓰기 ── */
+  .wr-intro{margin-bottom:12px;font-size:17px;line-height:1.6}
+  .wr-rules{margin-bottom:14px;font-size:16px}
+  .wr-rules ol{margin:8px 0 0;padding-left:24px;line-height:1.8}
+  .wr-go{font-size:21px !important;padding:18px !important;min-height:64px}
+  .wr-row{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;margin:0 0 8px;padding:10px 13px;border:2px solid #2B2A33;border-radius:16px;background:#fff;font-family:inherit;color:var(--ink);text-align:left;cursor:pointer;box-shadow:3px 4px 0 rgba(43,42,51,.16)}
+  .wr-row-t{flex:1;min-width:0}
+  .wr-row-t b{display:block;font-family:'Jua',sans-serif;font-weight:400;font-size:17px}
+  .wr-row-t small{display:block;font-size:14px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wr-pill{flex:none;font-family:'Jua',sans-serif;font-size:14px;font-weight:400;padding:3px 10px;border-radius:999px;background:#F1ECDD;color:#4A463C;white-space:nowrap}
+  .wr-pill.ok{background:#2F9E44;color:#fff}
+  .wr-ov{position:fixed;inset:0;z-index:9999;background:rgba(30,20,60,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+  .wr-ovbox{background:#fff;border-radius:22px;padding:26px 22px;max-width:340px;width:100%;text-align:center}
+  .wr-ovmsg{font-family:'Jua',sans-serif;font-size:19px;margin:6px 0}
+  .wr-praise{background:#FFF4D6;border:2px solid #E8A200;border-radius:16px;padding:12px 14px;margin:0 0 12px;font-size:17px;line-height:1.5}
+  .wr-tip{background:#EEF3FF;border:2px solid #2457C5;border-radius:16px;padding:12px 14px;margin:0 0 12px;font-size:16px;line-height:1.5;color:#1B3C8C}
+  .wr-sec{margin-bottom:12px}
+  .wr-sec h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'Jua',sans-serif;font-weight:400;font-size:19px;margin:0 0 10px}
+  .wr-say{margin-left:auto;min-height:40px;padding:6px 14px;font-size:15px}
+  .wr-text{font-size:18px;line-height:1.8;word-break:keep-all;overflow-wrap:anywhere}
+  .wr-text.en{font-family:'Patrick Hand','Gowun Dodum',sans-serif;font-size:22px;line-height:1.6}
+  .wr-chk{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px dashed var(--line)}
+  .wr-chk:first-of-type{border-top:0}
+  .wr-mark{flex:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;background:#2F9E44}
+  .wr-chk.no .wr-mark{background:#C92A2A}
+  .wr-chk b{display:block;font-size:17px;font-weight:700}
+  .wr-chk small{display:block;font-size:15px;color:var(--ink-soft);margin-top:2px}
+  .wr-allok{font-family:'Jua',sans-serif;font-size:18px;color:#2F7D3A;text-align:center;padding:6px 0 2px}
+  .wr-fix{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 8px;padding:8px 0;border-top:1px dashed var(--line);font-size:19px}
+  .wr-fix:first-of-type{border-top:0}
+  .wr-bad{color:#B42318;text-decoration:line-through;text-decoration-thickness:2px}
+  .wr-good{color:#1B6E2D;font-weight:700}
+  .wr-arrow{color:var(--ink-soft)}
+  .wr-fix small{flex-basis:100%;font-size:14.5px;color:var(--ink-soft)}
+  .wr-awk{padding:9px 0;border-top:1px dashed var(--line);font-size:17px;line-height:1.6}
+  .wr-awk:first-of-type{border-top:0}
+  .wr-awk small{display:block;font-size:14.5px;color:var(--ink-soft);margin-top:2px}
+  .wr-easy{border-color:#2F7D3A;background:#F3FBF4}
+  .wr-ko{margin-top:10px;font-size:15px}
+  .wr-ko summary{cursor:pointer;color:var(--ink-soft);min-height:36px;display:flex;align-items:center}
+  .wr-ko .wr-text{font-size:16px}
+  .wr-rrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .wr-rrow span{flex:none;width:26px;text-align:center;font-family:'Jua',sans-serif;font-size:17px}
+  .wr-rrow input{flex:1;min-width:0;padding:12px;border-radius:12px;border:2px solid var(--line);font:inherit;font-size:17px;background:#fff;color:var(--ink)}
+  .wr-rrow .btn{min-width:46px;min-height:46px;padding:6px}
   .hw-empty{font-size:16px;color:var(--ink-soft);padding:2px 4px 12px;line-height:1.5}
   .today-sub{font-family:'Jua',sans-serif;font-size:16px;color:var(--ink-soft);margin:6px 2px 8px}
   .hwe{margin-bottom:12px}
@@ -703,6 +748,7 @@
   .testbtn{border:2px solid var(--ink);border-radius:18px;box-shadow:var(--shadow)}
   .testbtn:active{transform:translate(2px,3px);box-shadow:1px 1px 0 rgba(43,42,51,.16)}
   #qzbig{background:#1971C2} #stbig{background:#C2255C} #ogbig{background:#2457C5} #mmbig,#play{background:#6741D9}
+  #dybig{background:#0C7A8A} #tpbig{background:#A61E4D}
   #ntbig{background:#C2410C} #spbig{background:#C92A2A} #fkbig{background:#2F7D3A} #pkbig{background:#0B7285} #dadbtn{background:#6B4E2E}
   .testbtn.lock{background:#F6F0E2;color:var(--ink-soft);border-style:dashed}
   ::selection{background:#FFE08A;color:var(--ink)}
@@ -903,7 +949,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 14:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 19:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2964,6 +3010,16 @@ function screenHome(){
       '<div class="t"><b>시험 노트</b><small>단어·문장 듣고 영어·뜻 쓰기 · 아빠 채점'+(notes().length ? ' · 최근 '+noteScore(notes()[notes().length-1])+'점' : '')+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="dybig" style="margin:0 0 12px">'+
+      '<div class="ico">📔</div>'+
+      '<div class="t"><b>영어일기</b><small>일기 사진을 올리면 AI 선생님이 고쳐 줘요</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
+    '<button class="testbtn" id="tpbig" style="margin:0 0 12px">'+
+      '<div class="ico">✍️</div>'+
+      '<div class="t"><b>주제글쓰기</b><small>한글 글 사진을 올리면 맞춤법을 고쳐 줘요</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
     '<button class="testbtn" id="spbig" style="margin:0 0 12px">'+
       '<div class="ico">🌟</div>'+
       '<div class="t"><b>스페셜 테스트</b><small>👨 아빠 앞에서 · 시 '+
@@ -3021,6 +3077,8 @@ function screenHome(){
   document.getElementById('mmbig').onclick = screenMimemal;
   document.getElementById('ogbig').onclick = screenOrigList;
   document.getElementById('ntbig').onclick = screenNoteHome;
+  document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
+  document.getElementById('tpbig').onclick = function(){ beep([700],.06); screenWrite('topic'); };
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
   document.getElementById('bag').onclick = function(){ beep([700,900],.06); screenBag(); };
@@ -9277,6 +9335,198 @@ function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 �
 }
 function pendDraw(p, after){
   modalStarDraw(function(got){ pendApply(p, got); pendDone(p.key); if(after) after(got); checkLevelUp(); }, p.lo, p.hi);
+}
+/* =========================================================
+   📔 영어일기 · ✍️ 주제글쓰기
+   · 하준이가 공책에 쓴 글을 사진으로 찍어 올리면 AI 선생님이 읽고 고쳐 준다
+   · 영어일기: 쓴 그대로 → 철자·문법 고침 → [기준] 확인 → 기준에 맞춘 아주 쉬운 글
+     기준은 아빠가 ✏️ 로 더하거나 뺄 수 있다(wrRules)
+   · 주제글쓰기(한글): 맞춤법·띄어쓰기 고침 + 어색한 문장 다듬기
+   · 결과(글자만)는 서버 드라이브에 따로 모아 둔다(wr / wrAdd / wrDel) → 어느 기기에서나 다시 본다
+   ========================================================= */
+var WR_RULES_DEF = ['5문장 이상 쓰기', 'because(왜냐하면) 넣어 쓰기', 'after(~후에) 넣어 쓰기', 'before(~전에) 넣어 쓰기', 'so(그래서) 넣어 쓰기'];
+var WR_MAX_PHOTOS = 4;       /* 한 번에 올리는 사진 수 (공책 여러 쪽) */
+var WR_TIMEOUT = 120;        /* AI 답을 기다리는 시간(초) */
+var WR_KEY = 'hajun_wr', WR_LIST = [], WR_SYNC_AT = 0;
+try{ var _wr0 = JSON.parse(localStorage.getItem(WR_KEY) || '[]'); if(_wr0 && _wr0.length) WR_LIST = _wr0; }catch(e){}
+function wrKeep(){ try{ localStorage.setItem(WR_KEY, JSON.stringify(WR_LIST.slice(-60))); }catch(e){} }
+function wrRules(){ return (PROG.wrRules && PROG.wrRules.length !== undefined) ? PROG.wrRules.slice() : WR_RULES_DEF.slice(); }
+var WR_INFO = {
+  diary: {ico:'📔', name:'영어일기', what:'영어 일기', btn:'📷 일기 사진 올리기'},
+  topic: {ico:'✍️', name:'주제글쓰기', what:'한글 글', btn:'📷 글 사진 올리기'}
+};
+function wrSync(cb){
+  if(!hasServer || OFFLINE){ if(cb) cb(); return; }
+  WR_SYNC_AT = Date.now();
+  apiGet('wr', function(j){
+    if(j && j.ok && j.list){ WR_LIST = j.list; wrKeep(); }
+    if(cb) cb();
+  });
+}
+function wrDate(at){ var d = new Date(at); return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+'일월화수목금토'.charAt(d.getDay())+')'; }
+function wrFirst(e){ var t = String((e.r && (e.r.fixed || e.r.original)) || '').split('\n').filter(function(s){ return s.trim(); }); return (e.kind === 'topic' && e.r.title) ? e.r.title : (t[1] || t[0] || ''); }
+function wrPassed(r){ var c = r.checks || []; return c.filter(function(x){ return x.ok; }).length+' / '+c.length; }
+
+/* ── 메뉴 화면 ── */
+function screenWrite(kind){
+  stopAll();
+  var I = WR_INFO[kind], rules = wrRules();
+  function draw(){
+    var list = WR_LIST.filter(function(e){ return e.kind === kind; }).sort(function(a, b){ return b.at - a.at; });
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>'+I.ico+' '+I.name+'</h2>'+
+        (kind === 'diary' ? '<button class="iconbtn" id="wrrule" aria-label="아빠: 일기 기준 고치기">✏️</button>' : '<div style="width:44px"></div>')+'</div>'+
+      '<div class="card wr-intro">'+(kind === 'diary'
+        ? '공책에 <b>영어 일기</b>를 쓰고 사진을 찍어 올려요.<br>AI 선생님이 <b>틀린 곳</b>을 고쳐 주고, <b>기준</b>에 맞는지 봐 줘요.'
+        : '공책에 쓴 <b>한글 글</b>을 사진으로 찍어 올려요.<br>AI 선생님이 <b>맞춤법</b>과 <b>어색한 문장</b>을 고쳐 줘요.')+'</div>'+
+      (kind === 'diary' ? '<div class="card wr-rules"><b>📋 일기 쓸 때 기준</b>'+
+        (rules.length ? '<ol>'+rules.map(function(t){ return '<li>'+esc(t)+'</li>'; }).join('')+'</ol>' : '<div class="muted" style="margin-top:6px">기준이 없어요. ✏️ 로 넣을 수 있어요.</div>')+'</div>' : '')+
+      '<button class="btn primary wide wr-go" id="wrgo">'+I.btn+'</button>'+
+      '<div class="muted" style="text-align:center;margin:6px 0 16px">글씨가 잘 보이게 밝은 곳에서 반듯하게 찍어요 · 여러 쪽이면 '+WR_MAX_PHOTOS+'장까지</div>'+
+      '<h3 class="homehd">📚 지난 글</h3>'+
+      (list.length ? list.map(function(e){
+        return '<button class="wr-row" data-id="'+esc(e.id)+'"><span class="wr-row-t"><b>'+esc(wrDate(e.at))+'</b><small>'+esc(wrFirst(e).slice(0, 60))+'</small></span>'+
+          (kind === 'diary' && (e.r.checks || []).length ? '<span class="wr-pill">기준 '+wrPassed(e.r)+'</span>' : '<span class="wr-pill">고친 곳 '+((e.r.fixes || []).length + (e.r.awkward || []).length)+'</span>')+'</button>';
+      }).join('') : '<div class="card muted" style="text-align:center">아직 올린 글이 없어요.</div>');
+    document.getElementById('back').onclick = screenHome;
+    document.getElementById('wrgo').onclick = function(){ beep([700,900],.06); wrUpload(kind); };
+    var rb = document.getElementById('wrrule'); if(rb) rb.onclick = function(){ beep([700],.06); needDad(screenWrRules, function(){ screenWrite('diary'); }, '일기 기준을 고치려면 아빠 비밀번호가 필요해요'); };
+    on('.wr-row', function(){ var id = this.dataset.id, e = WR_LIST.filter(function(x){ return x.id === id; })[0]; if(e){ beep([600],.05); screenWrResult(e); } });
+  }
+  draw();
+  if(Date.now() - WR_SYNC_AT > 20000) wrSync(function(){ if(document.getElementById('wrgo')) draw(); });
+}
+/* ── 사진 올리기 → AI ── */
+function wrUpload(kind){
+  var I = WR_INFO[kind];
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.onchange = function(){
+    var files = Array.prototype.slice.call(inp.files || []).slice(0, WR_MAX_PHOTOS);
+    if(inp.parentNode) inp.parentNode.removeChild(inp);
+    if(!files.length) return;
+    var cancelled = false, timer = null;
+    var ov = document.createElement('div'); ov.className = 'wr-ov';
+    ov.innerHTML = '<div class="wr-ovbox"><div style="font-size:46px">'+I.ico+'</div>'+
+      '<span class="sw-bars" aria-hidden="true" style="margin:10px auto 6px;justify-content:center"><i></i><i></i><i></i><i></i><i></i></span>'+
+      '<div id="wrMsg" class="wr-ovmsg">사진을 준비하고 있어요…</div>'+
+      '<div class="muted" style="line-height:1.5">AI 선생님이 글을 읽고 고치는 데 20~50초 걸려요.<br>화면을 닫지 말고 기다려 주세요.</div>'+
+      '<button class="btn" id="wrCancel" style="margin-top:14px">✖ 취소</button></div>';
+    document.body.appendChild(ov);
+    function close(){ cancelled = true; clearTimeout(timer); if(ov.parentNode) ov.parentNode.removeChild(ov); }
+    function msg(t){ var m = document.getElementById('wrMsg'); if(m) m.textContent = t; }
+    function fail(t){ if(cancelled) return; close(); noSound(); alert(t); }
+    document.getElementById('wrCancel').onclick = close;
+    var out = [];
+    (function next(i){
+      if(cancelled) return;
+      if(i >= files.length) return send();
+      msg('사진 준비 '+(i+1)+'/'+files.length);
+      scanPrep({file: files[i]}, function(b64){ if(b64) out.push(b64); next(i+1); });
+    })(0);
+    function send(){
+      if(!out.length) return fail('사진을 열지 못했어요. 다른 사진으로 다시 해 주세요.');
+      msg('AI 선생님이 '+I.what+'을 읽고 있어요…');
+      timer = setTimeout(function(){ fail('너무 오래 걸려서 멈췄어요. 잠시 뒤에 다시 해 주세요.'); }, WR_TIMEOUT*1000);
+      var rules = kind === 'diary' ? wrRules() : [];
+      apiPost({action:'ocr', kind:kind, pin:DAD_PIN, images:out, rules:rules}, function(j){
+        if(cancelled) return;
+        clearTimeout(timer);
+        if(!j || !j.ok || !j.data) return fail(scanErrMsg(j));
+        var r = j.data; if(r.items && r.items.length && !r.fixed) r = r.items[0] || {};
+        if(r.error || !String(r.fixed || r.original || '').trim()) return fail('글씨를 읽지 못했어요.\n밝은 곳에서 글씨가 크게 보이도록 반듯하게 다시 찍어 주세요.');
+        var e = {id:'w'+Date.now().toString(36), kind:kind, at:Date.now(), rules:rules, r:wrTidy(kind, r)};
+        WR_LIST.push(e); wrKeep();
+        apiPost({action:'wrAdd', pin:DAD_PIN, entry:e}, function(){});
+        close(); starSound(); confetti(26);
+        screenWrResult(e);
+      });
+    }
+  };
+  inp.click();
+}
+function wrTidy(kind, r){
+  function S(v){ return String(v == null ? '' : v).trim(); }
+  function L(a){ return (a || []).filter(function(x){ return x && (S(x.from) || S(x.to)); }).map(function(x){ return {from:S(x.from), to:S(x.to), why:S(x.why)}; }); }
+  var o = {original:S(r.original), fixed:S(r.fixed), fixes:L(r.fixes), praise:S(r.praise)};
+  if(kind === 'diary'){ o.count = Number(r.count) || 0; o.checks = (r.checks || []).map(function(c){ return {rule:S(c.rule), ok:!!c.ok, note:S(c.note)}; }); o.easy = S(r.easy); o.ko = S(r.ko); }
+  else { o.title = S(r.title); o.awkward = L(r.awkward); o.tip = S(r.tip); }
+  return o;
+}
+/* 긴 영어 글을 문장마다 이어서 읽어 준다 */
+function wrSpeak(text, btn){
+  if(btn.dataset.on === '1'){ stopAll(); btn.dataset.on = ''; btn.textContent = '🔊 듣기'; return; }
+  var ss = String(text).split(/\n+/).map(function(s){ return s.trim(); }).filter(function(s){ return /[A-Za-z]/.test(s); }), i = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('.wr-say'), function(b){ b.dataset.on = ''; b.textContent = '🔊 듣기'; });
+  btn.dataset.on = '1'; btn.textContent = '⏹ 멈추기';
+  (function next(){
+    if(btn.dataset.on !== '1' || !btn.parentNode) return;
+    if(i >= ss.length){ btn.dataset.on = ''; btn.textContent = '🔊 듣기'; return; }
+    speakWords(ss[i++].split(/\s+/), RATE, function(){}, function(){ setTimeout(next, 250); });
+  })();
+}
+/* ── 결과 화면 ── */
+function screenWrResult(e){
+  stopAll();
+  var kind = e.kind, I = WR_INFO[kind], r = e.r, en = kind === 'diary';
+  function para(t, cls){ return '<div class="wr-text '+(cls || '')+'">'+esc(t).replace(/\n/g, '<br>')+'</div>'; }
+  function fixRows(a){ return a.map(function(x){ return '<div class="wr-fix"><span class="wr-bad">'+esc(x.from)+'</span><span class="wr-arrow" aria-hidden="true">→</span><span class="wr-good">'+esc(x.to)+'</span>'+(x.why ? '<small>'+esc(x.why)+'</small>' : '')+'</div>'; }).join(''); }
+  var checks = r.checks || [], okN = checks.filter(function(c){ return c.ok; }).length;
+  app.innerHTML =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>'+I.ico+' '+esc(wrDate(e.at))+'</h2><div style="width:44px"></div></div>'+
+    (r.praise ? '<div class="wr-praise">💬 '+esc(r.praise)+'</div>' : '')+
+    (en && checks.length ? '<div class="card wr-sec"><h3>📋 기준 확인 <span class="wr-pill '+(okN === checks.length ? 'ok' : '')+'">'+okN+' / '+checks.length+'</span></h3>'+
+      checks.map(function(c){ return '<div class="wr-chk '+(c.ok ? 'ok' : 'no')+'"><span class="wr-mark" aria-hidden="true">'+(c.ok ? '✔' : '✘')+'</span><span><b>'+esc(c.rule)+'</b>'+(c.note ? '<small>'+esc(c.note)+'</small>' : '')+'</span></div>'; }).join('')+
+      (okN === checks.length ? '<div class="wr-allok">🎉 기준을 모두 지켰어요!</div>' : '')+'</div>' : '')+
+    '<div class="card wr-sec"><h3>📝 내가 쓴 글</h3>'+para(r.original, en ? 'en' : '')+'</div>'+
+    '<div class="card wr-sec"><h3>🔧 '+(en ? '고친 곳' : '맞춤법·띄어쓰기 고친 곳')+' <span class="wr-pill">'+r.fixes.length+'</span></h3>'+
+      (r.fixes.length ? fixRows(r.fixes) : '<div class="wr-allok">👏 틀린 곳이 없어요!</div>')+'</div>'+
+    (!en ? '<div class="card wr-sec"><h3>🪄 어색한 문장 다듬기 <span class="wr-pill">'+(r.awkward || []).length+'</span></h3>'+
+      ((r.awkward || []).length ? r.awkward.map(function(x){ return '<div class="wr-awk"><div class="wr-bad">'+esc(x.from)+'</div><div class="wr-good">→ '+esc(x.to)+'</div>'+(x.why ? '<small>'+esc(x.why)+'</small>' : '')+'</div>'; }).join('') : '<div class="wr-allok">👏 어색한 문장이 없어요!</div>')+'</div>' : '')+
+    '<div class="card wr-sec"><h3>✨ '+(en ? '바르게 고친 글' : '고친 글')+(en ? ' <button class="btn wr-say" id="say1">🔊 듣기</button>' : '')+'</h3>'+para(r.fixed, en ? 'en' : '')+'</div>'+
+    (en && r.easy ? '<div class="card wr-sec wr-easy"><h3>🌱 기준에 맞춘 쉬운 글 <button class="btn wr-say" id="say2">🔊 듣기</button></h3>'+
+      '<div class="muted" style="margin-bottom:8px">기준을 모두 넣어서 아주 쉬운 문장으로 다시 쓴 글이에요. 공책에 따라 써 봐요!</div>'+para(r.easy, 'en')+
+      (r.ko ? '<details class="wr-ko"><summary>우리말 뜻 보기</summary>'+para(r.ko)+'</details>' : '')+'</div>' : '')+
+    (!en && r.tip ? '<div class="wr-tip">💡 '+esc(r.tip)+'</div>' : '')+
+    '<button class="btn primary wide" id="again" style="margin:6px 0 10px">'+I.btn+'</button>'+
+    '<button class="btn wide" id="del" style="font-size:15px;min-height:44px">🗑 이 글 지우기 (아빠)</button>';
+  document.getElementById('back').onclick = function(){ screenWrite(kind); };
+  document.getElementById('again').onclick = function(){ beep([700,900],.06); wrUpload(kind); };
+  var s1 = document.getElementById('say1'); if(s1) s1.onclick = function(){ wrSpeak(r.fixed.split('\n').slice(/\d/.test(r.fixed.split('\n')[0]) && !/[.!?]$/.test(r.fixed.split('\n')[0].trim()) ? 1 : 0).join('\n'), s1); };
+  var s2 = document.getElementById('say2'); if(s2) s2.onclick = function(){ wrSpeak(r.easy, s2); };
+  document.getElementById('del').onclick = function(){
+    dadGate(function(){
+      WR_LIST = WR_LIST.filter(function(x){ return x.id !== e.id; }); wrKeep();
+      apiPost({action:'wrDel', pin:DAD_PIN, id:e.id}, function(){});
+      screenWrite(kind);
+    }, function(){ screenWrResult(e); }, '글을 지우려면 아빠 비밀번호가 필요해요');
+  };
+  window.scrollTo(0, 0);
+}
+/* ── ✏️ 아빠: 영어일기 기준 고치기 ── */
+function screenWrRules(){
+  var W = wrRules();
+  function read(){ W = Array.prototype.map.call(app.querySelectorAll('.wr-rin'), function(i){ return i.value; }); }
+  function draw(focus){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>✏️ 일기 기준</h2><div class="pill">'+W.length+'개</div></div>'+
+      '<div class="card" style="margin-bottom:12px;line-height:1.6">AI 선생님이 일기가 이 기준에 맞는지 하나씩 확인하고, <b>기준을 모두 넣은 쉬운 글</b>로 다시 써 줘요.<br><span class="muted">예: 5문장 이상 쓰기 · because 넣어 쓰기 · 날짜 쓰기 · 과거형으로 쓰기</span></div>'+
+      W.map(function(t, i){ return '<div class="wr-rrow"><span>'+(i+1)+'</span><input class="wr-rin" type="text" maxlength="80" value="'+esc(t)+'" placeholder="기준을 써 주세요" aria-label="기준 '+(i+1)+'"><button class="btn" data-del="'+i+'" aria-label="기준 '+(i+1)+' 빼기">🗑</button></div>'; }).join('')+
+      '<button class="btn wide" id="add" style="margin:4px 0 14px">➕ 기준 더하기</button>'+
+      '<button class="btn primary wide" id="save" style="font-size:20px;padding:16px;margin-bottom:10px">💾 저장</button>'+
+      '<button class="btn wide" id="def" style="font-size:15px">↩️ 처음 기준으로 되돌리기</button>';
+    document.getElementById('back').onclick = function(){ screenWrite('diary'); };
+    document.getElementById('add').onclick = function(){ read(); if(W.length >= 12){ hwSay('기준은 12개까지 넣을 수 있어요'); return; } W.push(''); draw(true); };
+    on('[data-del]', function(){ read(); W.splice(+this.dataset.del, 1); draw(); });
+    document.getElementById('def').onclick = function(){ if(confirm('처음 기준 '+WR_RULES_DEF.length+'개로 되돌릴까요?')){ W = WR_RULES_DEF.slice(); draw(); } };
+    document.getElementById('save').onclick = function(){
+      read(); PROG.wrRules = W.map(function(s){ return String(s).trim(); }).filter(function(s){ return s; }).slice(0, 12); saveProgress();
+      okSound(); hwSay('💾 기준을 저장했어요'); screenWrite('diary');
+    };
+    if(focus){ var f = app.querySelectorAll('.wr-rin'); if(f.length) f[f.length-1].focus(); }
+  }
+  draw();
 }
 /* =========================================================
    📌 오늘 할 것 = 숙제 체크리스트
