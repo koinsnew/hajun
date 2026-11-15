@@ -104,6 +104,7 @@ function getProgress() {
 function saveProgress(obj) {
   if (!obj || typeof obj !== 'object') return false;
   _stripDead(obj);                       // 지운 것은 다시 저장하지 않는다(옛 화면을 켜 둔 기기가 되살리지 못하게)
+  _goneKeep(obj);                        // 지운 것의 별 보관함은 줄지 않게 지킨다
   var pm = _ppMap();                     // (처음이면 예전 목록을 먼저 옮겨 둔다)
   if (obj.pphoto) {                      // 선수 사진 목록은 진도와 따로 지킨다. 목록에 없는 레벨만 받아 둔다(옛 화면에서 넣은 사진)
     var add = false;
@@ -871,13 +872,33 @@ function _dead() {
   raw.split(',').forEach(function (id) { if (id) o[id] = 1; });
   return o;
 }
+var GONE_DEF = { quizzes: 1, sents: 1, orig: 10, papers: 10 };   // 별 수가 안 적힌 옛 항목의 기본 별(앱의 STAR_QUIZ·STAR_SENT·STAR_ORIG·STAR_PAPER 와 같게)
+/* 보관함은 '마지막에 저장한 기기'가 덮어써도 줄지 않게, 서버에 있던 것과 합친다(같은 id 는 큰 값) */
+function _goneKeep(obj) {
+  try {
+    var pr = JSON.parse(_store().getProperty(PROP_KEY) || '{}');
+    if (pr && pr.gone && typeof pr.gone === 'object') {
+      if (!obj.gone || typeof obj.gone !== 'object') obj.gone = {};
+      for (var gk in pr.gone) obj.gone[gk] = Math.max(+obj.gone[gk] || 0, +pr.gone[gk] || 0);
+    }
+  } catch (e) {}
+}
 function _stripDead(o) {
   var d = _dead(), hit = false;
   if (!o || typeof o !== 'object') return false;
   for (var k in o) {
     if (Object.prototype.toString.call(o[k]) !== '[object Array]') continue;
     var f = o[k].filter(function (x) { return !(x && typeof x === 'object' && x.id && d[x.id]); });
-    if (f.length !== o[k].length) { o[k] = f; hit = true; }
+    if (f.length !== o[k].length) {
+      /* 지워지는 것이 받은 별은 보관함(gone)에 옮겨 적는다 → 지워도 별·레벨은 그대로 */
+      o[k].forEach(function (x) {
+        if (!(x && typeof x === 'object' && x.id && d[x.id] && x.done)) return;
+        var def = GONE_DEF[k] || 0;
+        var n = (k === 'papers') ? (typeof x.stars === 'number' ? x.stars : def) : (+x.stars || def);
+        if (n > 0) { if (!o.gone || typeof o.gone !== 'object') o.gone = {}; o.gone[x.id] = Math.max(+o.gone[x.id] || 0, n); }
+      });
+      o[k] = f; hit = true;
+    }
   }
   return hit;
 }

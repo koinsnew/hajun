@@ -980,7 +980,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.15 21:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.15 22:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2772,7 +2772,12 @@ function comboHtml(best, got){
   return '<div class="card combo">🔥 최고 <b>'+best+'연속</b> 정답!'+
     (got > 0 ? '<br>콤보 보너스 <b>⭐ +'+got+'</b>' : (Math.floor(best/COMBO_PER) > 0 ? '<br><span class="muted">오늘 콤보 보너스는 다 받았어요 (하루 '+COMBO_DAILY_MAX+'개)</span>' : '<br><span class="muted">'+COMBO_PER+'연속부터 보너스 별!</span>'))+'</div>';
 }
-function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars(); }
+/* 지운 것의 별 보관함(PROG.gone = {지운 id: 그때까지 받은 별})
+   단어장·읽기·원서·종이책의 별은 '지금 목록에 있는 것'에서 세기 때문에, 지우면 별이 같이 사라져 레벨이 내려갔다.
+   → 지울 때 그 별을 여기 옮겨 적는다. 받은 별은 지워도 그대로 남는다. */
+function goneStars(){ var g = PROG.gone || {}, n = 0; for(var k in g){ n += (+g[k] || 0); } return n; }
+function goneAdd(id, n){ if(!id || !(n > 0)) return; if(!PROG.gone || typeof PROG.gone !== 'object') PROG.gone = {}; PROG.gone[id] = Math.max(+PROG.gone[id] || 0, n); }
+function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + goneStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
    ★ 뽑기도 카드도 '이 별'을 쓴다. 레벨은 모은 별(누적)로 정해져서, 별을 써도 레벨은 안 내려간다. */
@@ -4948,7 +4953,7 @@ function screenQuizList(){
   document.getElementById('back').onclick = screenHome;
   document.getElementById('add').onclick = function(){ needDad(function(){ screenQuizEdit(null); }, screenQuizList); };
   on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.ed); if(q) needDad(function(){ screenQuizEdit(q); }, screenQuizList); });
-  on('.qzdel', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.rm); if(q) listDel('“'+q.title+'” 단어장을 지울까요?', screenQuizList, function(done){ PROG.quizzes = quizzes().filter(function(x){ return x.id!==q.id; }); done(); }, q.id); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var q=quizById(this.dataset.rm); if(q) listDel('“'+q.title+'” 단어장을 지울까요? (받은 별은 그대로 남아요)', screenQuizList, function(done){ PROG.quizzes = quizzes().filter(function(x){ return x.id!==q.id; }); done(); }, q.id); });
   on('.qzbk', function(){
     var q = quizById(this.dataset.id);
     if(!q) return;
@@ -5804,7 +5809,7 @@ function screenSentList(){
   document.getElementById('back').onclick = screenHome;
   document.getElementById('add').onclick = function(){ needDad(function(){ screenSentEdit(null); }, screenSentList); };
   on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.ed); if(s) needDad(function(){ screenSentEdit(s); }, screenSentList); });
-  on('.qzdel', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.rm); if(s) listDel('“'+s.title+'” 문장 묶음을 지울까요?', screenSentList, function(done){ PROG.sents = sents().filter(function(x){ return x.id!==s.id; }); done(); }, s.id); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var s=sentById(this.dataset.rm); if(s) listDel('“'+s.title+'” 문장 묶음을 지울까요? (받은 별은 그대로 남아요)', screenSentList, function(done){ PROG.sents = sents().filter(function(x){ return x.id!==s.id; }); done(); }, s.id); });
   on('.qzbk', function(){
     var s = sentById(this.dataset.id);
     if(!s) return;
@@ -9538,16 +9543,25 @@ try{ (JSON.parse(localStorage.getItem(DEAD_KEY) || '[]') || []).forEach(function
 function deadKeep(){ try{ localStorage.setItem(DEAD_KEY, JSON.stringify(Object.keys(DEAD).slice(-300))); }catch(e){} }
 function deadApply(){
   var hit = false;
-  for(var k in PROG){
-    if(!Array.isArray(PROG[k])) continue;
-    var f = PROG[k].filter(function(x){ return !(x && typeof x === 'object' && x.id && DEAD[x.id]); });
-    if(f.length !== PROG[k].length){ PROG[k] = f; hit = true; }
-  }
+  Object.keys(PROG).forEach(function(k){
+    if(!Array.isArray(PROG[k])) return;
+    var dead = PROG[k].filter(function(x){ return x && typeof x === 'object' && x.id && DEAD[x.id]; });
+    dead.forEach(function(x){
+      /* 하나씩 빼면서 줄어든 별만큼 보관함에 적는다 → 지워도 별·레벨은 그대로 */
+      var b = 0, a = 0;
+      try{ b = totalStars(); }catch(e){}
+      PROG[k] = PROG[k].filter(function(y){ return y !== x; });
+      try{ a = totalStars(); }catch(e){ a = b; }
+      goneAdd(x.id, b - a);
+      hit = true;
+    });
+  });
   return hit;
 }
 function deadAdd(id){
   if(!id) return;
   DEAD[id] = 1; deadKeep(); DEAD_PEND.push(id);
+  deadApply();   /* 바로 목록에서 빼고, 받은 별은 보관함으로 */
   deadPush();
 }
 function deadPush(cb){
