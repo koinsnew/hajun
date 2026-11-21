@@ -563,6 +563,7 @@
   .vc-prsum{margin-top:6px;font-size:15px;color:var(--ink-soft)}
   .vc-prsum.all{color:#1B6B2F;font-weight:700}
   .vc-pcard{margin-bottom:12px}
+  .vc-plab{font-size:15px;color:var(--ink-soft);margin:8px 2px 4px}
   .vc-pq{font-size:14px;color:var(--ink-soft);margin-top:6px}
   .vc-pq:first-child{margin-top:0}
   .vc-pgiven{font-size:20px;line-height:1.35}
@@ -1067,7 +1068,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.21 18:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.21 19:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -9832,6 +9833,7 @@ function progRefresh(){
 var VOC_PRAC_N = 5;     /* 틀린 문제를 눌렀을 때 따라 쓰는 횟수 */
 var VOC_PEN_H_EN = 180, VOC_PEN_H_KO = 170;   /* 시험에서 펜으로 답을 쓰는 칸 높이(px): 영어 · 한글 뜻 */
 var VOC_TRACE_H = 280;      /* 따라 쓰기 칸의 최소 높이(px) */
+var VOC_TRACE_H_BOTH = 220; /* 영어와 뜻을 둘 다 쓸 때 한 칸의 최소 높이(px) */
 var VOC_TRACE_FS = 76, VOC_TRACE_FS_MIN = 36;   /* 따라 쓰기 점선 글씨 크기(px): 기본 · 긴 답일 때 최소 */
 var VOC_TRACE_INK = 0.9;    /* 따라 쓰기 한 번으로 세는 기준: 글자 수 × 글자 크기 × 이 값 만큼의 획 길이 */
 var VOC_HAND_CHUNK = 10;    /* 손글씨를 AI에게 한 번에 보내는 개수 */
@@ -10009,46 +10011,62 @@ function vocFit(text, W, lang){
   return {fs:fs, lines:lines, font:'400 '+fs+'px '+fam, lh:Math.round(fs*1.55)};
 }
 /* 5번 따라 쓰기 한 문제: 답이 점선으로 깔린 큰 칸에 펜으로 쓴다.
-   o = {it:{en,ko}, side:'en'|'ko'(쓰는 쪽), cnt:이미 쓴 횟수, head:위에 보일 말, doneLabel, onCount(cnt), onExit(다 썼는지)} */
+   o = {it:{en,ko}, side:'en'|'ko'(쓰는 쪽) 또는 both:true(영어와 뜻 둘 다), cnt:이미 쓴 횟수, head:위에 보일 말, doneLabel, onCount(cnt), onExit(다 썼는지)} */
 function vocPractice(o){
   stopAll();
-  var it = o.it, side = o.side, want = it[side], cnt = o.cnt || 0;
+  var it = o.it, side = o.side, cnt = o.cnt || 0;
+  var sides = o.both ? ['en', 'ko'] : [side];   /* both: 한 번에 영어와 한글 뜻을 둘 다 쓴다 */
+  var LAB = {en:'English', ko:'한글 뜻'};
   function render(msg){
     var done = cnt >= VOC_PRAC_N;
     app.innerHTML =
       '<div class="topbar"><button class="iconbtn" id="back" aria-label="돌아가기">←</button><h2>✏️ '+VOC_PRAC_N+'번 따라 쓰기</h2><div class="pill">'+cnt+'/'+VOC_PRAC_N+'</div></div>'+
       (o.head ? '<div class="muted" style="text-align:center;margin:-2px 0 8px">'+esc(o.head)+'</div>' : '')+
-      '<div class="card vc-pcard">'+
-        '<div class="vc-pq">'+(side === 'en' ? '뜻' : 'English')+'</div><div class="vc-pgiven'+(side === 'en' ? '' : ' en')+'">'+esc(it[side === 'en' ? 'ko' : 'en'])+'</div>'+
-        '<div class="vc-pq">'+(side === 'en' ? 'English' : '뜻')+'</div><div class="vc-pwant'+(side === 'en' ? ' en' : '')+'">'+esc(want)+'</div>'+
-      '</div>'+
+      (o.both
+        ? '<div class="card vc-pcard"><div class="vc-pq">English</div><div class="vc-pwant en">'+esc(it.en)+'</div><div class="vc-pq">한글 뜻</div><div class="vc-pwant">'+esc(it.ko)+'</div></div>'
+        : '<div class="card vc-pcard">'+
+            '<div class="vc-pq">'+(side === 'en' ? '뜻' : 'English')+'</div><div class="vc-pgiven'+(side === 'en' ? '' : ' en')+'">'+esc(it[side === 'en' ? 'ko' : 'en'])+'</div>'+
+            '<div class="vc-pq">'+(side === 'en' ? 'English' : '뜻')+'</div><div class="vc-pwant'+(side === 'en' ? ' en' : '')+'">'+esc(it[side])+'</div>'+
+          '</div>')+
       '<div class="vc-dots" aria-hidden="true">'+new Array(VOC_PRAC_N+1).join('x').split('').map(function(_, k){ return '<span class="'+(k < cnt ? 'on' : '')+'">'+(k < cnt ? '✔' : (k+1))+'</span>'; }).join('')+'</div>'+
       (done
         ? '<div class="card" style="text-align:center;background:#E8F7EE;margin-bottom:12px;font-size:18px">✅ <b>연습 완료!</b> '+VOC_PRAC_N+'번 다 썼어요 👏</div>'+
           '<button class="btn primary wide" id="pdone" style="font-size:19px;padding:15px">'+esc(o.doneLabel || '돌아가기')+'</button>'
-        : '<div class="rp-lab">'+(cnt+1)+'번째 — 점선 글씨를 따라 펜으로 써요</div>'+
-          '<div class="vc-pen vc-trace"><canvas id="ptr" class="vc-cv" aria-label="따라 쓰는 칸"></canvas>'+
-          '<div class="vc-tools"><button class="btn" id="pun">↩ 한 획 지우기</button><button class="btn" id="pcl">🗑 다 지우기</button></div></div>'+
+        : '<div class="rp-lab">'+(cnt+1)+'번째 — 점선 글씨를 따라 펜으로 써요'+(o.both ? ' (영어와 뜻 둘 다)' : '')+'</div>'+
+          sides.map(function(sd){
+            return (o.both ? '<div class="vc-plab">'+(sd === 'en' ? '🔤 ' : '🇰🇷 ')+LAB[sd]+'</div>' : '')+
+              '<div class="vc-pen vc-trace"><canvas id="ptr'+(o.both ? '_'+sd : '')+'" class="vc-cv" aria-label="'+LAB[sd]+' 따라 쓰는 칸"></canvas>'+
+              '<div class="vc-tools"><button class="btn" data-pun="'+sd+'">↩ 한 획 지우기</button><button class="btn" data-pcl="'+sd+'">🗑 다 지우기</button></div></div>';
+          }).join('')+
           '<div class="vc-pmsg" id="pmsg" role="status">'+(msg || '')+'</div>'+
           '<button class="btn primary wide" id="pok" style="font-size:19px;padding:15px;margin-top:6px">✅ 썼어요</button>');
     document.getElementById('back').onclick = function(){ o.onExit(false); };
     if(done){ document.getElementById('pdone').onclick = function(){ o.onExit(true); }; return; }
-    var cv = document.getElementById('ptr'), W = Math.max(260, cv.parentNode.clientWidth || 320), fit = vocFit(want, W, side);
-    var H = Math.max(VOC_TRACE_H, fit.lines.length*fit.lh + 70);
-    var pad = penCanvas(cv, W, H, side, function(ctx){
-      var y0 = (H - fit.lines.length*fit.lh)/2 + fit.lh/2;
-      ctx.save(); ctx.font = fit.font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#F1EADB';
-      fit.lines.forEach(function(l, k){ ctx.fillText(l, W/2, y0 + k*fit.lh); });
-      ctx.setLineDash([5, 5]); ctx.lineWidth = 1.6; ctx.strokeStyle = '#B9A77F';
-      fit.lines.forEach(function(l, k){ ctx.strokeText(l, W/2, y0 + k*fit.lh); });
-      ctx.restore();
+    var pads = {}, need = {};
+    sides.forEach(function(sd){
+      var want = it[sd], cv = document.getElementById('ptr'+(o.both ? '_'+sd : '')), W = Math.max(260, cv.parentNode.clientWidth || 320), fit = vocFit(want, W, sd);
+      var H = Math.max(o.both ? VOC_TRACE_H_BOTH : VOC_TRACE_H, fit.lines.length*fit.lh + 70);
+      pads[sd] = penCanvas(cv, W, H, sd, function(ctx){
+        var y0 = (H - fit.lines.length*fit.lh)/2 + fit.lh/2;
+        ctx.save(); ctx.font = fit.font; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#F1EADB';
+        fit.lines.forEach(function(l, k){ ctx.fillText(l, W/2, y0 + k*fit.lh); });
+        ctx.setLineDash([5, 5]); ctx.lineWidth = 1.6; ctx.strokeStyle = '#B9A77F';
+        fit.lines.forEach(function(l, k){ ctx.strokeText(l, W/2, y0 + k*fit.lh); });
+        ctx.restore();
+      });
+      need[sd] = Math.max(30, String(want).replace(/\s+/g, '').length * fit.fs * VOC_TRACE_INK);   /* 이만큼은 써야 한 번으로 센다 */
     });
-    var need = Math.max(30, String(want).replace(/\s+/g, '').length * fit.fs * VOC_TRACE_INK);   /* 이만큼은 써야 한 번으로 센다 */
-    document.getElementById('pun').onclick = function(){ pad.undo(); };
-    document.getElementById('pcl').onclick = function(){ pad.clear(); };
+    on('[data-pun]', function(){ pads[this.dataset.pun].undo(); });
+    on('[data-pcl]', function(){ pads[this.dataset.pcl].clear(); });
     document.getElementById('pok').onclick = function(){
-      if(pad.inkLen() < need){ noSound(); var pm = document.getElementById('pmsg'); if(pm) pm.textContent = pad.count() ? '조금 더! 점선 글씨를 끝까지 따라 써 봐요.' : '점선 글씨를 따라 써 봐요.'; return; }
+      var lack = sides.filter(function(sd){ return pads[sd].inkLen() < need[sd]; });
+      if(lack.length){
+        noSound(); var pm = document.getElementById('pmsg');
+        if(pm) pm.textContent = o.both ? LAB[lack[0]]+(lack.length > 1 ? '와 '+LAB[lack[1]] : '')+' 칸의 점선 글씨를 끝까지 따라 써 봐요.'
+                                       : (pads[lack[0]].count() ? '조금 더! 점선 글씨를 끝까지 따라 써 봐요.' : '점선 글씨를 따라 써 봐요.');
+        return;
+      }
       cnt++; if(o.onCount) o.onCount(cnt);
       if(cnt >= VOC_PRAC_N){ starSound(); confetti(18); } else okSound();
       render('');
@@ -10063,7 +10081,7 @@ function screenVocStart(v){
   app.innerHTML =
     '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>🔤 '+esc(v.title)+'</h2><div class="pill">'+v.items.length+'문제</div></div>'+
     '<button class="btn primary wide vc-big" id="vtest">📝 시험 보기<small>영어·뜻을 펜으로 쓰고 채점해요</small></button>'+
-    '<button class="btn wide vc-big" id="vpick">✏️ 골라서 '+VOC_PRAC_N+'번 쓰기<small>원하는 문제만 골라 따라 써요</small></button>';
+    '<button class="btn wide vc-big" id="vpick">✏️ 골라서 '+VOC_PRAC_N+'번 쓰기<small>원하는 문제만 골라 영어와 뜻을 따라 써요</small></button>';
   document.getElementById('back').onclick = screenVocList;
   document.getElementById('vtest').onclick = function(){ beep([700,900],.06); startVoc(v); };
   document.getElementById('vpick').onclick = function(){ beep([700],.06); screenVocPick(v); };
@@ -10076,11 +10094,7 @@ function screenVocPick(v, keep){
     var nSel = items.filter(function(_, i){ return st.sel[i]; }).length;
     app.innerHTML =
       '<div class="topbar"><button class="iconbtn" id="back" aria-label="뒤로">←</button><h2>✏️ 골라서 '+VOC_PRAC_N+'번 쓰기</h2><div class="pill">'+nSel+'개</div></div>'+
-      '<div class="traceBig" style="font-size:17px;margin-bottom:10px">쓰고 싶은 문제를 눌러서 골라요!</div>'+
-      '<div class="ogrw" role="group" aria-label="무엇을 쓸지 고르기">'+
-        '<button class="btn'+(st.side === 'en' ? ' primary' : '')+'" id="sdE" aria-pressed="'+(st.side === 'en')+'">🔤 영어 쓰기</button>'+
-        '<button class="btn'+(st.side === 'ko' ? ' primary' : '')+'" id="sdK" aria-pressed="'+(st.side === 'ko')+'">🇰🇷 뜻 쓰기</button>'+
-      '</div>'+
+      '<div class="traceBig" style="font-size:17px;margin-bottom:10px">쓰고 싶은 문제를 눌러서 골라요!<br><span style="font-size:15px">한 번에 <b>영어</b>와 <b>한글 뜻</b>을 둘 다 써요.</span></div>'+
       '<div class="vc-tools" style="justify-content:space-between;margin:0 0 8px"><button class="btn" id="all">'+(nSel === items.length ? '☐ 모두 풀기' : '☑ 모두 고르기')+'</button></div>'+
       items.map(function(it, i){
         return '<button class="vc-pick'+(st.sel[i] ? ' on' : '')+'" data-i="'+i+'" aria-pressed="'+(!!st.sel[i])+'">'+
@@ -10090,8 +10104,6 @@ function screenVocPick(v, keep){
       }).join('')+
       '<button class="btn primary wide" id="go" style="font-size:19px;padding:15px;margin-top:12px"'+(nSel ? '' : ' disabled')+'>'+(nSel ? '✏️ 고른 '+nSel+'문제 '+VOC_PRAC_N+'번씩 쓰기' : '문제를 골라 주세요')+'</button>';
     document.getElementById('back').onclick = function(){ screenVocStart(v); };
-    document.getElementById('sdE').onclick = function(){ st.side = 'en'; beep([600],.05); draw(); };
-    document.getElementById('sdK').onclick = function(){ st.side = 'ko'; beep([600],.05); draw(); };
     document.getElementById('all').onclick = function(){ var allOn = nSel === items.length; items.forEach(function(_, i){ st.sel[i] = !allOn; }); beep([600],.05); draw(); };
     on('.vc-pick', function(){ var i = +this.dataset.i, top = window.scrollY; st.sel[i] = !st.sel[i]; beep([st.sel[i] ? 700 : 500],.04); draw(); window.scrollTo(0, top); });
     document.getElementById('go').onclick = function(){
@@ -10102,7 +10114,7 @@ function screenVocPick(v, keep){
   }
   function run(q, k){
     var i = q[k];
-    vocPractice({it:items[i], side:st.side, cnt:0, head:(k+1)+' / '+q.length+' 번째 문제',
+    vocPractice({it:items[i], both:true, cnt:0, head:(k+1)+' / '+q.length+' 번째 문제',
       doneLabel: k < q.length-1 ? '다음 문제 ▶' : '🎉 다 했어요! 돌아가기',
       onCount:function(c){ if(c >= VOC_PRAC_N){ st.done[i] = true; st.sel[i] = false; } },
       onExit:function(fin){ if(fin && k < q.length-1) run(q, k+1); else draw(); }});
