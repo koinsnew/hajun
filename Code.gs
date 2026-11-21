@@ -55,6 +55,7 @@ function doPost(e) {
   else if (action === 'word')   out = wordInfo(body);
   else if (action === 'trans')  out = transSentence(body);
   else if (action === 'hand')   out = handRead(body);
+  else if (action === 'handList') out = handList(body);
   else if (action === 'ppSet')  out = ppSet(body);
   else if (action === 'hwSet')  out = hwSet(body);
   else if (action === 'wrAdd')  out = wrAdd(body);
@@ -1028,4 +1029,40 @@ function bookReport(req) {
   ].filter(function (b) { return b.answer; });
   return { ok: true, model: g.model, data: { title: S(d.title) || title, src: 'memory', blanks: blanks,
     summary: (d.summary || []).map(S).filter(function (x) { return x; }).slice(0, 6), summaryKo: S(d.summaryKo) } };
+}
+
+/* ===== ✏️ 손글씨 여러 장 읽기 (원서 단어·숙어 시험 채점) =====
+ * images: [{lang:'en'|'ko', b64}] → items: 이미지마다 읽은 글자(순서 그대로). 하루 횟수는 손글씨 읽기(HAND_DAILY_MAX)와 같이 센다. */
+var HAND_LIST_MAX = 12;
+var HAND_LIST_PROMPT =
+  '위 이미지들은 초등학생이 펜으로 화면에 쓴 손글씨다. 이미지마다 앞에 [번호|영어] 또는 [번호|한글] 표시가 있다.\n' +
+  '각 이미지에 쓰인 글을 읽어 JSON 하나로만 답한다: {"items":["1번에서 읽은 글","2번에서 읽은 글"]}\n' +
+  '규칙:\n' +
+  '1) items 의 칸 수는 이미지 수와 같고 순서도 같다.\n' +
+  '2) 보이는 글자를 그대로 읽는다. 철자가 틀렸거나 말이 이상해도 절대 고치거나 추측해서 바꾸지 않는다(받아쓰기 채점용이다).\n' +
+  '3) [영어]는 알파벳(소문자로)·띄어쓰기·아포스트로피만, [한글]은 한글·띄어쓰기만 적는다.\n' +
+  '4) 글자가 없거나 전혀 못 읽겠으면 그 칸은 빈 문자열.';
+function handList(req) {
+  if (!_hasOcrKey()) return { error: 'NO_KEY' };
+  var pinWant = PropertiesService.getScriptProperties().getProperty(OCR_PIN_PROP) || '7084';
+  if (String(req.pin || '') !== pinWant) return { error: 'BAD_PIN' };
+  var imgs = (req.images || []).filter(function (x) { return x && x.b64; }).slice(0, HAND_LIST_MAX);
+  if (!imgs.length) return { error: 'NO_IMAGE' };
+  var sp = PropertiesService.getScriptProperties();
+  var dayKey = 'HD_N_' + Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyyMMdd');
+  var n = Number(sp.getProperty(dayKey) || 0);
+  if (n >= HAND_DAILY_MAX) return { error: 'DAILY_LIMIT' };
+  sp.setProperty(dayKey, String(n + 1));
+  var parts = [];
+  imgs.forEach(function (x, i) {
+    parts.push({ text: '[' + (i + 1) + '|' + (x.lang === 'ko' ? '한글' : '영어') + ']' });
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: String(x.b64) } });
+  });
+  parts.push({ text: HAND_LIST_PROMPT });
+  var g = _geminiJSON(parts, 1500);
+  if (!g.ok) return { error: g.error };
+  var d = g.data || {}, arr = Array.isArray(d) ? d : (d.items || []);
+  var out = arr.map(function (x) { return String(x && typeof x === 'object' ? (x.text || x.en || x.ko || '') : (x == null ? '' : x)).trim(); }).slice(0, imgs.length);
+  while (out.length < imgs.length) out.push('');
+  return { ok: true, items: out, model: g.model };
 }
