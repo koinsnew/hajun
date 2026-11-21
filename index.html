@@ -512,6 +512,27 @@
   .ognav{display:flex;gap:8px;margin-top:8px}
   .ognav .btn{flex:1;min-height:46px;font-size:16px}
   .ognav .btn:disabled{opacity:.4}
+  .vc-row{display:grid;grid-template-columns:34px 1fr 1fr;gap:6px;align-items:stretch;margin-bottom:6px}
+  .vc-row.vc-ed{grid-template-columns:28px 1fr 1fr 44px}
+  .vc-row.vc-hd{font-size:14px;color:var(--ink-soft);text-align:center;margin-bottom:4px}
+  .vc-row.vc-hd.vc-row > div{padding:0}
+  .vc-no{display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:16px;color:var(--ink-soft)}
+  .vc-cell{display:flex;flex-direction:column;justify-content:center;min-height:50px;padding:7px 10px;border:2px solid #2B2A33;border-radius:10px;background:#fff;font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+  .vc-cell.en{font-family:'Andika','Gowun Dodum',sans-serif}
+  .vc-in{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:50px;padding:7px 10px;border:2px solid #2B2A33;border-radius:10px;background:#fff;font:inherit;font-size:18px;color:var(--ink)}
+  .vc-in.vc-ans{border:2px dashed #2457C5;background:#F1F6FF}
+  .vc-in:focus{outline:3px solid #2457C5;outline-offset:1px}
+  .vc-x{min-height:50px;padding:0;font-size:16px}
+  .vc-paste{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #2B2A33;border-radius:12px;font:inherit;font-size:16px;line-height:1.5;background:#fff;color:var(--ink)}
+  .vc-res.ok{background:#E8F7EE;border-color:#2B8A3E}
+  .vc-res.bad{background:#FFF0F0;border-color:#C92A2A}
+  .vc-mine i{color:var(--ink-soft)}
+  .vc-res.bad .vc-mine{text-decoration:line-through;color:#8a3a3a}
+  .vc-right{color:#1B6B2F;font-weight:700}
+  .vc-mk{width:34px;height:44px;border:0;background:none;font-size:20px;padding:0;cursor:pointer}
+  .vc-score{text-align:center;margin-bottom:10px;font-size:17px}
+  .vc-score b{font-family:'Jua',sans-serif;font-size:24px;margin-right:6px}
+  .vc-score.all{background:#FFF8E6}
   .rp-lab{display:block;font-size:15px;color:var(--ink-soft);margin:2px 2px 6px}
   .rp-in{display:block;width:100%;box-sizing:border-box;min-height:52px;margin:0 0 12px;padding:10px 14px;border:2px solid #2B2A33;border-radius:14px;background:#fff;font:inherit;font-size:18px;color:var(--ink)}
   .rp-in:focus{outline:3px solid #2457C5;outline-offset:2px}
@@ -1000,7 +1021,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.16 02:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.21 16:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2790,7 +2811,7 @@ function goneMerge(o){
   }
   return hit;
 }
-function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + goneStars(); }
+function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + vocStars() + goneStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
    ★ 뽑기도 카드도 '이 별'을 쓴다. 레벨은 모은 별(누적)로 정해져서, 별을 써도 레벨은 안 내려간다. */
@@ -3087,6 +3108,11 @@ function screenHome(){
       '<div class="t"><b>시험 노트</b><small>단어·문장 듣고 영어·뜻 쓰기 · 아빠 채점'+(notes().length ? ' · 최근 '+noteScore(notes()[notes().length-1])+'점' : '')+'</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
+    '<button class="testbtn" id="vcbig" style="margin:0 0 12px">'+
+      '<div class="ico">🔤</div>'+
+      '<div class="t"><b>원서 단어·숙어</b><small>영어 ↔ 한글 뜻 쓰기 · '+vocs().filter(function(v){ return v.done; }).length+'/'+vocs().length+' 통과</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
     '</div>'+
     '<div class="homehd">🎈 놀고 받기</div>'+
     '<div class="tgrid">'+
@@ -3138,6 +3164,7 @@ function screenHome(){
   document.getElementById('rpbig').onclick = function(){ beep([700],.06); screenReport(); };
   document.getElementById('ogbig').onclick = function(){ SHELF = ''; screenSpecials(); };
   document.getElementById('ntbig').onclick = screenNoteHome;
+  document.getElementById('vcbig').onclick = function(){ beep([700],.06); screenVocList(); };
   document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
@@ -9542,6 +9569,7 @@ function pendDone(key){ PROG.pend = pendList().filter(function(x){ return x.key 
 function pendAlive(p){   /* 대상이 지워졌으면 더는 보여주지 않는다 */
   if(p.k === 'quiz') return !!quizById(p.id);
   if(p.k === 'sent') return !!sentById(p.id);
+  if(p.k === 'voc') return !!vocById(p.id);
   if(p.k === 'mm') return mimemal().some(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
   if(p.k === 'orig') return !!origById(p.id);
   if(p.k === 'paper') return papers().some(function(b){ return b.id === p.id; });
@@ -9552,6 +9580,7 @@ function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 �
   var prev;
   if(p.k === 'quiz'){ var q = quizById(p.id); if(q){ q.done = true; q.stars = got; } }
   else if(p.k === 'sent'){ var se = sentById(p.id); if(se){ se.done = true; se.stars = got; } }
+  else if(p.k === 'voc'){ var vo = vocById(p.id); if(vo){ vo.done = true; vo.stars = got; } }
   else if(p.k === 'mm'){
     var list = mimemal().filter(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
     var per = list.length ? Math.floor(got/list.length) : 0, rem = got - per*list.length;
@@ -9744,6 +9773,259 @@ function progRefresh(){
     LOAD_BASE_SCORE = Math.max(LOAD_BASE_SCORE || 0, progScore(PROG));
     hwRedraw();
   });
+}
+/* =========================================================
+   🔤 원서 단어·숙어
+   · 아빠가 PDF·사진을 올리거나 글을 붙여 넣어 「영어 ↔ 한글 뜻」 목록을 만든다
+   · 시험: 왼쪽 영어 · 오른쪽 한글 뜻. 줄 순서는 그대로, 줄마다 한쪽만 보여 주고 다른 쪽을 쓴다
+     → 절반은 한글 뜻 쓰기, 절반은 영어 쓰기. 어느 줄이 어느 쪽인지는 시험 볼 때마다 새로 섞는다
+   · 모두 맞으면 통과 → 별 뽑기(처음 한 번). 한글 뜻은 표현이 다를 수 있어 아빠가 채점을 고칠 수 있다
+   ========================================================= */
+var VOC_KO_MIN = 2;      /* 한글 뜻: 답의 일부만 써도 이 글자 수 이상 겹치면 맞게 본다 */
+function vocs(){ return PROG.vocs || []; }
+function vocById(id){ return vocs().filter(function(v){ return v.id === id; })[0]; }
+function vocStars(){ return vocs().reduce(function(a, v){ return a + (v.done ? (+v.stars || 0) : 0); }, 0); }
+/* 붙여 넣은 글 → [{en, ko}]  (탭 · " - " · ":" · "=" 로 나뉜 줄, 영어 뒤에 한글이 바로 오는 줄, 영어 줄/한글 줄이 번갈아 오는 글) */
+function vocParse(text){
+  var out = [], hold = '';
+  String(text || '').replace(/\r/g, '').split('\n').forEach(function(raw){
+    var s = raw.replace(/^\s*(?:\d+\s*[.)\]:]|[-•·*▪◦]+)\s*/, '').trim();
+    if(!s) return;
+    var en = '', ko = '', m;
+    if(s.indexOf('\t') >= 0){ var p = s.split(/\t+/); en = p[0]; ko = p.slice(1).join(' '); }
+    else if((m = s.match(/^(.*?[A-Za-z].*?)\s+[-–—:=→]\s+(.+)$/)) || (m = s.match(/^([^가-힣]*[A-Za-z][^가-힣]*?)\s*[:=]\s*(.+)$/))){ en = m[1]; ko = m[2]; }
+    else {
+      var k = s.search(/[가-힣]/);
+      if(k > 0 && /[A-Za-z]/.test(s.slice(0, k))){
+        var cut = k; while(cut > 0 && /[(\[~…\s]/.test(s.charAt(cut-1))) cut--;   /* "(~을) 찾다" 처럼 한글 뜻 앞의 기호는 뜻 쪽에 붙인다 */
+        en = s.slice(0, cut); ko = s.slice(cut);
+      }
+      else if(k === 0 || (k < 0 && !/[A-Za-z]/.test(s))){ if(hold){ out.push({en:hold, ko:s}); hold = ''; } return; }
+      else { if(hold) out.push({en:hold, ko:''}); hold = s; return; }
+    }
+    if(hold){ out.push({en:hold, ko:''}); hold = ''; }
+    en = en.trim().replace(/[\s:=\-–—]+$/, ''); ko = ko.trim();
+    if(en) out.push({en:en, ko:ko});
+  });
+  if(hold) out.push({en:hold, ko:''});
+  return out;
+}
+/* 채점 */
+function vocNormEn(s){ return String(s || '').toLowerCase().replace(/[’‘`]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+function vocNormKo(s){ return String(s || '').replace(/[^가-힣a-zA-Z0-9]+/g, ''); }
+function vocAlts(s){   /* "a / b", "a, b", "(~을) 찾다" → 맞는 답 후보들 */
+  var list = [];
+  String(s || '').split(/[\/;,·]|\s또는\s/).forEach(function(part){
+    part = part.trim(); if(!part) return;
+    list.push(part.replace(/[()\[\]]/g, ' '));            /* 괄호 속까지 쓴 답 */
+    list.push(part.replace(/\([^)]*\)|\[[^\]]*\]/g, ' '));  /* 괄호 속은 뺀 답 */
+  });
+  list.push(String(s || '').replace(/[()\[\]]/g, ' '));
+  return list;
+}
+function vocCheck(side, ans, right){
+  if(side === 'en'){
+    var a = vocNormEn(ans); if(!a) return false;
+    return vocAlts(right).some(function(x){ return vocNormEn(x) === a; });
+  }
+  var k = vocNormKo(ans); if(!k) return false;
+  return vocAlts(right).some(function(x){
+    var r = vocNormKo(x); if(!r) return false;
+    return r === k || (k.length >= VOC_KO_MIN && (r.indexOf(k) >= 0 || k.indexOf(r) >= 0));
+  });
+}
+function screenVocList(){
+  stopAll();
+  var vs = vocs();
+  var html =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>🔤 원서 단어·숙어</h2><div class="pill">⭐ '+vocStars()+'</div></div>'+
+    '<div class="card" style="margin-bottom:12px;text-align:center">'+
+      '<div style="font-size:16px">왼쪽은 <b>영어</b>, 오른쪽은 <b>한글 뜻</b>!</div>'+
+      '<div class="muted" style="margin-top:5px">줄마다 한쪽만 보여요. 빈칸에 <b>영어</b>나 <b>뜻</b>을 써요.<br>어느 쪽을 쓸지는 시험 볼 때마다 바뀌어요 (절반씩).<br>다 맞추면 별 <b style="color:var(--mango-ink)">'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑아요!</div>'+
+    '</div>';
+  if(!vs.length){
+    html += '<div class="card" style="text-align:center"><div style="font-size:44px">🔤</div><div class="muted" style="margin-top:6px">아직 단어·숙어 묶음이 없어요.<br>아빠가 아래 버튼으로 만들어 주세요!</div></div>';
+  } else vs.forEach(function(v){
+    html += '<div class="qzrow">'+
+      '<button class="qzbk '+(v.done ? 'done' : '')+'" data-id="'+esc(v.id)+'" style="flex:1">'+
+        '<div class="ico">'+(v.done ? '🏆' : '🔤')+'</div>'+
+        '<div class="t"><b>'+esc(v.title)+'</b><small>'+v.items.length+'문제'+(v.best != null ? ' · 최고 '+v.best+'/'+v.items.length : '')+(v.done ? ' · ✅ ⭐'+(v.stars || 0)+'개 받음' : ' · ⭐'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
+        '<div style="font-size:20px">▶</div>'+
+      '</button>'+
+      '<button class="qzedit" data-ed="'+esc(v.id)+'" title="아빠가 고치기" aria-label="아빠가 고치기">✏️</button>'+
+      '<button class="qzedit qzdel" data-rm="'+esc(v.id)+'" title="아빠가 지우기" aria-label="아빠가 지우기">🗑</button>'+
+    '</div>';
+  });
+  html += '<div class="row" style="margin-top:6px"><button class="btn primary" id="add" style="flex:1">➕ 단어·숙어 묶음 만들기</button></div>';
+  app.innerHTML = html;
+  document.getElementById('back').onclick = screenHome;
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenVocEdit(null); }, screenVocList); };
+  on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var v = vocById(this.dataset.ed); if(v) needDad(function(){ screenVocEdit(v); }, screenVocList); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var v = vocById(this.dataset.rm); if(v) listDel('“'+v.title+'” 묶음을 지울까요? (받은 별은 그대로 남아요)', screenVocList, function(done){ PROG.vocs = vocs().filter(function(x){ return x.id !== v.id; }); done(); }, v.id); });
+  on('.qzbk', function(){
+    var v = vocById(this.dataset.id); if(!v) return;
+    if(!v.items.length){ needDad(function(){ screenVocEdit(v); }, screenVocList); return; }
+    beep([700,900],.06); startVoc(v);
+  });
+}
+function screenVocEdit(v){
+  var editing = !!v, title = v ? v.title : '', paste = '';
+  var rows = v ? v.items.map(function(it){ return {en:it.en, ko:it.ko}; }) : [{en:'', ko:''}, {en:'', ko:''}, {en:'', ko:''}];
+  function collect(){
+    var t = document.getElementById('vt'); if(t) title = t.value;
+    var p = document.getElementById('vpaste'); if(p) paste = p.value;
+    rows.forEach(function(r, i){ var e = document.getElementById('ve'+i), k = document.getElementById('vk'+i); if(e) r.en = e.value; if(k) r.ko = k.value; });
+  }
+  function addRows(got){
+    rows = rows.filter(function(r){ return String(r.en || '').trim() || String(r.ko || '').trim(); }).concat(got);
+  }
+  function draw(){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>'+(editing ? '✏️ 묶음 고치기' : '➕ 묶음 만들기')+'</h2><div style="width:44px"></div></div>'+
+      '<div class="card" style="margin-bottom:12px"><div class="qlab">묶음 이름</div><input id="vt" class="rp-in" style="margin:0" placeholder="예: Maisy 3권 단어·숙어" value="'+esc(title)+'"></div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 사진·PDF로 자동 입력</button>'+
+      '<div class="card" style="margin-bottom:12px">'+
+        '<div class="qlab">📋 붙여 넣기 — 한 줄에 「영어 (탭·-·:) 한글 뜻」</div>'+
+        '<textarea id="vpaste" class="vc-paste" rows="5" placeholder="look for - ~을 찾다&#10;library : 도서관&#10;give up	포기하다">'+esc(paste)+'</textarea>'+
+        '<button class="btn wide" id="pasteGo" style="margin-top:8px">⬇️ 붙여 넣은 내용을 아래 목록에 넣기</button>'+
+      '</div>'+
+      '<div class="vc-row vc-hd"><div></div><div>English</div><div>한글 뜻</div><div></div></div>'+
+      rows.map(function(r, i){
+        return '<div class="vc-row vc-ed"><div class="vc-no">'+(i+1)+'</div>'+
+          '<input id="ve'+i+'" class="vc-in" lang="en" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="영어" value="'+esc(r.en)+'" aria-label="'+(i+1)+'번 영어">'+
+          '<input id="vk'+i+'" class="vc-in" lang="ko" autocomplete="off" placeholder="한글 뜻" value="'+esc(r.ko)+'" aria-label="'+(i+1)+'번 한글 뜻">'+
+          '<button class="btn vc-x" data-del="'+i+'" aria-label="'+(i+1)+'번 줄 지우기">✕</button></div>';
+      }).join('')+
+      '<button class="btn wide" id="addrow" style="margin:6px 0 14px">➕ 한 줄 추가</button>'+
+      '<button class="btn primary wide" id="save" style="font-size:18px">💾 저장하기</button>'+
+      (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 묶음 지우기</button>' : '');
+    document.getElementById('back').onclick = screenVocList;
+    document.getElementById('addrow').onclick = function(){ collect(); rows.push({en:'', ko:''}); draw(); var e = document.getElementById('ve'+(rows.length-1)); if(e) e.focus(); };
+    on('[data-del]', function(){ collect(); rows.splice(+this.dataset.del, 1); if(!rows.length) rows.push({en:'', ko:''}); draw(); });
+    document.getElementById('pasteGo').onclick = function(){
+      collect();
+      var got = vocParse(paste);
+      if(!got.length){ noSound(); toast('붙여 넣은 글에서 영어를 찾지 못했어요'); return; }
+      addRows(got); paste = ''; okSound(); draw();
+      toast('✅ '+got.length+'줄을 넣었어요');
+    };
+    document.getElementById('scan').onclick = function(){
+      collect();
+      scanImages('vocab', function(d){
+        var got = (d.items || []).map(function(x){ return {en:String(x.en || '').trim(), ko:String(x.ko || '').trim()}; }).filter(function(x){ return x.en; });
+        if(!got.length){ noSound(); alert('사진에서 영어 단어·숙어를 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        addRows(got);
+        if(!String(title || '').trim() && d.title) title = String(d.title).trim();
+        okSound(); draw();
+        setTimeout(function(){ alert('✅ '+got.length+'줄을 읽었어요.\n영어와 뜻이 맞는지 확인하고 고친 뒤 「저장하기」를 눌러 주세요.'); }, 60);
+      });
+    };
+    document.getElementById('save').onclick = function(){
+      collect();
+      var items = rows.map(function(r){ return {en:String(r.en || '').trim(), ko:String(r.ko || '').trim()}; }).filter(function(r){ return r.en || r.ko; });
+      if(!items.length){ noSound(); toast('단어·숙어를 넣어주세요'); return; }
+      var bad = -1; items.forEach(function(r, i){ if(bad < 0 && (!r.en || !r.ko)) bad = i; });
+      if(bad >= 0){ noSound(); alert((bad+1)+'번째 줄에 '+(items[bad].en ? '한글 뜻' : '영어')+'이 비어 있어요.\n영어와 한글 뜻을 모두 채워 주세요.'); return; }
+      var t = String(title || '').trim() || '단어·숙어 '+(vocs().length+1);
+      if(!PROG.vocs) PROG.vocs = [];
+      if(editing){ v.title = t; v.items = items; if(v.best != null && v.best > items.length) v.best = items.length; }
+      else PROG.vocs.push({id:'v'+Date.now(), title:t, items:items, done:false, stars:0});
+      saveProgress(); okSound(); toast('💾'); screenVocList();
+    };
+    var dl = document.getElementById('del');
+    if(dl) dl.onclick = function(){
+      if(!confirm('“'+v.title+'” 묶음을 지울까요? (받은 별은 그대로 남아요)')) return;
+      deadAdd(v.id); PROG.vocs = vocs().filter(function(x){ return x.id !== v.id; }); saveProgress(); toast('🗑'); screenVocList();
+    };
+  }
+  draw();
+}
+function startVoc(v){
+  stopAll();
+  var items = v.items.slice(), n = items.length;
+  /* 절반은 한글 뜻 쓰기(영어를 보여 줌), 절반은 영어 쓰기(뜻을 보여 줌). 홀수면 남는 한 줄은 아무 쪽. 줄 순서는 그대로 */
+  var idx = items.map(function(_, i){ return i; });
+  for(var a = idx.length-1; a > 0; a--){ var b = Math.floor(Math.random()*(a+1)), t = idx[a]; idx[a] = idx[b]; idx[b] = t; }
+  var nKo = Math.floor(n/2) + ((n % 2) && Math.random() < 0.5 ? 1 : 0), ask = [];
+  idx.forEach(function(i, k){ ask[i] = k < nKo ? 'ko' : 'en'; });   /* ask[i] = 그 줄에서 써야 하는 쪽 */
+  var ans = items.map(function(){ return ''; }), marks = null, dadOk = false;
+  function collect(){ items.forEach(function(_, i){ var el = document.getElementById('va'+i); if(el) ans[i] = el.value; }); }
+  function cell(i, side){
+    var it = items[i], given = ask[i] !== side;
+    if(given) return '<div class="vc-cell'+(side === 'en' ? ' en' : '')+'">'+esc(it[side])+'</div>';
+    if(!marks) return '<input id="va'+i+'" class="vc-in vc-ans" lang="'+side+'"'+(side === 'en' ? ' autocapitalize="off"' : '')+' autocomplete="off" autocorrect="off" spellcheck="false" placeholder="'+(side === 'en' ? '영어를 써요' : '뜻을 써요')+'" value="'+esc(ans[i])+'" aria-label="'+(i+1)+'번 '+(side === 'en' ? '영어' : '한글 뜻')+' 쓰기">';
+    return '<div class="vc-cell vc-res '+(marks[i] ? 'ok' : 'bad')+(side === 'en' ? ' en' : '')+'">'+
+      '<span class="vc-mine">'+(String(ans[i]).trim() ? esc(ans[i]) : '<i>안 썼어요</i>')+'</span>'+
+      (marks[i] ? '' : '<span class="vc-right">✔ '+esc(it[side])+'</span>')+'</div>';
+  }
+  function draw(){
+    var right = marks ? marks.filter(Boolean).length : 0;
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>🔤 '+esc(v.title)+'</h2><div class="pill">'+(marks ? right+'/'+n : n+'문제')+'</div></div>'+
+      (marks
+        ? '<div class="card vc-score '+(right === n ? 'all' : '')+'"><b>'+right+' / '+n+'</b> '+(right === n ? '모두 맞았어요! 🎉' : '틀린 곳은 <span class="vc-right">✔ 바른 답</span>을 보고 다시 해 봐요.')+'</div>'
+        : '<div class="traceBig" style="font-size:17px;margin-bottom:10px">빈칸에 <b>영어</b>나 <b>한글 뜻</b>을 써요!</div>')+
+      '<div class="vc-row vc-hd"><div></div><div>English</div><div>한글 뜻</div></div>'+
+      items.map(function(_, i){
+        return '<div class="vc-row vc-t"><div class="vc-no">'+(marks ? '<button class="vc-mk '+(marks[i] ? 'ok' : 'bad')+'" data-mk="'+i+'" aria-label="'+(i+1)+'번 '+(marks[i] ? '맞음' : '틀림')+' (아빠가 누르면 바뀜)">'+(marks[i] ? '⭕' : '❌')+'</button>' : (i+1))+'</div>'+cell(i, 'en')+cell(i, 'ko')+'</div>';
+      }).join('')+
+      (marks
+        ? (right === n ? '<button class="btn primary wide" id="passgo" style="font-size:19px;padding:15px;margin-top:12px">🏆 통과! 계속하기</button>'
+                       : '<button class="btn primary wide" id="again" style="font-size:19px;padding:15px;margin-top:12px">🔁 다시 시험 보기 (새로 섞어요)</button>')+
+          '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.5">👨 뜻을 다르게 썼지만 맞았다면, 아빠가 ❌ 를 눌러 ⭕ 로 바꿀 수 있어요.</div>'
+        : '<button class="btn primary wide" id="grade" style="font-size:19px;padding:15px;margin-top:12px">✅ 다 썼어요! 채점하기</button>');
+    document.getElementById('back').onclick = function(){ if(!marks){ collect(); if(ans.some(function(x){ return String(x).trim(); }) && !confirm('시험을 그만둘까요? 쓴 답은 지워져요.')) return; } screenVocList(); };
+    if(!marks){
+      document.getElementById('grade').onclick = function(){
+        collect();
+        var empty = ans.filter(function(x){ return !String(x).trim(); }).length;
+        if(empty && !confirm('아직 안 쓴 칸이 '+empty+'개 있어요. 그래도 채점할까요?')) return;
+        marks = items.map(function(it, i){ return vocCheck(ask[i], ans[i], it[ask[i]]); });
+        finishRound(); draw(); window.scrollTo(0, 0);
+      };
+      Array.prototype.forEach.call(app.querySelectorAll('.vc-ans'), function(el, k, all){
+        el.onkeydown = function(ev){ if(ev.key === 'Enter'){ ev.preventDefault(); var nx = all[k+1]; if(nx) nx.focus(); else el.blur(); } };
+      });
+    } else {
+      on('.vc-mk', function(){
+        var i = +this.dataset.mk;
+        function flip(){ marks[i] = !marks[i]; finishRound(); beep([600],.05); draw(); }
+        if(dadOk) return flip();
+        dadGate(function(){ dadOk = true; flip(); }, draw, '채점을 고치려면 아빠 비밀번호가 필요해요');
+      });
+      var ag = document.getElementById('again'); if(ag) ag.onclick = function(){ beep([700,900],.06); startVoc(v); };
+      var pg = document.getElementById('passgo'); if(pg) pg.onclick = pass;
+    }
+  }
+  function finishRound(){
+    var right = marks.filter(Boolean).length;
+    if(v.best == null || right > v.best) v.best = right;
+    saveProgress();
+    if(right === n){ starSound(); confetti(40); } else noSound();
+  }
+  function pass(){
+    var got = null;
+    if(!v.done) pendAdd({key:'voc:'+v.id, k:'voc', id:v.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'🔤 '+v.title});
+    function render(){
+      var first = !v.done && got === null;
+      app.innerHTML =
+        '<div class="result"><div class="big">🏆</div><h2>원서 단어·숙어 통과!</h2>'+
+          '<p>“'+esc(v.title)+'”<br><b>'+n+'문제를 모두 맞췄어요!</b></p>'+
+          (got !== null ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+new Array(got+1).join('⭐')+'<br><b>별 '+got+'개</b>를 받았어요!</div>'
+            : first ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6">⭐ 별 <b>'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑을 수 있어요!</div><button class="btn primary wide" id="draw" style="font-size:19px;padding:15px;margin-bottom:10px">🎁 별 뽑기</button>'
+            : '<div class="card muted" style="margin-bottom:12px">이미 별을 받은 묶음이에요. 연습 잘했어요!</div>')+
+          (first ? '' : '<button class="btn primary wide" id="again" style="font-size:18px;margin-bottom:10px">🔁 한 번 더 (새로 섞어요)</button>')+
+          '<button class="btn wide" id="lst">📋 목록으로</button></div>';
+      var d = document.getElementById('draw');
+      if(d) d.onclick = function(){ modalStarDraw(function(g){ v.done = true; v.stars = g; pendDone('voc:'+v.id); got = g; saveProgress(); render(); checkLevelUp(); }, STAR_PICK_MIN, STAR_PICK_MAX); };
+      var ag = document.getElementById('again'); if(ag) ag.onclick = function(){ beep([700,900],.06); startVoc(v); };
+      document.getElementById('lst').onclick = screenVocList;
+    }
+    render();
+    if(v.done) checkLevelUp();
+  }
+  if(!n){ screenVocList(); return; }
+  draw();
 }
 /* =========================================================
    📗 북리포트
