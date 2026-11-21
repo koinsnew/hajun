@@ -506,6 +506,13 @@
   .pbnav{gap:6px}
   .pbnav .btn{white-space:nowrap;font-size:15px;padding-left:4px;padding-right:4px;min-height:48px}
   .pbnav .btn:disabled{opacity:.4}
+  .pgpic{display:flex;gap:10px;align-items:center;margin-top:8px}
+  .pgth{flex:0 0 96px;width:96px;height:72px;border:2px solid #2B2A33;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .pgth.none{border-style:dashed;border-color:#9AA3B5}
+  .pgth img{width:100%;height:100%;object-fit:contain;display:block}
+  .pgth span{font-size:12px;color:var(--ink-soft);text-align:center;padding:2px}
+  .pgpicb{display:flex;flex-wrap:wrap;gap:6px}
+  .pgpicb .btn{min-height:44px;padding:6px 12px;font-size:14px}
   .pb-load{padding:26px 8px;color:var(--ink-soft);font-size:15px}
   .ogrw{display:flex;gap:8px;margin:0 0 12px}
   .ogrw .btn{flex:1;min-height:50px;font-size:17px}
@@ -1068,7 +1075,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.21 19:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.21 19:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -6461,12 +6468,47 @@ function pageRowsHtml(lines, par){
         '</div>'+
         (n>1 ? '<button class="delx" data-delpg="'+i+'" title="이 쪽 지우기" style="flex:0 0 auto">🗑</button>' : '')+
       '</div>'+
+      /* 쪽 그림: 작게 보여 주고, 바꾸거나 뺄 수 있다 (그림이 잘못 들어간 쪽을 고칠 때) */
+      (par ? '<div class="pgpic">'+
+        '<div class="pgth'+(par[i] ? '' : ' none')+'" data-th="'+i+'">'+(par[i] ? '<span>불러오는 중…</span>' : '<span>그림 없음</span>')+'</div>'+
+        '<div class="pgpicb">'+
+          '<button class="btn" data-pic="'+i+'">🖼 '+(par[i] ? '그림 바꾸기' : '그림 넣기')+'</button>'+
+          (par[i] ? '<button class="btn" data-nopic="'+i+'">✕ 그림 빼기</button>' : '')+
+        '</div>'+
+      '</div>' : '')+
     '</div>';
   }).join('');
 }
 /* collect(): 입력값을 lines에 반영, rerender(): 다시 그리기 */
-function bindPageRows(lines, collect, rerender, par){
+function bindPageRows(lines, collect, rerender, par, bookId){
   function fit(){ if(par){ while(par.length < lines.length) par.push(''); par.length = lines.length; } }
+  if(par){
+    /* 쪽 그림 미리보기 */
+    Array.prototype.forEach.call(document.querySelectorAll('.pgth[data-th]'), function(box){
+      var i = +box.dataset.th, id = par[i]; if(!id) return;
+      pbLoadId(bookId, id, function(u){
+        if(!box.isConnected || par[i] !== id) return;
+        box.innerHTML = u ? '<img src="'+u+'" alt="'+(i+1)+'쪽 그림">' : '<span>그림을 불러오지 못했어요</span>';
+      });
+    });
+    /* 그림 바꾸기·넣기: 사진 한 장을 골라 그 쪽 그림으로 쓴다 (저장할 때 서버에 올라간다) */
+    on('[data-pic]', function(){
+      var i = +this.dataset.pic, inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*'; inp.style.display = 'none'; document.body.appendChild(inp);
+      inp.onchange = function(){
+        var f = inp.files && inp.files[0]; if(inp.parentNode) inp.parentNode.removeChild(inp);
+        if(!f) return;
+        shrinkImage(f, PB_IMG_SIDE, PB_IMG_QUALITY, function(url){
+          if(!url){ noSound(); alert('사진을 열지 못했어요. 다른 사진으로 해 주세요.'); return; }
+          collect(); fit();
+          var id = origNewId()+'e'; PB_PEND[id] = url; par[i] = id;
+          okSound(); rerender();
+        });
+      };
+      inp.click();
+    });
+    on('[data-nopic]', function(){ var i = +this.dataset.nopic; if(!confirm((i+1)+'쪽의 그림을 뺄까요? (글은 그대로 남아요)')) return; collect(); fit(); par[i] = ''; rerender(); });
+  }
   function sw(a, b){ var t = lines[a]; lines[a] = lines[b]; lines[b] = t; if(par){ t = par[a]; par[a] = par[b]; par[b] = t; } }
   on('[data-up]', function(){ var i=+this.dataset.up; if(i<=0) return; collect(); fit(); sw(i-1, i); rerender(); });
   on('[data-dn]', function(){ var i=+this.dataset.dn; if(i>=lines.length-1) return; collect(); fit(); sw(i, i+1); rerender(); });
@@ -8081,7 +8123,7 @@ function screenAddPaper(){
         setTimeout(function(){ alert('✅ '+got.length+'쪽을 읽었어요. (지금 모두 '+lines.length+'쪽)\n쪽마다 그림(🖼️)과 글이 맞는지 확인하고 고친 뒤 「책 등록하기」를 눌러 주세요.'); }, 200);
       }); });
     };
-    bindPageRows(lines, collect, draw, pim);
+    bindPageRows(lines, collect, draw, pim, null);
     document.getElementById('save').onclick = function(){
       collect();
       var t = (meta.t||'').trim();
@@ -8168,6 +8210,16 @@ function pbLoad(b, i, cb){
     origSrvGet([key], function(j){ var v = j && j.ok && j.imgs && j.imgs[key]; if(v) origImgPut(key, v); cb(v || ''); });
   });
 }
+function pbLoadId(bookId, id, cb){   /* 그림 id 로 불러오기 (쪽 순서가 바뀐 편집 화면용) */
+  if(!id) return cb('');
+  if(PB_PEND[id]) return cb(PB_PEND[id]);
+  if(!bookId) return cb('');
+  var key = pbKey(bookId, id);
+  origImgGet(key, function(u){
+    if(u) return cb(u);
+    origSrvGet([key], function(j){ var v = j && j.ok && j.imgs && j.imgs[key]; if(v) origImgPut(key, v); cb(v || ''); });
+  });
+}
 function pbDelKeys(bookId, ids, cb){
   var keys = (ids || []).filter(Boolean).map(function(id){ return pbKey(bookId, id); });
   if(!keys.length) return cb && cb();
@@ -8218,7 +8270,7 @@ function screenPaper(b){
         '<button class="btn" id="jump" style="flex:1">↪ 쪽 고르기</button>'+
         '<button class="btn" id="nextp" style="flex:1"'+(i>=b.pages-1?' disabled':'')+'>다음 쪽 ▶</button>'+
       '</div>'+
-      '<button class="btn wide" id="edlines" style="margin-top:8px;font-size:14px">✏️ 책 문장 넣기/고치기 (아빠)</button>'+
+      '<button class="btn wide" id="edlines" style="margin-top:8px;font-size:14px">✏️ 책 문장·그림 고치기 (아빠)</button>'+
       '<div class="muted" style="text-align:center;margin-top:10px">여기까지 읽은 건 저장돼요. 다음에 이어서 하면 됩니다.</div>';
     document.getElementById('back').onclick = function(){ stopAll(); screenSpecials(); };
     var ln = (b.lines||[])[i];
@@ -8266,7 +8318,7 @@ function screenPaper(b){
     if(!lines.length) lines = [''];
     function render(){
       app.innerHTML =
-        '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>✏️ 책 문장 넣기</h2><div style="width:44px"></div></div>'+
+        '<div class="topbar"><button class="iconbtn" id="back">←</button><h2>✏️ 책 문장·그림 고치기</h2><div style="width:44px"></div></div>'+
         '<div class="card" style="margin-bottom:10px">'+
           '<div class="muted"><b>'+esc(b.t)+'</b> · 칸 개수가 곧 <b>쪽수</b> (현재 <b id="pgcnt">'+lines.length+'</b>쪽)<br>'+
             '쪽마다 문장을 넣거나 고치세요. 넣은 쪽은 읽기 화면에 문장과 🔊 소리가 나와요.<br>'+
@@ -8280,7 +8332,7 @@ function screenPaper(b){
       function collect(){ Array.prototype.forEach.call(document.querySelectorAll('.pgin'), function(el){ lines[+el.dataset.pg] = el.value; }); }
       document.getElementById('back').onclick = function(){ draw(); };
       document.getElementById('addpg').onclick = function(){ collect(); lines.push(''); pim.push(''); render(); };
-      bindPageRows(lines, collect, render, pim);
+      bindPageRows(lines, collect, render, pim, b.id);
       document.getElementById('scan').onclick = function(){
         collect();
         scanImages('pbook', function(d){ pbStash(d.imgs || [], function(pids){
