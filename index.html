@@ -548,6 +548,10 @@
   .vc-rd{font-size:14px;color:var(--ink-soft)}
   .vc-rd b{color:var(--ink)}
   .vc-prgo{min-height:46px;font-size:16px;border-color:#C92A2A;color:#9F1239;background:#FFF0F0}
+  .vc-dadok{min-height:46px;font-size:15px;border-color:#2457C5;color:#1B3E8F;background:#F1F6FF}
+  .vc-dadrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .vc-dadtag{font-size:14px;font-weight:700;color:#1B6B2F}
+  .vc-dadun{min-height:40px;padding:4px 12px;font-size:14px}
   .vc-prgo.opt{border-color:#2B2A33;color:var(--ink);background:#fff;min-height:40px;font-size:14px}
   .vc-big{display:flex;flex-direction:column;gap:4px;align-items:center;font-size:21px;padding:18px 12px;margin-bottom:12px}
   .vc-big small{font-size:14px;font-weight:400;opacity:.85}
@@ -1075,7 +1079,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.21 19:30';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.22 20:50';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -10184,6 +10188,8 @@ function startVoc(v){
   idx.forEach(function(i, k){ ask[i] = k < nKo ? 'ko' : 'en'; });   /* ask[i] = 그 줄에서 써야 하는 쪽 */
   var pads = [], imgs = [], read = [], marks = null, dadOk = false, aiNote = '';
   var wrong0 = null, prac = {};   /* wrong0[i] = 처음 채점에서 틀린 줄, prac[i] = 그 줄을 몇 번 따라 썼는지 */
+  var dadFix = {};                /* dadFix[i] = 아빠가 '맞은 걸로' 고친 줄 (AI가 글씨를 잘못 읽었을 때) */
+  function needPrac(i){ return wrong0[i] && !dadFix[i]; }
   function cell(i, side){
     var it = items[i], given = ask[i] !== side;
     if(given) return '<div class="vc-cell'+(side === 'en' ? ' en' : '')+'">'+esc(it[side])+'</div>';
@@ -10197,7 +10203,9 @@ function startVoc(v){
     return '<div class="vc-hand '+(marks[i] ? 'ok' : 'bad')+'">'+
       (imgs[i] ? '<img src="data:image/jpeg;base64,'+imgs[i]+'" alt="하준이가 쓴 글씨">' : '<i class="vc-none">안 썼어요</i>')+
       (read[i] ? '<span class="vc-rd">읽은 글씨: <b>'+esc(read[i])+'</b></span>' : '')+
-      '<button class="btn vc-prgo'+(pd ? ' pd' : '')+(wrong0[i] ? '' : ' opt')+'" data-pr="'+i+'">'+(pd ? '✅ 연습 완료 (한 번 더 하려면 눌러요)' : '✏️ '+VOC_PRAC_N+'번 따라 쓰기'+(prac[i] ? ' ('+prac[i]+'/'+VOC_PRAC_N+')' : ''))+'</button>'+
+      (marks[i] ? (dadFix[i] ? '<div class="vc-dadrow"><span class="vc-dadtag">👨 아빠가 맞다고 확인했어요</span><button class="btn vc-dadun" data-fix="'+i+'">↩ 되돌리기</button></div>' : '')
+                : '<button class="btn vc-dadok" data-fix="'+i+'">👨 맞게 썼어요 — 맞은 걸로 고치기 (아빠)</button>')+
+      '<button class="btn vc-prgo'+(pd ? ' pd' : '')+(needPrac(i) ? '' : ' opt')+'" data-pr="'+i+'">'+(pd ? '✅ 연습 완료 (한 번 더 하려면 눌러요)' : '✏️ '+VOC_PRAC_N+'번 따라 쓰기'+(prac[i] ? ' ('+prac[i]+'/'+VOC_PRAC_N+')' : ''))+'</button>'+
     '</div>';
   }
   function draw(){
@@ -10206,7 +10214,7 @@ function startVoc(v){
       '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>🔤 '+esc(v.title)+'</h2><div class="pill">'+(marks ? right+'/'+n : n+'문제')+'</div></div>'+
       (marks
         ? '<div class="card vc-score '+(right === n ? 'all' : '')+'"><b>'+right+' / '+n+'</b> '+(right === n ? '모두 맞았어요! 🎉' : '틀린 문제는 <span class="vc-right">바른 답</span>을 <b style="font-size:inherit;font-family:inherit;margin:0">'+VOC_PRAC_N+'번</b> 따라 써 봐요. 맞은 문제도 골라서 쓸 수 있어요.')+
-            (function(){ var w = wrong0.filter(Boolean).length, d = wrong0.filter(function(x, k){ return x && (prac[k] || 0) >= VOC_PRAC_N; }).length; return w ? '<div class="vc-prsum'+(d === w ? ' all' : '')+'">✏️ 틀린 문제 쓰기 연습 '+d+'/'+w+(d === w ? ' — 모두 완료! 👏' : '')+'</div>' : ''; })()+
+            (function(){ var w = wrong0.filter(function(x, k){ return needPrac(k); }).length, d = wrong0.filter(function(x, k){ return needPrac(k) && (prac[k] || 0) >= VOC_PRAC_N; }).length; return w ? '<div class="vc-prsum'+(d === w ? ' all' : '')+'">✏️ 틀린 문제 쓰기 연습 '+d+'/'+w+(d === w ? ' — 모두 완료! 👏' : '')+'</div>' : ''; })()+
             (aiNote ? '<div class="vc-ainote">'+esc(aiNote)+'</div>' : '')+'</div>'
         : '<div class="traceBig" style="font-size:17px;margin-bottom:10px">빈칸의 <b>영어</b>나 <b>한글 뜻</b>을 아래 칸에 펜으로 써요!</div>')+
       '<div class="vc-row vc-hd"><div></div><div>English</div><div>한글 뜻</div></div>'+
@@ -10216,7 +10224,7 @@ function startVoc(v){
       (marks
         ? (right === n ? '<button class="btn primary wide" id="passgo" style="font-size:19px;padding:15px;margin-top:12px">🏆 통과! 계속하기</button>'
                        : '<button class="btn primary wide" id="again" style="font-size:19px;padding:15px;margin-top:12px">🔁 다시 시험 보기 (새로 섞어요)</button>')+
-          '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.5">👨 AI가 글씨를 잘못 읽었거나 뜻을 다르게 썼지만 맞았다면, 아빠가 왼쪽의 ❌ 를 눌러 ⭕ 로 바꿀 수 있어요.</div>'
+          '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.5">👨 AI가 글씨를 잘못 읽었거나 뜻을 다르게 썼지만 맞았다면, 아빠가 그 문제의 「맞은 걸로 고치기」를 눌러 주세요.</div>'
         : '<button class="btn primary wide" id="grade" style="font-size:19px;padding:15px;margin-top:12px">✅ 다 썼어요! 채점하기</button>');
     document.getElementById('back').onclick = function(){ if(!marks && pads.some(function(p){ return p && p.count(); }) && !confirm('시험을 그만둘까요? 쓴 답은 지워져요.')) return; screenVocList(); };
     if(!marks){
@@ -10228,12 +10236,15 @@ function startVoc(v){
       on('[data-cl]', function(){ pads[+this.dataset.cl].clear(); });
       document.getElementById('grade').onclick = grade;
     } else {
-      on('.vc-mk', function(){
-        var i = +this.dataset.mk, top = window.scrollY;
-        function flip(){ marks[i] = !marks[i]; finishRound(); beep([600],.05); draw(); window.scrollTo(0, top); }
+      /* 아빠가 채점 고치기: 왼쪽 ⭕/❌ 표시나 「맞은 걸로 고치기」 버튼. 비밀번호는 한 시험에 한 번만 묻는다 */
+      function dadFlip(i){
+        var top = window.scrollY;
+        function flip(){ marks[i] = !marks[i]; dadFix[i] = marks[i] && wrong0[i]; finishRound(); beep([600],.05); draw(); window.scrollTo(0, top); }
         if(dadOk) return flip();
         dadGate(function(){ dadOk = true; flip(); }, function(){ draw(); window.scrollTo(0, top); }, '채점을 고치려면 아빠 비밀번호가 필요해요');
-      });
+      }
+      on('.vc-mk', function(){ dadFlip(+this.dataset.mk); });
+      on('[data-fix]', function(){ dadFlip(+this.dataset.fix); });
       on('[data-pr]', function(){ beep([600],.05); practice(+this.dataset.pr); });
       var ag = document.getElementById('again'); if(ag) ag.onclick = function(){ beep([700,900],.06); startVoc(v); };
       var pg = document.getElementById('passgo'); if(pg) pg.onclick = pass;
