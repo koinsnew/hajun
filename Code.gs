@@ -925,7 +925,13 @@ function _goneKeep(obj) {
     var pr = JSON.parse(_store().getProperty(PROP_KEY) || '{}');
     if (pr && pr.gone && typeof pr.gone === 'object') {
       if (!obj.gone || typeof obj.gone !== 'object') obj.gone = {};
-      for (var gk in pr.gone) obj.gone[gk] = Math.max(+obj.gone[gk] || 0, +pr.gone[gk] || 0);
+      var back = 0;
+      for (var gk in pr.gone) {
+        var was = +obj.gone[gk] || 0, keep = Math.max(was, +pr.gone[gk] || 0);
+        back += keep - was; obj.gone[gk] = keep;
+      }
+      /* 이 기기가 '별을 잃었다'고 보고 채워 둔 레벨 별(lvPad)이 있는데 그 별을 서버 보관함에서 되찾았으면, 되찾은 만큼 덜어 낸다(두 번 더해지지 않게) */
+      if (back > 0 && +obj.lvPad > 0) obj.lvPad = Math.max(0, +obj.lvPad - back);
     }
     /* 가장 높았던 레벨 별(lvHi)도 줄지 않게 지킨다 → 어느 기기가 저장해도 레벨은 안 내려간다 */
     if (pr && typeof pr.lvBase === 'number' && pr.lvBase === obj.lvBase && +pr.lvHi > (+obj.lvHi || 0)) obj.lvHi = +pr.lvHi;
