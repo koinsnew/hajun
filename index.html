@@ -939,7 +939,8 @@
   .hud-btn span{background:#FCC419;color:#3B2208;border-radius:999px;padding:1px 7px;margin-left:3px;font-size:13px}
   .hud-btn span.hot{animation:bagpop 1.6s ease-in-out infinite}
   .hud-next{flex:1 1 100%;display:flex;align-items:center;gap:12px;position:relative;border-top:1.5px dashed rgba(255,255,255,.3);padding-top:11px}
-  .peek{position:relative;flex:none}
+  .peek{position:relative;flex:none;pointer-events:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  .pcard img{-webkit-user-drag:none;-webkit-touch-callout:none}
   .peek-top{position:absolute;inset:0;transition:clip-path .8s cubic-bezier(.16,1,.3,1)}
   .hud-next-t{font-size:13.5px;line-height:1.5;color:#DCE6F9;min-width:0}
   .hud-next-t b{font-family:'Jua',sans-serif;font-weight:400;font-size:16px;color:#fff}
@@ -1079,7 +1080,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.22 21:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.24 23:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1961,7 +1962,7 @@ function playerCard(lv, size, lock){
   var p = playerAt(lv), t = p.tier;
   return '<div class="pcard '+(size||'')+' t-'+t.k+(lock?' lock':'')+'" style="--c1:'+t.c1+';--c2:'+t.c2+';--ci:'+t.ink+'">'+
       '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
-      '<div class="pc-art">'+playerSVG(lv, lock)+ppImg(lv, lock)+'</div>'+
+      '<div class="pc-art">'+playerSVG(lv, lock)+(peek ? ppPeek(lv) : ppImg(lv, lock))+'</div>'+
       '<div class="pc-name">'+(lock || peek ? '???' : esc(p.n))+'</div>'+
       '<div class="pc-meta">'+(lock || peek ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
     '</div>';
@@ -2024,7 +2025,7 @@ var PEEK_HINT = 50, PEEK_HOT = 80;
 function nextPeek(g){
   if(g.max) return '';
   var L = g.lv + 1, pct = Math.max(0, Math.min(100, Math.round(g.got*100/g.need))), p = playerAt(L), hot = pct >= PEEK_HOT;
-  return '<div class="hud-next'+(hot ? ' hot' : '')+'">'+
+  return '<div class="hud-next'+(hot ? ' hot' : '')+'" data-pct="'+pct+'">'+
       '<div class="peek" aria-hidden="true">'+playerCard(L, 'sm', true)+
         '<div class="peek-top" style="clip-path:inset('+(100-pct)+'% 0 0 0);-webkit-clip-path:inset('+(100-pct)+'% 0 0 0)">'+playerCard(L, 'sm', 'peek')+'</div></div>'+
       '<div class="hud-next-t"><b>다음 선수</b> <span class="pk-pct">'+pct+'%</span><br>'+
@@ -2162,11 +2163,44 @@ function ppFill(){
     var u = ORIG_MEM[im.getAttribute('data-k')];
     if(u){ im.src = u; im.hidden = false; }
   });
+  peekFill();
 }
 function ppImg(lv, lock){
   var k = ppKey(lv); if(!k || lock) return '';
   var u = ORIG_MEM[k];
   return '<img class="pc-photo" data-k="'+esc(k)+'" alt="'+esc(playerAt(lv).n)+' 사진"'+(u ? ' src="'+u+'"' : ' hidden')+'>';
+}
+/* 다음 선수 미리보기용 사진: <img>로 통째로 넣으면 길게 눌러 저장·열기로 다 보이므로,
+   캔버스에 '지금 드러난 아래쪽'만 그린다(위쪽 픽셀은 아예 없음) */
+function ppPeek(lv){
+  var k = ppKey(lv); if(!k) return '';
+  return '<canvas class="pc-photo pc-peekcv" data-k="'+esc(k)+'" width="'+PP_W+'" height="'+PP_H+'" hidden aria-hidden="true"></canvas>';
+}
+function peekFill(){
+  Array.prototype.forEach.call(document.querySelectorAll('canvas.pc-peekcv'), function(cv){
+    var u = ORIG_MEM[cv.getAttribute('data-k')]; if(!u) return;
+    var box = cv.closest('.hud-next'), pct = box ? +box.getAttribute('data-pct') || 0 : 0;
+    if(cv.getAttribute('data-pd') === String(pct)) return;   /* 이미 그렸음 */
+    cv.setAttribute('data-pd', String(pct));
+    var card = cv.closest('.pcard'), im = new Image();
+    im.onload = function(){
+      if(!cv.isConnected) return;
+      var x = cv.getContext('2d'), W = cv.width, H = cv.height;
+      x.clearRect(0, 0, W, H);
+      var s = Math.max(W/im.width, H/im.height), dw = im.width*s, dh = im.height*s;
+      x.drawImage(im, (W-dw)/2, 0, dw, dh);   /* object-position: 50% 0 과 같게 */
+      /* 카드 위쪽 (100-pct)% 는 아직 안 드러난 곳 → 그 높이만큼 사진 위쪽을 지운다 */
+      var cut = H;
+      try{
+        var r = cv.getBoundingClientRect(), c = card.getBoundingClientRect();
+        if(r.height > 0 && c.height > 0){ var line = c.top + c.height*(100-pct)/100; cut = Math.max(0, Math.min(H, (line - r.top)*H/r.height)); }
+        else cut = H*(100-pct)/100;
+      }catch(e){ cut = H*(100-pct)/100; }
+      if(cut > 0) x.clearRect(0, 0, W, Math.ceil(cut));
+      cv.hidden = false;
+    };
+    im.src = u;
+  });
 }
 /* 사진 저장: 서버(드라이브) → 진도에 키 기록 → 예전 사진 지우기 */
 function ppSave(lv, url, cb){
@@ -3339,7 +3373,8 @@ function startPKGame(){
    '자유 노트'는 아빠가 직접 불러 주는 받아쓰기.
    ※ 왼쪽 번호 칸은 손가락으로 밀어서 위아래로 움직이는 곳(공책에서는 글씨만 써진다).
    ========================================================= */
-var NOTE_ROWS = 8;        /* 공책 번호 수 */
+var NOTE_ROWS = 8;        /* 공책 번호 수 (브릭스 단어 외의 묶음은 이만큼 섞어서) */
+var NOTE_ALL_MAX = 30;    /* 브릭스 단어는 묶음의 단어를 모두 낸다 — 이보다 많으면 이만큼만 */
 var NOTE_EN_H = 132;      /* 영어 줄(4선) 높이(px) — 화면이 넓으면 비율로 더 커진다 */
 var NOTE_KO_H = 96;       /* 한글 뜻 줄 높이(px) */
 var NOTE_MAX_W = 980;     /* 공책 최대 너비(px) — 태블릿에서도 크게 */
@@ -3358,7 +3393,7 @@ function noteCats(){
   var C = [];
   C.push({key:'q', ico:'📝', name:'브릭스 단어', color:'#1971C2', unit:'단어',
     sets: quizzes().map(function(q){
-      return {title:q.title, items:(q.items||[]).filter(function(x){ return x && x.w; }).map(function(x){ return {en:x.w, ko:x.k||'', say:x.def||''}; })};   /* 🔊 = 단어를 설명하는 영어 문장(뜻풀이) */
+      return {title:q.title, all:true, items:(q.items||[]).filter(function(x){ return x && x.w; }).map(function(x){ return {en:x.w, ko:x.k||'', say:x.def||''}; })};   /* 🔊 = 단어를 설명하는 영어 문장(뜻풀이) · all: 단어 수대로 다 낸다 */
     })});
   C.push({key:'s', ico:'📖', name:'브릭스 읽기', color:'#C2255C', unit:'문장',
     sets: sents().map(function(s){ return {title:s.title, items:(s.items||[]).filter(function(x){ return x && x.en; })}; })});
@@ -3422,10 +3457,10 @@ function screenNoteCat(key){
   app.innerHTML =
     '<div class="topbar"><button class="iconbtn" id="back" aria-label="시험 노트로">←</button>'+
       '<h2>📒 '+c.ico+' '+c.name+'</h2><div style="width:44px"></div></div>'+
-    '<div class="nttip">시험 볼 것을 골라요 · 한 번에 '+NOTE_ROWS+'개씩 섞어서 나와요</div>'+
+    '<div class="nttip">시험 볼 것을 골라요 · '+(c.key === 'q' ? '단어장의 단어가 <b>모두</b> 섞여서 나와요' : '한 번에 '+NOTE_ROWS+'개씩 섞어서 나와요')+'</div>'+
     (c.sets.length ? c.sets.map(function(s, i){
       return '<button class="qzbk ntpick" data-i="'+i+'">'+
-        '<div class="ico">'+c.ico+'</div><div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+s.unit+(s.items.length > NOTE_ROWS ? ' 중 '+NOTE_ROWS+'개' : '')+' · 🔊 불러 줘요</small></div>'+
+        '<div class="ico">'+c.ico+'</div><div class="t"><b>'+esc(s.title)+'</b><small>'+s.items.length+s.unit+(s.items.length > noteCap(s) ? ' 중 '+noteCap(s)+'개' : '')+' · 🔊 불러 줘요</small></div>'+
         '<div class="ogarrow" aria-hidden="true">▶</div></button>';
     }).join('') : '<div class="card muted" style="text-align:center;line-height:1.6">아직 「'+c.name+'」에 시험 볼 내용이 없어요.<br>「'+c.name+'」 메뉴에서 아빠가 넣을 수 있어요.</div>');
   document.getElementById('back').onclick = screenNoteHome;
@@ -3433,8 +3468,9 @@ function screenNoteCat(key){
 }
 
 /* set: {title, items:[{en,ko}]} (없으면 자유 노트) · only: 이 문장들로만 (틀린 것 다시) */
+function noteCap(set){ return set && set.all ? NOTE_ALL_MAX : NOTE_ROWS; }   /* 한 번에 내는 문제 수 */
 function startNote(set, only){
-  var items = only ? only.slice() : (set ? shuffle(set.items).slice(0, NOTE_ROWS) : []);
+  var items = only ? only.slice() : (set ? shuffle(set.items).slice(0, noteCap(set)) : []);
   var n = set ? Math.max(1, items.length) : NOTE_ROWS;
   var title = set ? set.title : '자유 노트';
   var mE = [], mK = [];        /* 영어·뜻 채점: 1=⭕ / 0=╱ / undefined=아직 */
@@ -3645,7 +3681,7 @@ var NOTE_SAY_GAP = 9;     /* 「차례로 듣기」: 문장 사이 쉬는 시간
 
 /* ── 공책 캔버스: 바탕(번호마다 영어 4선 줄 + 한글 뜻 줄) + 손글씨 + 위 캔버스에 채점 표시 ── */
 function notePad(cv, mk, W, H, g){
-  var DPR = Math.min(2, window.devicePixelRatio || 1);
+  var DPR = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(15000000/Math.max(1, W*H)));   /* 줄이 많으면 선명도를 조금 낮춰 기기 한도 안에 */
   [cv, mk].forEach(function(c){ c.width = W*DPR; c.height = H*DPR; c.style.width = W+'px'; c.style.height = H+'px'; });
   var ctx = cv.getContext('2d'), mx = mk.getContext('2d');
   ctx.scale(DPR, DPR); mx.scale(DPR, DPR);
