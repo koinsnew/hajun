@@ -539,6 +539,8 @@
   .vc-blank{border-style:dashed;border-color:#2457C5;background:#F1F6FF;color:#2457C5;font-size:15px}
   .vc-pen{margin-left:0}
   .vc-q .vc-t,.sb-slab{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  /* 펜 칸과 시험 문제는 꾹 눌러도 글자 선택(파란 손잡이)·끌기가 생기지 않게 */
+  canvas,.vc-q,.vc-pen,.vc-tools,.sb-card,.qzpen{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none}
   .vc-pen.vc-trace{margin-left:0}
   .vc-cv{display:block;width:100%;border:2px solid #2B2A33;border-radius:12px;background:#FFFDF7;touch-action:none}
   .vc-tools{display:flex;gap:6px;justify-content:flex-end;margin-top:4px}
@@ -1105,7 +1107,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.28 17:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.28 17:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -5251,6 +5253,16 @@ document.addEventListener('pointerdown', function(e){
   });
   if(best){ e.preventDefault(); best.start(e); }
 }, {capture:true, passive:false});
+function penPadsOn(){ PEN_PADS = PEN_PADS.filter(function(p){ return document.body.contains(p.cv); }); return PEN_PADS.length > 0; }
+function penNoSel(){ try{ var s = window.getSelection && window.getSelection(); if(s && s.rangeCount) s.removeAllRanges(); }catch(x){} }
+/* 펜 칸이 있는 화면에서는 글자 선택·끌기를 막는다 (입력칸은 그대로) */
+['selectstart','dragstart'].forEach(function(t){
+  document.addEventListener(t, function(e){
+    var el = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
+    if(el && el.closest && el.closest('input,textarea,[contenteditable]')) return;
+    if(penPadsOn()) e.preventDefault();
+  }, true);
+});
 var PEN_EN_H = 150;         /* 영어 펜 칸 높이(px) */
 var PEN_KO_H = 128;         /* 한글 펜 칸 높이(px) */
 var QZ_IN_KEY = 'hajun_qz_input';   /* 펜/자판 고른 것 기억 (이 기기에서만) */
@@ -5287,6 +5299,7 @@ function penCanvas(cv, W, H, lang, ghost){
   function endStroke(drop){ if(drop && cur){ var k = strokes.indexOf(cur); if(k >= 0) strokes.splice(k, 1); } cur = null; curId = null; if(drop) redraw(); }
   function start(e){
     var now = Date.now();
+    penNoSel();
     if(e.pointerType === 'pen'){ PEN_LAST = now; if(cur && curType !== 'pen') endStroke(true); }   /* 손바닥이 먼저 잡은 획은 버리고 펜이 쓴다 */
     else if(e.pointerType === 'touch'){
       if(now - PEN_LAST < NOTE_PEN_HOLD_MS) return;   /* 펜 쓰는 중 손바닥 (두 칸 공통) */
@@ -5316,6 +5329,8 @@ function penCanvas(cv, W, H, lang, ghost){
   cv.addEventListener('lostpointercapture', up);
   cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
   cv.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+  cv.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  cv.addEventListener('pointermove', function(e){ if(cur && e.pointerId === curId) penNoSel(); });
   return {
     count: function(){ return strokes.length; },
     inkLen: function(){ var n = 0; strokes.forEach(function(s){ for(var i = 1; i < s.p.length; i++) n += Math.abs(s.p[i].x - s.p[i-1].x) + Math.abs(s.p[i].y - s.p[i-1].y); }); return n; },
