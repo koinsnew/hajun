@@ -574,6 +574,23 @@
   .vc-prsum{margin-top:6px;font-size:15px;color:var(--ink-soft)}
   .vc-prsum.all{color:#1B6B2F;font-weight:700}
   .vc-pcard{margin-bottom:12px}
+  .vc-say{min-height:36px;padding:2px 10px;font-size:14px;margin-left:6px;vertical-align:middle}
+  .sb-gap{display:inline-block;min-width:4.2em;padding:0 6px;margin:0 2px;border-bottom:3px solid #2457C5;background:#F1F6FF;border-radius:4px 4px 0 0;text-align:center;font-weight:700}
+  .sb-gap.ok{border-color:#2B8A3E;background:#E8F7EE;color:#1B6B2F}
+  .sb-gap.bad{border-color:#C92A2A;background:#FFF0F0;color:#1B6B2F}
+  .sb-card{margin-bottom:16px}
+  .sb-q{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+  .sb-no{flex:0 0 34px;display:flex;justify-content:center;font-family:'Jua',sans-serif;font-size:18px;color:var(--ink-soft);padding-top:4px}
+  .sb-s{flex:1;min-width:0;font-size:20px;line-height:1.7;overflow-wrap:anywhere}
+  .sb-s.en,.vc-pgiven.en{font-family:'Andika','Gowun Dodum',sans-serif}
+  .sb-ko{font-family:'Gowun Dodum',sans-serif;font-size:15px;color:var(--ink-soft);margin-top:4px}
+  .sb-bank{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 12px;padding:8px 10px;border:2px dashed #2B2A33;border-radius:12px;background:#FFFDF7}
+  .sb-bank span{font-size:14px;color:var(--ink-soft);margin-right:2px}
+  .sb-bank b{font-family:'Andika','Gowun Dodum',sans-serif;font-weight:400;font-size:17px;padding:2px 10px;border:1.5px solid #2B2A33;border-radius:999px;background:#fff}
+  .sb-ed{margin-bottom:10px}
+  .sb-edh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .sb-edh b{font-family:'Jua',sans-serif;font-size:18px}
+  .sb-edr{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
   .vc-plab{font-size:15px;color:var(--ink-soft);margin:8px 2px 4px}
   .vc-pq{font-size:14px;color:var(--ink-soft);margin-top:6px}
   .vc-pq:first-child{margin-top:0}
@@ -1080,7 +1097,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.24 23:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.28 15:00';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -2918,7 +2935,7 @@ function goneMerge(o){
   }
   return hit;
 }
-function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + vocStars() + goneStars(); }
+function totalStars(){ return actStars() + testStars() + bookStars() + specStars() + paperStars() + bonusStars() + quizStars() + sentStars() + origStars() + comboStars() + fkStars() + vocStars() + sblStars() + goneStars(); }
 function spentStars(){ return PROG.spent || 0; }
 /* 지금 가진 별 = 모은 별 − 카드로 쓴 별.
    ★ 뽑기도 카드도 '이 별'을 쓴다. 레벨은 모은 별(누적)로 정해져서, 별을 써도 레벨은 안 내려간다. */
@@ -3217,7 +3234,12 @@ function screenHome(){
     '</button>'+
     '<button class="testbtn" id="vcbig" style="margin:0 0 12px">'+
       '<div class="ico">🔤</div>'+
-      '<div class="t"><b>원서 단어·숙어</b><small>영어 ↔ 한글 뜻 쓰기 · '+vocs().filter(function(v){ return v.done; }).length+'/'+vocs().length+' 통과</small></div>'+
+      '<div class="t"><b>원서 총괄 테스트<br>(단어)</b><small>영어 ↔ 한글 뜻 쓰기 · '+vocs().filter(function(v){ return v.done; }).length+'/'+vocs().length+' 통과</small></div>'+
+      '<div style="font-size:22px">▶</div>'+
+    '</button>'+
+    '<button class="testbtn" id="sbbig" style="margin:0 0 12px">'+
+      '<div class="ico">📝</div>'+
+      '<div class="t"><b>원서 총괄 테스트<br>(문장)</b><small>문장 빈칸 채우기 · '+sbls().filter(function(v){ return v.done; }).length+'/'+sbls().length+' 통과</small></div>'+
       '<div style="font-size:22px">▶</div>'+
     '</button>'+
     '</div>'+
@@ -3272,6 +3294,7 @@ function screenHome(){
   document.getElementById('ogbig').onclick = function(){ SHELF = ''; screenSpecials(); };
   document.getElementById('ntbig').onclick = screenNoteHome;
   document.getElementById('vcbig').onclick = function(){ beep([700],.06); screenVocList(); };
+  document.getElementById('sbbig').onclick = function(){ beep([700],.06); screenSblList(); };
   document.getElementById('dybig').onclick = function(){ beep([700],.06); screenWrite('diary'); };
   document.getElementById('qzbig').onclick = screenQuizList;
   document.getElementById('stbig').onclick = screenSentList;
@@ -6500,6 +6523,8 @@ function scanImages(kind, onResult){
           if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
           if(d.pages && d.pages.length) acc.pages = acc.pages.concat(d.pages);
           if(d.notice && d.notice.length) acc.notice = (acc.notice || []).concat(d.notice);
+          if(d.bank && d.bank.length) acc.bank = (acc.bank || []).concat(d.bank.filter(function(w){ return (acc.bank || []).indexOf(w) < 0; }));   /* 보기 단어 (문장 빈칸) */
+          if(d.guessed) acc.guessed = true;
           doneN++;
           runBatch(bi+1);
         });
@@ -9726,6 +9751,7 @@ function pendAlive(p){   /* 대상이 지워졌으면 더는 보여주지 않는
   if(p.k === 'quiz') return !!quizById(p.id);
   if(p.k === 'sent') return !!sentById(p.id);
   if(p.k === 'voc') return !!vocById(p.id);
+  if(p.k === 'sbl') return !!sblById(p.id);
   if(p.k === 'mm') return mimemal().some(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
   if(p.k === 'orig') return !!origById(p.id);
   if(p.k === 'paper') return papers().some(function(b){ return b.id === p.id; });
@@ -9737,6 +9763,7 @@ function pendApply(p, got){   /* 각 시험 화면의 별 뽑기와 똑같이 �
   if(p.k === 'quiz'){ var q = quizById(p.id); if(q){ q.done = true; q.stars = got; } }
   else if(p.k === 'sent'){ var se = sentById(p.id); if(se){ se.done = true; se.stars = got; } }
   else if(p.k === 'voc'){ var vo = vocById(p.id); if(vo){ vo.done = true; vo.stars = got; } }
+  else if(p.k === 'sbl'){ var sbo = sblById(p.id); if(sbo){ sbo.done = true; sbo.stars = got; } }
   else if(p.k === 'mm'){
     var list = mimemal().filter(function(m){ return (p.ids||[]).indexOf(m.id) >= 0; });
     var per = list.length ? Math.floor(got/list.length) : 0, rem = got - per*list.length;
@@ -10001,7 +10028,7 @@ function screenVocList(){
   stopAll();
   var vs = vocs();
   var html =
-    '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>🔤 원서 단어·숙어</h2><div class="pill">⭐ '+vocStars()+'</div></div>'+
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>🔤 원서 총괄 테스트 (단어)</h2><div class="pill">⭐ '+vocStars()+'</div></div>'+
     '<div class="card" style="margin-bottom:12px;text-align:center">'+
       '<div style="font-size:16px">왼쪽은 <b>영어</b>, 오른쪽은 <b>한글 뜻</b>!</div>'+
       '<div class="muted" style="margin-top:5px">줄마다 한쪽만 보여요. 빈칸의 <b>영어</b>나 <b>뜻</b>을 <b>펜으로</b> 써요.<br>어느 쪽을 쓸지는 시험 볼 때마다 바뀌어요 (절반씩).<br>다 맞추면 별 <b style="color:var(--mango-ink)">'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑아요!</div>'+
@@ -10121,24 +10148,27 @@ function vocFit(text, W, lang){
    o = {it:{en,ko}, side:'en'|'ko'(쓰는 쪽) 또는 both:true(영어와 뜻 둘 다), cnt:이미 쓴 횟수, head:위에 보일 말, doneLabel, onCount(cnt), onExit(다 썼는지)} */
 function vocPractice(o){
   stopAll();
-  var it = o.it, side = o.side, cnt = o.cnt || 0;
+  var it = o.it, side = o.side, cnt = o.cnt || 0, REPS = o.reps || VOC_PRAC_N;
   var sides = o.both ? ['en', 'ko'] : [side];   /* both: 한 번에 영어와 한글 뜻을 둘 다 쓴다 */
   var LAB = {en:'English', ko:'한글 뜻'};
   function render(msg){
-    var done = cnt >= VOC_PRAC_N;
+    var done = cnt >= REPS;
     app.innerHTML =
-      '<div class="topbar"><button class="iconbtn" id="back" aria-label="돌아가기">←</button><h2>✏️ '+VOC_PRAC_N+'번 따라 쓰기</h2><div class="pill">'+cnt+'/'+VOC_PRAC_N+'</div></div>'+
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="돌아가기">←</button><h2>✏️ '+(REPS > 1 ? REPS+'번 따라 쓰기' : '따라 쓰기')+'</h2><div class="pill">'+cnt+'/'+REPS+'</div></div>'+
       (o.head ? '<div class="muted" style="text-align:center;margin:-2px 0 8px">'+esc(o.head)+'</div>' : '')+
       (o.both
         ? '<div class="card vc-pcard"><div class="vc-pq">English</div><div class="vc-pwant en">'+esc(it.en)+'</div><div class="vc-pq">한글 뜻</div><div class="vc-pwant">'+esc(it.ko)+'</div></div>'
         : '<div class="card vc-pcard">'+
-            '<div class="vc-pq">'+(side === 'en' ? '뜻' : 'English')+'</div><div class="vc-pgiven'+(side === 'en' ? '' : ' en')+'">'+esc(it[side === 'en' ? 'ko' : 'en'])+'</div>'+
-            '<div class="vc-pq">'+(side === 'en' ? 'English' : '뜻')+'</div><div class="vc-pwant'+(side === 'en' ? ' en' : '')+'">'+esc(it[side])+'</div>'+
+            '<div class="vc-pq">'+esc(o.givenLab || (side === 'en' ? '뜻' : 'English'))+(o.sayText ? ' <button class="btn vc-say" id="psay" aria-label="문장 듣기">🔊 듣기</button>' : '')+'</div>'+
+            '<div class="vc-pgiven'+(side === 'en' && !o.givenHtml ? '' : ' en')+'">'+(o.givenHtml || esc(it[side === 'en' ? 'ko' : 'en']))+'</div>'+
+            '<div class="vc-pq">'+esc(o.wantLab || (side === 'en' ? 'English' : '뜻'))+'</div><div class="vc-pwant'+(side === 'en' ? ' en' : '')+'">'+esc(it[side])+'</div>'+
           '</div>')+
-      '<div class="vc-dots" aria-hidden="true">'+new Array(VOC_PRAC_N+1).join('x').split('').map(function(_, k){ return '<span class="'+(k < cnt ? 'on' : '')+'">'+(k < cnt ? '✔' : (k+1))+'</span>'; }).join('')+'</div>'+
+      (o.extraHtml || '')+
+      '<div class="vc-dots" aria-hidden="true">'+new Array(REPS+1).join('x').split('').map(function(_, k){ return '<span class="'+(k < cnt ? 'on' : '')+'">'+(k < cnt ? '✔' : (k+1))+'</span>'; }).join('')+'</div>'+
       (done
-        ? '<div class="card" style="text-align:center;background:#E8F7EE;margin-bottom:12px;font-size:18px">✅ <b>연습 완료!</b> '+VOC_PRAC_N+'번 다 썼어요 👏</div>'+
-          '<button class="btn primary wide" id="pdone" style="font-size:19px;padding:15px">'+esc(o.doneLabel || '돌아가기')+'</button>'
+        ? '<div class="card" style="text-align:center;background:#E8F7EE;margin-bottom:12px;font-size:18px">✅ <b>'+(REPS > 1 ? '연습 완료!</b> '+REPS+'번 다 썼어요' : '잘 썼어요!</b>')+' 👏</div>'+
+          '<button class="btn primary wide" id="pdone" style="font-size:19px;padding:15px">'+esc(o.doneLabel || '돌아가기')+'</button>'+
+          (o.prevOk ? '<button class="btn wide" id="pprev" style="margin-top:8px">◀ 앞 문장</button>' : '')
         : '<div class="rp-lab">'+(cnt+1)+'번째 — 점선 글씨를 따라 펜으로 써요'+(o.both ? ' (영어와 뜻 둘 다)' : '')+'</div>'+
           sides.map(function(sd){
             return (o.both ? '<div class="vc-plab">'+(sd === 'en' ? '🔤 ' : '🇰🇷 ')+LAB[sd]+'</div>' : '')+
@@ -10146,8 +10176,11 @@ function vocPractice(o){
               '<div class="vc-tools"><button class="btn" data-pun="'+sd+'">↩ 한 획 지우기</button><button class="btn" data-pcl="'+sd+'">🗑 다 지우기</button></div></div>';
           }).join('')+
           '<div class="vc-pmsg" id="pmsg" role="status">'+(msg || '')+'</div>'+
-          '<button class="btn primary wide" id="pok" style="font-size:19px;padding:15px;margin-top:6px">✅ 썼어요</button>');
+          '<button class="btn primary wide" id="pok" style="font-size:19px;padding:15px;margin-top:6px">✅ 썼어요</button>'+
+          (o.prevOk ? '<button class="btn wide" id="pprev" style="margin-top:8px">◀ 앞 문장</button>' : ''));
     document.getElementById('back').onclick = function(){ o.onExit(false); };
+    var ps = document.getElementById('psay'); if(ps) ps.onclick = function(){ say(o.sayText, RATE); };
+    if(o.prevOk){ var pv = document.getElementById('pprev'); if(pv) pv.onclick = function(){ o.onPrev(); }; }
     if(done){ document.getElementById('pdone').onclick = function(){ o.onExit(true); }; return; }
     var pads = {}, need = {};
     sides.forEach(function(sd){
@@ -10175,7 +10208,7 @@ function vocPractice(o){
         return;
       }
       cnt++; if(o.onCount) o.onCount(cnt);
-      if(cnt >= VOC_PRAC_N){ starSound(); confetti(18); } else okSound();
+      if(cnt >= REPS){ starSound(); confetti(18); } else okSound();
       render('');
     };
   }
@@ -10351,7 +10384,7 @@ function startVoc(v){
     function render(){
       var first = !v.done && got === null;
       app.innerHTML =
-        '<div class="result"><div class="big">🏆</div><h2>원서 단어·숙어 통과!</h2>'+
+        '<div class="result"><div class="big">🏆</div><h2>원서 총괄 테스트 (단어) 통과!</h2>'+
           '<p>“'+esc(v.title)+'”<br><b>'+n+'문제를 모두 맞췄어요!</b></p>'+
           (got !== null ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+new Array(got+1).join('⭐')+'<br><b>별 '+got+'개</b>를 받았어요!</div>'
             : first ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6">⭐ 별 <b>'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑을 수 있어요!</div><button class="btn primary wide" id="draw" style="font-size:19px;padding:15px;margin-bottom:10px">🎁 별 뽑기</button>'
@@ -10367,6 +10400,298 @@ function startVoc(v){
     if(v.done) checkLevelUp();
   }
   if(!n){ screenVocList(); return; }
+  draw();
+}
+/* =========================================================
+   📝 원서 총괄 테스트 (문장) — 문장 빈칸 채우기
+   · 아빠가 빈칸 문제지 사진을 올리면 AI가 「빈칸 있는 문장 · 정답 · 뜻 · 보기 단어」를 읽어 묶음을 만든다(고칠 수 있음)
+   · 연습: 한 문장씩, 빈칸에 들어갈 답이 점선으로 깔린 칸에 따라 쓴다 (🔊 문장 듣기)
+   · 시험: 빈칸마다 펜으로 쓰고 → AI가 글씨를 읽어 채점 → 아빠가 고칠 수 있음 → 틀린(또는 고른) 문제는 5번 따라 쓰기
+   · 모두 맞으면 통과 → 별 뽑기(처음 한 번)
+   ========================================================= */
+var SBL_BLANK = '___';   /* 문장 속 빈칸 표시 */
+function sbls(){ return PROG.sblanks || []; }
+function sblById(id){ return sbls().filter(function(v){ return v.id === id; })[0]; }
+function sblStars(){ return sbls().reduce(function(a, v){ return a + (v.done ? (+v.stars || 0) : 0); }, 0); }
+function sblNorm(s){ return String(s || '').replace(/_{2,}|\(\s*\)|\[\s*\]|…{1,}|\.{4,}/g, SBL_BLANK); }   /* 여러 빈칸 표기를 ___ 로 */
+function sblHtml(s, fill, cls){   /* 빈칸 자리를 칸으로 그린다. fill 이 있으면 그 글자를 넣는다 */
+  var parts = sblNorm(s).split(SBL_BLANK);
+  if(parts.length < 2) return esc(s)+' <span class="sb-gap '+(cls||'')+'">'+(fill ? esc(fill) : '&nbsp;')+'</span>';
+  return parts.map(function(p, k){ return esc(p)+(k < parts.length-1 ? '<span class="sb-gap '+(cls||'')+'">'+(fill ? esc(fill) : '&nbsp;')+'</span>' : ''); }).join('');
+}
+function sblFull(it){ var p = sblNorm(it.s).split(SBL_BLANK); return p.length < 2 ? it.s+' '+it.a : p.join(it.a); }   /* 정답을 넣은 문장 (듣기용) */
+/* 붙여 넣은 글 → 문제들. 「The cat is [in] the box.」 또는 「The cat is ___ the box. = in」 / 「… (답: in)」 */
+function sblParse(text){
+  var out = [];
+  String(text || '').replace(/\r/g, '').split('\n').forEach(function(raw){
+    var s = raw.replace(/^\s*(?:\d+\s*[.)\]:]|[-•·*▪◦]+)\s*/, '').trim(), a = '', ko = '', m;
+    if(!s) return;
+    if((m = s.match(/^(.*?)\s*\/\/\s*(.+)$/))){ s = m[1].trim(); ko = m[2].trim(); }   /* 뜻은 // 뒤에 */
+    if((m = s.match(/\[([^\]]+)\]/)) && !/\[\s*\]/.test(s)){ a = m[1].trim(); s = s.replace(m[0], SBL_BLANK); }
+    else if((m = s.match(/^(.*?)\s*(?:=|→|\(답\s*[:：]?\s*)\s*([^()=→]+?)\)?\s*$/)) && /_{2,}|\(\s*\)/.test(m[1])){ s = m[1].trim(); a = m[2].trim(); }
+    s = sblNorm(s);
+    if(s.indexOf(SBL_BLANK) < 0 && !a) return;
+    out.push({s:s, a:a, ko:ko});
+  });
+  return out;
+}
+function screenSblList(){
+  stopAll();
+  var vs = sbls();
+  var html =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="홈으로">←</button><h2>📝 원서 총괄 테스트 (문장)</h2><div class="pill">⭐ '+sblStars()+'</div></div>'+
+    '<div class="card" style="margin-bottom:12px;text-align:center">'+
+      '<div style="font-size:16px">문장의 <b>빈칸</b>에 알맞은 영어를 써요!</div>'+
+      '<div class="muted" style="margin-top:5px">✏️ 연습: 점선 글씨를 따라 써요<br>📝 시험: 펜으로 쓰고 AI 선생님이 채점해요 · 다 맞추면 별 <b style="color:var(--mango-ink)">'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>!</div>'+
+    '</div>';
+  if(!vs.length){
+    html += '<div class="card" style="text-align:center"><div style="font-size:44px">📝</div><div class="muted" style="margin-top:6px">아직 문장 묶음이 없어요.<br>아빠가 아래 버튼으로 문제지 사진을 올려 주세요!</div></div>';
+  } else vs.forEach(function(v){
+    html += '<div class="qzrow">'+
+      '<button class="qzbk '+(v.done ? 'done' : '')+'" data-id="'+esc(v.id)+'" style="flex:1">'+
+        '<div class="ico">'+(v.done ? '🏆' : '📝')+'</div>'+
+        '<div class="t"><b>'+esc(v.title)+'</b><small>'+v.items.length+'문제'+(v.best != null ? ' · 최고 '+v.best+'/'+v.items.length : '')+(v.done ? ' · ✅ ⭐'+(v.stars || 0)+'개 받음' : ' · ⭐'+STAR_PICK_MIN+'~'+STAR_PICK_MAX)+'</small></div>'+
+        '<div style="font-size:20px">▶</div>'+
+      '</button>'+
+      '<button class="qzedit" data-ed="'+esc(v.id)+'" title="아빠가 고치기" aria-label="아빠가 고치기">✏️</button>'+
+      '<button class="qzedit qzdel" data-rm="'+esc(v.id)+'" title="아빠가 지우기" aria-label="아빠가 지우기">🗑</button>'+
+    '</div>';
+  });
+  html += '<div class="row" style="margin-top:6px"><button class="btn primary" id="add" style="flex:1">➕ 문장 묶음 만들기 (문제지 사진)</button></div>';
+  app.innerHTML = html;
+  document.getElementById('back').onclick = screenHome;
+  document.getElementById('add').onclick = function(){ needDad(function(){ screenSblEdit(null); }, screenSblList); };
+  on('.qzedit[data-ed]', function(ev){ ev.stopPropagation(); var v = sblById(this.dataset.ed); if(v) needDad(function(){ screenSblEdit(v); }, screenSblList); });
+  on('.qzdel', function(ev){ ev.stopPropagation(); var v = sblById(this.dataset.rm); if(v) listDel('“'+v.title+'” 묶음을 지울까요? (받은 별은 그대로 남아요)', screenSblList, function(done){ PROG.sblanks = sbls().filter(function(x){ return x.id !== v.id; }); done(); }, v.id); });
+  on('.qzbk', function(){
+    var v = sblById(this.dataset.id); if(!v) return;
+    if(!v.items.length){ needDad(function(){ screenSblEdit(v); }, screenSblList); return; }
+    beep([700,900],.06); screenSblStart(v);
+  });
+}
+function screenSblStart(v){
+  stopAll();
+  app.innerHTML =
+    '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>📝 '+esc(v.title)+'</h2><div class="pill">'+v.items.length+'문제</div></div>'+
+    '<button class="btn wide vc-big" id="sprac">✏️ 연습하기<small>빈칸의 답을 점선 따라 써요 · 🔊 문장 듣기</small></button>'+
+    '<button class="btn primary wide vc-big" id="stest">📝 시험 보기<small>빈칸을 펜으로 쓰고 채점해요</small></button>';
+  document.getElementById('back').onclick = screenSblList;
+  document.getElementById('sprac').onclick = function(){ beep([700],.06); sblPractice(v); };
+  document.getElementById('stest').onclick = function(){ beep([700,900],.06); startSbl(v); };
+}
+function screenSblEdit(v){
+  var editing = !!v, title = v ? v.title : '', paste = '', bank = v && v.bank ? v.bank.join(', ') : '';
+  var rows = v ? v.items.map(function(it){ return {s:it.s, a:it.a, ko:it.ko || ''}; }) : [{s:'', a:'', ko:''}];
+  function collect(){
+    var t = document.getElementById('st'); if(t) title = t.value;
+    var p = document.getElementById('spaste'); if(p) paste = p.value;
+    var bk = document.getElementById('sbank'); if(bk) bank = bk.value;
+    rows.forEach(function(r, i){ ['s','a','ko'].forEach(function(f){ var e = document.getElementById('sb'+f+i); if(e) r[f] = e.value; }); });
+  }
+  function addRows(got){ rows = rows.filter(function(r){ return String(r.s || '').trim() || String(r.a || '').trim(); }).concat(got); }
+  function draw(){
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>'+(editing ? '✏️ 묶음 고치기' : '➕ 묶음 만들기')+'</h2><div style="width:44px"></div></div>'+
+      '<div class="card" style="margin-bottom:12px"><div class="qlab">묶음 이름</div><input id="st" class="rp-in" style="margin:0" placeholder="예: Maisy 총괄 테스트" value="'+esc(title)+'"></div>'+
+      '<button class="btn wide" id="scan" style="margin-bottom:12px;background:#E8F7EE;box-shadow:0 4px 0 #B7E4C7">📷 문제지 사진·PDF로 자동 입력</button>'+
+      '<details class="card" style="margin-bottom:12px"><summary style="cursor:pointer">📋 글로 붙여 넣기</summary>'+
+        '<div class="muted" style="margin:6px 0">한 줄에 한 문제 · 답은 [ ] 안에: <b>The cat is [in] the box.</b><br>뜻을 붙이려면 // 뒤에: … // 고양이가 상자 안에 있어요</div>'+
+        '<textarea id="spaste" class="vc-paste" rows="4" placeholder="The cat is [in] the box.&#10;She ___ to school. = goes">'+esc(paste)+'</textarea>'+
+        '<button class="btn wide" id="pasteGo" style="margin-top:8px">⬇️ 아래 목록에 넣기</button>'+
+      '</details>'+
+      '<div class="card" style="margin-bottom:12px"><div class="qlab">보기 단어 (있으면 · 쉼표로)</div><input id="sbank" class="rp-in" style="margin:0" lang="en" autocapitalize="off" placeholder="예: in, goes, happy" value="'+esc(bank)+'"></div>'+
+      '<div class="muted" style="margin:0 2px 6px">빈칸은 문장 안에 <b>___</b> (밑줄 세 개)로 써요.</div>'+
+      rows.map(function(r, i){
+        return '<div class="card sb-ed">'+
+          '<div class="sb-edh"><b>'+(i+1)+'</b><button class="btn vc-x" data-del="'+i+'" aria-label="'+(i+1)+'번 문제 지우기">✕</button></div>'+
+          '<textarea id="sbs'+i+'" class="vc-paste" rows="2" lang="en" placeholder="빈칸 있는 문장 (빈칸은 ___)" aria-label="'+(i+1)+'번 문장">'+esc(r.s)+'</textarea>'+
+          '<div class="sb-edr"><input id="sba'+i+'" class="vc-in" lang="en" autocapitalize="off" spellcheck="false" placeholder="정답" value="'+esc(r.a)+'" aria-label="'+(i+1)+'번 정답">'+
+          '<input id="sbko'+i+'" class="vc-in" lang="ko" placeholder="뜻 (선택)" value="'+esc(r.ko)+'" aria-label="'+(i+1)+'번 뜻"></div>'+
+        '</div>';
+      }).join('')+
+      '<button class="btn wide" id="addrow" style="margin:6px 0 14px">➕ 문제 추가</button>'+
+      '<button class="btn primary wide" id="save" style="font-size:18px">💾 저장하기</button>'+
+      (editing ? '<button class="btn wide no" id="del" style="margin-top:9px;background:#FFE4E6;color:#9F1239;box-shadow:0 6px 0 #FDA4AF">🗑 이 묶음 지우기</button>' : '');
+    document.getElementById('back').onclick = screenSblList;
+    document.getElementById('addrow').onclick = function(){ collect(); rows.push({s:'', a:'', ko:''}); draw(); var e = document.getElementById('sbs'+(rows.length-1)); if(e) e.focus(); };
+    on('[data-del]', function(){ collect(); rows.splice(+this.dataset.del, 1); if(!rows.length) rows.push({s:'', a:'', ko:''}); draw(); });
+    document.getElementById('pasteGo').onclick = function(){
+      collect(); var got = sblParse(paste);
+      if(!got.length){ noSound(); toast('빈칸 있는 문장을 찾지 못했어요'); return; }
+      addRows(got); paste = ''; okSound(); draw(); toast('✅ '+got.length+'문제를 넣었어요');
+    };
+    document.getElementById('scan').onclick = function(){
+      collect();
+      scanImages('sblank', function(d){
+        var got = (d.items || []).map(function(x){ return {s:sblNorm(String(x.s || '').trim()), a:String(x.a || '').trim(), ko:String(x.ko || '').trim()}; }).filter(function(x){ return x.s; });
+        if(!got.length){ noSound(); alert('사진에서 빈칸 문장을 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
+        addRows(got);
+        if(!String(title || '').trim() && d.title) title = String(d.title).trim();
+        if(!String(bank || '').trim() && d.bank && d.bank.length) bank = d.bank.join(', ');
+        okSound(); draw();
+        setTimeout(function(){ alert('✅ '+got.length+'문제를 읽었어요.\n문장과 정답이 맞는지 확인하고 고친 뒤 「저장하기」를 눌러 주세요.'+(d.guessed ? '\n\n⚠️ 문제지에 정답이 없어서 AI가 정답을 추측한 문제가 있어요. 꼭 확인해 주세요.' : '')); }, 60);
+      });
+    };
+    document.getElementById('save').onclick = function(){
+      collect();
+      var items = rows.map(function(r){ return {s:sblNorm(String(r.s || '').trim()), a:String(r.a || '').trim(), ko:String(r.ko || '').trim()}; }).filter(function(r){ return r.s || r.a; });
+      if(!items.length){ noSound(); toast('문제를 넣어주세요'); return; }
+      var bad = -1; items.forEach(function(r, i){ if(bad < 0 && (!r.s || !r.a || r.s.indexOf(SBL_BLANK) < 0)) bad = i; });
+      if(bad >= 0){ noSound(); alert((bad+1)+'번 문제: '+(!items[bad].a ? '정답이 비어 있어요.' : !items[bad].s ? '문장이 비어 있어요.' : '문장에 빈칸(___)이 없어요.')); return; }
+      var t = String(title || '').trim() || '총괄 테스트 '+(sbls().length+1);
+      var bk = String(bank || '').split(/[,\n]/).map(function(x){ return x.trim(); }).filter(Boolean);
+      if(!PROG.sblanks) PROG.sblanks = [];
+      if(editing){ v.title = t; v.items = items; v.bank = bk; if(v.best != null && v.best > items.length) v.best = items.length; }
+      else PROG.sblanks.push({id:'b'+Date.now(), title:t, items:items, bank:bk, done:false, stars:0});
+      saveProgress(); okSound(); toast('💾'); screenSblList();
+    };
+    var dl = document.getElementById('del');
+    if(dl) dl.onclick = function(){
+      if(!confirm('“'+v.title+'” 묶음을 지울까요? (받은 별은 그대로 남아요)')) return;
+      deadAdd(v.id); PROG.sblanks = sbls().filter(function(x){ return x.id !== v.id; }); saveProgress(); toast('🗑'); screenSblList();
+    };
+  }
+  draw();
+}
+function sblBankHtml(v){ return v.bank && v.bank.length ? '<div class="sb-bank"><span>보기</span>'+v.bank.map(function(w){ return '<b>'+esc(w)+'</b>'; }).join('')+'</div>' : ''; }
+/* 연습: 한 문장씩 점선 답을 따라 쓴다 */
+function sblPractice(v, k){
+  k = k || 0;
+  var it = v.items[k];
+  vocPractice({it:{en:it.a, ko:it.s}, side:'en', cnt:0, reps:1,
+    givenLab:(k+1)+' / '+v.items.length+' · 빈칸에 들어갈 말', givenHtml:sblHtml(it.s, '', 'q')+(it.ko ? '<div class="sb-ko">'+esc(it.ko)+'</div>' : ''),
+    wantLab:'빈칸에 쓸 말', sayText:sblFull(it), extraHtml:sblBankHtml(v),
+    doneLabel: k < v.items.length-1 ? '다음 문장 ▶' : '🎉 연습 끝! 시험 보러 가기',
+    prevOk: k > 0, onPrev:function(){ sblPractice(v, k-1); },
+    onExit:function(fin){ if(fin && k < v.items.length-1) sblPractice(v, k+1); else if(fin) startSbl(v); else screenSblStart(v); }});
+}
+/* 시험 */
+function startSbl(v){
+  stopAll();
+  var items = v.items.slice(), n = items.length;
+  var pads = [], imgs = [], read = [], marks = null, dadOk = false, aiNote = '';
+  var wrong0 = null, prac = {}, dadFix = {};
+  function needPrac(i){ return wrong0[i] && !dadFix[i]; }
+  function card(i){
+    var it = items[i];
+    var head = '<div class="sb-q"><div class="sb-no">'+(marks ? '<button class="vc-mk '+(marks[i] ? 'ok' : 'bad')+'" data-mk="'+i+'" aria-label="'+(i+1)+'번 '+(marks[i] ? '맞음' : '틀림')+' (아빠가 누르면 바뀜)">'+(marks[i] ? '⭕' : '❌')+'</button>' : (i+1))+'</div>'+
+      '<div class="sb-s en">'+(marks ? sblHtml(it.s, it.a, marks[i] ? 'ok' : 'bad') : sblHtml(it.s, '', 'q'))+'</div></div>';
+    if(!marks) return '<div class="sb-card">'+head+
+      '<div class="vc-pen"><canvas id="sbcv'+i+'" class="vc-cv" aria-label="'+(i+1)+'번 빈칸에 쓸 말 쓰는 칸"></canvas>'+
+      '<div class="vc-tools"><button class="btn" data-un="'+i+'">↩ 한 획 지우기</button><button class="btn" data-cl="'+i+'">🗑 다 지우기</button></div></div></div>';
+    var pd = (prac[i] || 0) >= VOC_PRAC_N;
+    return '<div class="sb-card">'+head+
+      '<div class="vc-hand '+(marks[i] ? 'ok' : 'bad')+'">'+
+        (imgs[i] ? '<img src="data:image/jpeg;base64,'+imgs[i]+'" alt="하준이가 쓴 글씨">' : '<i class="vc-none">안 썼어요</i>')+
+        (read[i] ? '<span class="vc-rd">읽은 글씨: <b>'+esc(read[i])+'</b></span>' : '')+
+        (marks[i] ? (dadFix[i] ? '<div class="vc-dadrow"><span class="vc-dadtag">👨 아빠가 맞다고 확인했어요</span><button class="btn vc-dadun" data-fix="'+i+'">↩ 되돌리기</button></div>' : '')
+                  : '<button class="btn vc-dadok" data-fix="'+i+'">👨 맞게 썼어요 — 맞은 걸로 고치기 (아빠)</button>')+
+        '<button class="btn vc-prgo'+(pd ? ' pd' : '')+(needPrac(i) ? '' : ' opt')+'" data-pr="'+i+'">'+(pd ? '✅ 연습 완료 (한 번 더 하려면 눌러요)' : '✏️ '+VOC_PRAC_N+'번 따라 쓰기'+(prac[i] ? ' ('+prac[i]+'/'+VOC_PRAC_N+')' : ''))+'</button>'+
+      '</div></div>';
+  }
+  function draw(){
+    var right = marks ? marks.filter(Boolean).length : 0;
+    app.innerHTML =
+      '<div class="topbar"><button class="iconbtn" id="back" aria-label="목록으로">←</button><h2>📝 '+esc(v.title)+'</h2><div class="pill">'+(marks ? right+'/'+n : n+'문제')+'</div></div>'+
+      (marks
+        ? '<div class="card vc-score '+(right === n ? 'all' : '')+'"><b>'+right+' / '+n+'</b> '+(right === n ? '모두 맞았어요! 🎉' : '틀린 문제는 <span class="vc-right">바른 답</span>을 <b style="font-size:inherit;font-family:inherit;margin:0">'+VOC_PRAC_N+'번</b> 따라 써 봐요.')+
+            (function(){ var w = wrong0.filter(function(x, k){ return needPrac(k); }).length, d = wrong0.filter(function(x, k){ return needPrac(k) && (prac[k] || 0) >= VOC_PRAC_N; }).length; return w ? '<div class="vc-prsum'+(d === w ? ' all' : '')+'">✏️ 틀린 문제 쓰기 연습 '+d+'/'+w+(d === w ? ' — 모두 완료! 👏' : '')+'</div>' : ''; })()+
+            (aiNote ? '<div class="vc-ainote">'+esc(aiNote)+'</div>' : '')+'</div>'
+        : '<div class="traceBig" style="font-size:17px;margin-bottom:10px">빈칸에 알맞은 말을 아래 칸에 펜으로 써요!</div>')+
+      sblBankHtml(v)+
+      items.map(function(_, i){ return card(i); }).join('')+
+      (marks
+        ? (right === n ? '<button class="btn primary wide" id="passgo" style="font-size:19px;padding:15px;margin-top:12px">🏆 통과! 계속하기</button>'
+                       : '<button class="btn primary wide" id="again" style="font-size:19px;padding:15px;margin-top:12px">🔁 다시 시험 보기</button>')+
+          '<div class="muted" style="text-align:center;margin-top:10px;line-height:1.5">👨 AI가 글씨를 잘못 읽었으면, 아빠가 그 문제의 「맞은 걸로 고치기」를 눌러 주세요.</div>'
+        : '<button class="btn primary wide" id="grade" style="font-size:19px;padding:15px;margin-top:12px">✅ 다 썼어요! 채점하기</button>');
+    document.getElementById('back').onclick = function(){ if(!marks && pads.some(function(p){ return p && p.count(); }) && !confirm('시험을 그만둘까요? 쓴 답은 지워져요.')) return; screenSblList(); };
+    if(!marks){
+      pads = items.map(function(_, i){
+        var cv = document.getElementById('sbcv'+i), W = Math.max(260, cv.parentNode.clientWidth || 320);
+        return penCanvas(cv, W, VOC_PEN_H_EN, 'en');
+      });
+      on('[data-un]', function(){ pads[+this.dataset.un].undo(); });
+      on('[data-cl]', function(){ pads[+this.dataset.cl].clear(); });
+      document.getElementById('grade').onclick = grade;
+    } else {
+      function dadFlip(i){
+        var top = window.scrollY;
+        function flip(){ marks[i] = !marks[i]; dadFix[i] = marks[i] && wrong0[i]; finishRound(); beep([600],.05); draw(); window.scrollTo(0, top); }
+        if(dadOk) return flip();
+        dadGate(function(){ dadOk = true; flip(); }, function(){ draw(); window.scrollTo(0, top); }, '채점을 고치려면 아빠 비밀번호가 필요해요');
+      }
+      on('.vc-mk', function(){ dadFlip(+this.dataset.mk); });
+      on('[data-fix]', function(){ dadFlip(+this.dataset.fix); });
+      on('[data-pr]', function(){ beep([600],.05); practice(+this.dataset.pr); });
+      var ag = document.getElementById('again'); if(ag) ag.onclick = function(){ beep([700,900],.06); startSbl(v); };
+      var pg = document.getElementById('passgo'); if(pg) pg.onclick = pass;
+    }
+  }
+  function grade(){
+    imgs = pads.map(function(p){ return p.b64(); });
+    var empty = imgs.filter(function(x){ return !x; }).length;
+    if(empty && !confirm('아직 안 쓴 칸이 '+empty+'개 있어요. 그래도 채점할까요?')) return;
+    read = items.map(function(){ return ''; });
+    var todo = []; imgs.forEach(function(b, i){ if(b) todo.push(i); });
+    var ov = document.createElement('div'); ov.className = 'wr-ov';
+    ov.innerHTML = '<div class="wr-ovbox"><div style="font-size:46px">📝</div>'+
+      '<span class="sw-bars" aria-hidden="true" style="margin:10px auto 6px;justify-content:center"><i></i><i></i><i></i><i></i><i></i></span>'+
+      '<div id="sbMsg" class="wr-ovmsg">AI 선생님이 글씨를 읽고 있어요…</div><div class="muted">잠깐만 기다려 주세요.</div></div>';
+    document.body.appendChild(ov);
+    var failed = false, k = 0;
+    function finish(){
+      if(ov.parentNode) ov.parentNode.removeChild(ov);
+      marks = items.map(function(it, i){ return vocCheck('en', read[i], it.a); });
+      wrong0 = marks.map(function(m){ return !m; });
+      aiNote = failed ? '⚠️ AI가 글씨를 다 읽지 못했어요. 못 읽은 문제는 ❌ 로 나와요 — 아빠가 보고 ⭕ 로 바꿔 주세요.' : '';
+      finishRound(); draw(); window.scrollTo(0, 0);
+    }
+    (function next(){
+      if(k >= todo.length) return finish();
+      var part = todo.slice(k, k + VOC_HAND_CHUNK); k += part.length;
+      if(!hasServer){ failed = true; return finish(); }
+      apiPost({action:'handList', pin:DAD_PIN, images:part.map(function(i){ return {lang:'en', b64:imgs[i]}; })}, function(j){
+        if(j && j.ok && j.items) part.forEach(function(i, x){ read[i] = String(j.items[x] || '').trim(); });
+        else failed = true;
+        next();
+      });
+    })();
+  }
+  function practice(i){
+    var top = window.scrollY, c0 = prac[i] || 0, it = items[i];
+    vocPractice({it:{en:it.a, ko:it.s}, side:'en', cnt:c0 >= VOC_PRAC_N ? 0 : c0,
+      givenLab:'문장', givenHtml:sblHtml(it.s, '', 'q'), wantLab:'빈칸에 쓸 말', sayText:sblFull(it),
+      onCount:function(c){ prac[i] = c; }, onExit:function(){ draw(); window.scrollTo(0, top); }});
+  }
+  function finishRound(){
+    var right = marks.filter(Boolean).length;
+    if(v.best == null || right > v.best) v.best = right;
+    saveProgress();
+    if(right === n){ starSound(); confetti(40); } else noSound();
+  }
+  function pass(){
+    var got = null;
+    if(!v.done) pendAdd({key:'sbl:'+v.id, k:'sbl', id:v.id, lo:STAR_PICK_MIN, hi:STAR_PICK_MAX, t:'📝 '+v.title});
+    function render(){
+      var first = !v.done && got === null;
+      app.innerHTML =
+        '<div class="result"><div class="big">🏆</div><h2>원서 총괄 테스트 (문장) 통과!</h2>'+
+          '<p>“'+esc(v.title)+'”<br><b>'+n+'문제를 모두 맞췄어요!</b></p>'+
+          (got !== null ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6;font-size:20px">'+new Array(got+1).join('⭐')+'<br><b>별 '+got+'개</b>를 받았어요!</div>'
+            : first ? '<div class="card" style="margin-bottom:12px;background:#FFF8E6">⭐ 별 <b>'+STAR_PICK_MIN+'~'+STAR_PICK_MAX+'개</b>를 뽑을 수 있어요!</div><button class="btn primary wide" id="draw" style="font-size:19px;padding:15px;margin-bottom:10px">🎁 별 뽑기</button>'
+            : '<div class="card muted" style="margin-bottom:12px">이미 별을 받은 묶음이에요. 연습 잘했어요!</div>')+
+          (first ? '' : '<button class="btn primary wide" id="again" style="font-size:18px;margin-bottom:10px">🔁 한 번 더</button>')+
+          '<button class="btn wide" id="lst">📋 목록으로</button></div>';
+      var d = document.getElementById('draw');
+      if(d) d.onclick = function(){ modalStarDraw(function(g){ v.done = true; v.stars = g; pendDone('sbl:'+v.id); got = g; saveProgress(); render(); checkLevelUp(); }, STAR_PICK_MIN, STAR_PICK_MAX); };
+      var ag = document.getElementById('again'); if(ag) ag.onclick = function(){ beep([700,900],.06); startSbl(v); };
+      document.getElementById('lst').onclick = screenSblList;
+    }
+    render();
+    if(v.done) checkLevelUp();
+  }
+  if(!n){ screenSblList(); return; }
   draw();
 }
 /* =========================================================
