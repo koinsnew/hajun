@@ -725,7 +725,7 @@ function _ppMap() {
 function ppSet(req) {
   if (!_pinOk(req)) return { error: 'BAD_PIN' };
   var lv = String(parseInt(req.lv, 10));
-  if (!/^\d{1,2}$/.test(lv)) return { error: 'BAD_LV' };
+  if (!/^\d{1,3}$/.test(lv) || +lv > 100) return { error: 'BAD_LV' };
   var key = String(req.key || '');
   if (key && !_origKeyOk(key)) return { error: 'BAD_KEY' };
   var lock = null;

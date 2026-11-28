@@ -917,6 +917,12 @@
   .pcard:before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.55) 0 12%,transparent 13% 40%,rgba(255,255,255,.22) 41% 47%,transparent 48%);pointer-events:none}
   .pc-top{display:flex;justify-content:space-between;align-items:center;font-family:'Jua',sans-serif;font-size:calc(var(--w)*.105);line-height:1.1;padding:0 calc(var(--w)*.02) calc(var(--w)*.03);position:relative}
   .pc-lv b{font-family:'Patrick Hand',sans-serif;font-weight:400;font-size:calc(var(--w)*.19);line-height:.9}
+  .pc-lv.l3 b{font-size:calc(var(--w)*.15)}
+  .pc-tier{white-space:nowrap}
+  .pc-tier.tl{font-size:.82em;letter-spacing:-.02em}
+  .pc-name .pc-pre{font-size:.6em;margin-right:.25em;opacity:.85;vertical-align:.12em}
+  .pc-name.n2{font-size:calc(var(--w)*.115)}
+  .pc-name.n3{font-size:calc(var(--w)*.095);letter-spacing:-.02em}
   .pc-tier{font-size:calc(var(--w)*.095);opacity:.95;white-space:nowrap}
   .pcard.sm .pc-tier{display:none}
   .pc-art{border-radius:calc(var(--w)*.09);overflow:hidden;position:relative;border:1.5px solid rgba(0,0,0,.35);
@@ -942,7 +948,7 @@
   .pcard.lock{background:linear-gradient(155deg,#5B6475,#2F3645);color:#C5CCDA}
   .pcard.lock:before{display:none}
   .pcard.lock .pc-art{background:#1A2030}
-  .pcard.t-leg:after,.pcard.t-son:after{content:'';position:absolute;top:0;bottom:0;left:-70%;width:45%;pointer-events:none;
+  .pcard.t-leg:after,.pcard.t-son:after,.pcard.t-myth:after,.pcard.t-god:after{content:'';position:absolute;top:0;bottom:0;left:-70%;width:45%;pointer-events:none;
     background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);animation:pcshine 3.2s ease-in-out infinite}
   .pcard.lock:after{display:none}
   @keyframes pcshine{0%,55%{left:-70%}100%{left:130%}}
@@ -1107,7 +1113,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.28 17:20';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.28 21:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -1703,12 +1709,15 @@ var FK_CURL0 = 0.55, FK_CURL50 = 1.9;    /* 감아차기 세기: Lv.FK_CURL_LV �
 var FK_KEEP0 = 1.15, FK_KEEP50 = 0.5;     /* 골키퍼 빠르기 배율 — 작을수록 덜 막는다 */
 var FK_KEEP_SPEED = 3.8;                 /* 골키퍼가 1초에 몸을 날리는 거리(m) */
 var FK_GUIDE0 = 0.45, FK_GUIDE50 = 0.9;  /* 노란 점(공이 갈 길)이 보이는 비율 */
-function fkMix(a, b){ return a + (b - a)*Math.max(0, Math.min(1, heroLv()/LV_MAX)); }
+function fkMix(a, b){ return a + (b - a)*Math.max(0, Math.min(1, heroLv()/LV_MID)); }
+/* ⚡ 슛 속도: 레벨이 오를수록 공이 빨라진다. Lv.0 ×1 → Lv.50 ×(1+FK_SPD50) → Lv.100 ×(1+FK_SPD100) */
+var FK_SPD50 = 0.45, FK_SPD100 = 1.0;
+function fkSpeedMul(){ var lv = heroLv(); return 1 + (lv <= LV_MID ? FK_SPD50*lv/LV_MID : FK_SPD50 + (FK_SPD100 - FK_SPD50)*(lv - LV_MID)/(LV_MAX - LV_MID)); }
 function fkErr(){ return fkMix(FK_ERR0, FK_ERR50); }
 function fkCurlOn(){ return heroLv() >= FK_CURL_LV; }
 function fkCurl(){
   var lv = heroLv(); if(lv < FK_CURL_LV) return 0;
-  return FK_CURL0 + (FK_CURL50 - FK_CURL0)*Math.min(1, (lv - FK_CURL_LV)/Math.max(1, LV_MAX - FK_CURL_LV));
+  return FK_CURL0 + (FK_CURL50 - FK_CURL0)*Math.min(1, (lv - FK_CURL_LV)/Math.max(1, LV_MID - FK_CURL_LV));
 }
 /* 감아차기 힘을 0~100으로 (화면에 보여 주는 숫자) */
 function fkCurlPct(){ return fkCurlOn() ? Math.round(fkCurl()/FK_CURL50*100) : 0; }
@@ -1723,7 +1732,7 @@ function fkTix(){
 function fkLvTxt(){
   var lv = heroLv();
   if(!lv) return '⬆️ 레벨이 오르면 킥이 더 정확해지고, 골키퍼가 덜 막고, Lv.'+FK_CURL_LV+'부터는 감아차기도 할 수 있어요!';
-  return '⬆️ <b>Lv.'+lv+' 킥</b>: 정확도 +'+Math.round((1 - fkErr()/FK_ERR0)*100)+'% · 감아차기 '+(fkCurlOn() ? fkCurlPct()+'%' : '🔒 Lv.'+FK_CURL_LV+'부터')+' · 골키퍼 −'+Math.round((1 - fkKeep()/FK_KEEP0)*100)+'%';
+  return '⬆️ <b>Lv.'+lv+' 킥</b>: ⚡ 슛 속도 +'+Math.round((fkSpeedMul()-1)*100)+'% · 정확도 +'+Math.round((1 - fkErr()/FK_ERR0)*100)+'% · 감아차기 '+(fkCurlOn() ? fkCurlPct()+'%' : '🔒 Lv.'+FK_CURL_LV+'부터')+' · 골키퍼 −'+Math.round((1 - fkKeep()/FK_KEEP0)*100)+'%';
 }
 var PK_KEEPER_SKILL = 0.6; /* 골키퍼가 공 방향을 맞혀 몸을 날릴 확률 (0~1) — 높을수록 어려움. 0.6이면 한 골 확률 약 40% */
 var PK_PRIZES = [
@@ -1749,13 +1758,23 @@ var SKIN='#F7C99A', SKIN2='#E8AF7C', HAIR='#2B2018', LINE='#2B2A33';
    ⭐ 별 레벨 + ⚽ 선수 카드
    · 레벨 = 지금까지 모은 별(누적, totalStars)로 정해진다. 별을 써도 레벨은 안 내려간다.
    · Lv.0 하준 → Lv.1~10 유망주 → 11~23 한국의 별 → 24~30 현역 스타 → 31~41 베테랑 → 42~49 전설 → Lv.50 손흥민
+   · 축구의 신 단계: 51~60 한국 레전드 → 61~70 황금 세대 → 71~80 월드컵 영웅 → 81~90 전설 중의 전설 → 91~99 축구의 신 → Lv.100 축구의 신 하준 (모두 「전성기 ○○」)
    · 레벨마다 필요한 별: 10개에서 시작해 조금씩 늘어 마지막엔 90개 (합계 LV_TOTAL)
    · 선수 그림은 사진이 아니라 앱 그림체 캐릭터 (머리·등번호·유니폼 색으로 구분, 엠블럼 없음)
    ========================================================= */
-var LV_MAX = 50;          /* 최고 레벨 */
+var LV_MAX = 100;         /* 최고 레벨 (Lv.51~100 = 축구의 신 단계) */
+var LV_MID = 50;          /* 손흥민 레벨 — 여기까지는 예전 속도 그대로 */
 var LV_FIRST = 10;        /* Lv.1에 필요한 별 */
 var LV_LAST = 90;         /* 마지막 레벨(Lv.50) 하나에 필요한 별 — 이 둘을 바꾸면 전체 속도가 바뀐다 (지금 합계 2,500) */
-function lvNeed(L){ L = Math.max(0, Math.min(LV_MAX, L)); return Math.round(LV_FIRST*L + (LV_LAST-LV_FIRST)/(LV_MAX-1) * L*(L-1)/2); }   /* Lv.L이 되려면 필요한 누적 별 */
+/* Lv.51부터는 훨씬 어렵게: 한 레벨에 별 LV_GOD_FIRST개(Lv.51)에서 시작해 LV_GOD_LAST개(Lv.100)까지 늘어난다 (51~100 합계 약 17,500) */
+var LV_GOD_FIRST = 200, LV_GOD_LAST = 500;
+function lvNeed(L){   /* Lv.L이 되려면 필요한 누적 별 */
+  L = Math.max(0, Math.min(LV_MAX, L));
+  var a = Math.min(L, LV_MID), s = Math.round(LV_FIRST*a + (LV_LAST-LV_FIRST)/(LV_MID-1) * a*(a-1)/2);
+  if(L <= LV_MID) return s;
+  var n = L - LV_MID, m = LV_MAX - LV_MID;
+  return s + Math.round(LV_GOD_FIRST*n + (LV_GOD_LAST-LV_GOD_FIRST)/Math.max(1, m-1) * n*(n-1)/2);
+}
 function lvOf(stars){ var L = 0; while(L < LV_MAX && stars >= lvNeed(L+1)) L++; return L; }
 
 /* 등급(구간): 카드 테두리 색이 달라진다 */
@@ -1766,7 +1785,13 @@ var TIERS = [
   {k:'star', n:'현역 스타',  from:24, c1:'#DEE2E6', c2:'#868E96', ink:'#212529'},
   {k:'vet',  n:'베테랑',     from:31, c1:'#FFD43B', c2:'#E67700', ink:'#3B2208'},
   {k:'leg',  n:'전설',       from:42, c1:'#B197FC', c2:'#5F3DC4', ink:'#fff'},
-  {k:'son',  n:'월드클래스', from:50, c1:'#FFE066', c2:'#F03E3E', ink:'#3B0A0A'}
+  {k:'son',  n:'월드클래스', from:50, c1:'#FFE066', c2:'#F03E3E', ink:'#3B0A0A'},
+  /* ── 축구의 신 단계 (Lv.51~100): 선수들의 전성기 ── */
+  {k:'klg',  n:'한국 레전드',     from:51, c1:'#FF8787', c2:'#1C3FAA', ink:'#fff'},
+  {k:'gold', n:'황금 세대',       from:61, c1:'#FFE8A3', c2:'#B07D00', ink:'#3B2208'},
+  {k:'wc',   n:'월드컵 영웅',     from:71, c1:'#63E6BE', c2:'#087F5B', ink:'#fff'},
+  {k:'myth', n:'전설 중의 전설',  from:81, c1:'#74C0FC', c2:'#1864AB', ink:'#fff'},
+  {k:'god',  n:'축구의 신',       from:91, c1:'#FFE066', c2:'#212529', ink:'#2B2008'}
 ];
 function tierOf(lv){ var t = TIERS[0]; TIERS.forEach(function(x){ if(lv >= x.from) t = x; }); return t; }
 
@@ -1777,7 +1802,9 @@ var KITS = {
   GER:['#F8F9FA','#212529','band'],  POR:['#A51E36','#2B8A3E',''],     NED:['#F76707','#212529',''],
   BEL:['#C92A2A','#212529',''],      NOR:['#C92A2A','#1C2C5B',''],     EGY:['#C92A2A','#F8F9FA',''],
   CRO:['#F8F9FA','#E03131','check'], POL:['#F8F9FA','#E03131','band'], URU:['#74C0FC','#212529',''],
-  GK:['#51CF66','#212529',''],       ME:['#2457C5','#FCC419','']
+  GK:['#51CF66','#212529',''],       ME:['#2457C5','#FCC419',''],
+  ITA:['#1971C2','#F8F9FA',''],      CIV:['#F76707','#2B8A3E',''],     HUN:['#C92A2A','#2B8A3E',''],
+  RUS:['#C92A2A','#F8F9FA',''],      GOD:['#FFD43B','#1B1B1B','band']
 };
 /* [이름, 등번호, 유니폼, 피부(0~4), 머리 모양, 머리 색, 수염, 특징{…}]
    수염: 0 없음 · 1 까슬 · 2 덥수룩 · 3 턱수염+콧수염 · 4 콧수염
@@ -1840,18 +1867,76 @@ var PLAYERS = [
   ['펠레',10,'BRA',4,'flat','#1B1B1B',0,{f:'oval',m:'big',e:'smile'}],
   ['메시',10,'ARG',0,'side','#5B3A22',2,{f:'oval',n:1}],
   /* 50 */
-  ['손흥민',7,'KOR',0,'sonny','#1B1B1B',0,{f:'oval',e:'smile',m:'big',b:4}]
+  ['손흥민',7,'KOR',0,'sonny','#1B1B1B',0,{f:'oval',e:'smile',m:'big',b:4}],
+  /* 51~60 한국 레전드 (전성기) */
+  ['전성기 이영표',12,'KOR',0,'short','#1B1B1B',0,{f:'round',e:'smile',m:'grin'}],
+  ['전성기 설기현',9,'KOR',0,'short','#1B1B1B',0,{f:'long',b:4}],
+  ['전성기 이동국',20,'KOR',0,'side','#1B1B1B',0,{f:'long',m:'calm'}],
+  ['전성기 안정환',19,'KOR',0,'perm','#3A2A1E',0,{f:'oval',b:4}],
+  ['전성기 이청용',17,'KOR',0,'curtain','#2B2018',0,{f:'oval',e:'smile'}],
+  ['전성기 기성용',16,'KOR',0,'wavy','#2B2018',0,{f:'long',m:'calm',n:1}],
+  ['전성기 홍명보',20,'KOR',0,'short','#1B1B1B',0,{f:'square',b:5,m:'calm'}],
+  ['전성기 황선홍',18,'KOR',0,'side','#1B1B1B',0,{f:'long',m:'calm',n:1}],
+  ['전성기 차범근',11,'KOR',0,'thick','#1B1B1B',0,{f:'square',b:5,m:'grin'}],
+  ['전성기 박지성',7,'KOR',0,'shag','#1B1B1B',0,{f:'oval',e:'smile',n:1}],
+  /* 61~70 황금 세대 */
+  ['전성기 램파드',8,'ENG',0,'short','#9A6B3A',0,{f:'square',m:'grin'}],
+  ['전성기 제라드',8,'ENG',0,'buzz','#C68E4E',0,{f:'long',b:4}],
+  ['전성기 루니',10,'ENG',0,'buzz','#7A5230',0,{f:'round',b:5,m:'big'}],
+  ['전성기 드록바',11,'CIV',4,'bald','#1B1B1B',1,{f:'long',m:'calm'}],
+  ['전성기 피구',7,'POR',0,'side','#2B2018',1,{f:'long',n:1}],
+  ['전성기 카카',22,'BRA',0,'short','#3A2A1E',0,{f:'oval',e:'smile'}],
+  ['전성기 이니에스타',8,'ESP',0,'receding','#5B3A22',0,{f:'oval',m:'calm'}],
+  ['전성기 사비',6,'ESP',0,'short','#1B1B1B',1,{f:'oval',b:4}],
+  ['전성기 베컴',7,'ENG',0,'quiff','#D9B45A',1,{f:'oval',b:4}],
+  ['전성기 호나우지뉴',10,'BRA',2,'curlylong','#1B1B1B',0,{f:'long',m:'big',hb:'#F8F9FA'}],
+  /* 71~80 월드컵 영웅 */
+  ['전성기 칸나바로',5,'ITA',1,'buzz','#1B1B1B',0,{f:'square',b:5}],
+  ['전성기 말디니',3,'ITA',0,'long','#2B2018',0,{f:'long',m:'calm'}],
+  ['전성기 부폰',1,'GK',0,'side','#3A2A1E',1,{f:'square'}],
+  ['전성기 피를로',21,'ITA',0,'long','#3A2A1E',3,{f:'long',m:'calm'}],
+  ['전성기 바조',10,'ITA',0,'ponytail','#2B2018',1,{f:'oval'}],
+  ['전성기 라울',7,'ESP',0,'short','#1B1B1B',0,{f:'oval',e:'smile'}],
+  ['전성기 카시야스',1,'GK',0,'side','#2B2018',1,{f:'oval',b:4}],
+  ['전성기 앙리',14,'FRA',3,'bald','#1B1B1B',3,{f:'long',m:'calm'}],
+  ['전성기 지단',10,'FRA',1,'receding','#2B2018',0,{f:'oval',m:'calm',b:5,n:1}],
+  ['전성기 호나우두',9,'BRA',2,'tuft','#1B1B1B',0,{f:'round',m:'big'}],
+  /* 81~90 전설 중의 전설 */
+  ['전성기 에우제비오',10,'POR',4,'short','#1B1B1B',0,{f:'oval',m:'grin'}],
+  ['전성기 가린샤',7,'BRA',2,'short','#1B1B1B',0,{f:'oval',m:'grin'}],
+  ['전성기 게르트 뮐러',13,'GER',0,'thick','#2B2018',0,{f:'round',b:5}],
+  ['전성기 야신',1,'GK',0,'short','#1B1B1B',0,{f:'long',m:'calm'}],
+  ['전성기 푸스카스',10,'HUN',0,'slick','#1B1B1B',0,{f:'round',m:'grin'}],
+  ['전성기 디스테파노',9,'ARG',0,'receding','#2B2018',0,{f:'long',n:2}],
+  ['전성기 플라티니',10,'FRA',0,'curly','#3A2A1E',0,{f:'oval'}],
+  ['전성기 반바스턴',9,'NED',0,'quiff','#C9A36B',0,{f:'long',m:'calm'}],
+  ['전성기 베켄바워',5,'GER',0,'thick','#3A2A1E',0,{f:'long',m:'calm'}],
+  ['전성기 크라위프',14,'NED',0,'shag','#3A2A1E',0,{f:'long',n:1}],
+  /* 91~99 축구의 신 */
+  ['전성기 벤제마',9,'FRA',1,'buzz','#1B1B1B',2,{f:'oval',m:'calm'}],
+  ['전성기 모드리치',10,'CRO',0,'long','#D9B45A',0,{f:'long',n:2,hb:'#212529',m:'calm'}],
+  ['전성기 레반도프스키',9,'POL',0,'quiff','#3A2A1E',0,{f:'square',b:4,m:'calm'}],
+  ['전성기 네이마르',10,'BRA',1,'mohawk','#2B2018',0,{f:'oval',m:'grin',hl:'#E3C565',er:1}],
+  ['전성기 마라도나',10,'ARG',1,'thickcurl','#1B1B1B',0,{f:'round',b:5,m:'grin'}],
+  ['전성기 펠레',10,'BRA',4,'flat','#1B1B1B',0,{f:'oval',m:'big',e:'smile'}],
+  ['전성기 호날두',7,'POR',1,'slick','#1B1B1B',0,{f:'square',m:'big',b:4}],
+  ['전성기 메시',10,'ARG',0,'side','#5B3A22',2,{f:'oval',n:1}],
+  ['전성기 손흥민',7,'KOR',0,'sonny','#1B1B1B',0,{f:'oval',e:'smile',m:'big',b:4}],
+  /* 100 */
+  ['축구의 신 하준',10,'GOD',0,'mop','#2B2018',0,{f:'round',m:'grin',ck:1}]
 ];
 var SKINS = ['#F7C99A','#E9B98C','#B97A56','#8A5636','#6B4226'];
 /* 포지션 (레벨 순서대로 0~50): F 공격수 · M 미드필더 · D 수비수 · G 골키퍼 */
-var POS_OF = 'F'+'FMFFMMMMFM'+'FDMMGFMDFDMFM'+'MMFFFFF'+'DFMFGFFFFMF'+'MFMMFMFF'+'F';
+var POS_OF = 'F'+'FMFFMMMMFM'+'FDMMGFMDFDMFM'+'MMFFFFF'+'DFMFGFFFFMF'+'MFMMFMFF'+'F'+
+  'DFFFMMDFFM'+'MMFFMMMMMF'+'DDGMFFGFMF'+'FFFGFFMFDF'+'FMFFFFFFF'+'F';
 var POS = {F:'공격수', M:'미드필더', D:'수비수', G:'골키퍼'};
 var POS_ICO = {F:'⚽', M:'🎯', D:'🛡️', G:'🧤'};
 /* 국적: 유니폼 코드 → [국기, 나라]. 골키퍼 유니폼(GK)·하준(ME)은 NAT_OF에서 따로 */
 var NATS = {KOR:['🇰🇷','대한민국'], BRA:['🇧🇷','브라질'], ARG:['🇦🇷','아르헨티나'], FRA:['🇫🇷','프랑스'], ENG:['🏴󠁧󠁢󠁥󠁮󠁧󠁿','잉글랜드'], ESP:['🇪🇸','스페인'],
   GER:['🇩🇪','독일'], POR:['🇵🇹','포르투갈'], NED:['🇳🇱','네덜란드'], BEL:['🇧🇪','벨기에'], NOR:['🇳🇴','노르웨이'], EGY:['🇪🇬','이집트'],
-  CRO:['🇭🇷','크로아티아'], POL:['🇵🇱','폴란드'], URU:['🇺🇾','우루과이']};
-var NAT_OF = {0:'KOR', 15:'KOR', 35:'GER'};
+  CRO:['🇭🇷','크로아티아'], POL:['🇵🇱','폴란드'], URU:['🇺🇾','우루과이'], ITA:['🇮🇹','이탈리아'], CIV:['🇨🇮','코트디부아르'],
+  HUN:['🇭🇺','헝가리'], RUS:['🇷🇺','소련(러시아)']};
+var NAT_OF = {0:'KOR', 15:'KOR', 35:'GER', 73:'ITA', 77:'ESP', 84:'RUS', 100:'KOR'};
 function playerAt(lv){
   var a = PLAYERS[Math.max(0, Math.min(LV_MAX, lv))];
   lv = Math.max(0, Math.min(LV_MAX, lv));
@@ -1988,12 +2073,16 @@ function playerCard(lv, size, lock){
   var peek = lock === 'peek'; if(peek) lock = false;   /* peek: 그림은 보이지만 이름은 아직 비밀 */
   var p = playerAt(lv), t = p.tier;
   return '<div class="pcard '+(size||'')+' t-'+t.k+(lock?' lock':'')+'" style="--c1:'+t.c1+';--c2:'+t.c2+';--ci:'+t.ink+'">'+
-      '<div class="pc-top"><span class="pc-lv">Lv.<b>'+lv+'</b></span><span class="pc-tier">'+esc(t.n)+'</span></div>'+
+      '<div class="pc-top"><span class="pc-lv'+(lv >= 100 ? ' l3' : '')+'">Lv.<b>'+lv+'</b></span><span class="pc-tier'+(t.n.length > 5 ? ' tl' : '')+'">'+esc(t.n)+'</span></div>'+
       '<div class="pc-art">'+playerSVG(lv, lock)+(peek ? ppPeek(lv) : ppImg(lv, lock))+'</div>'+
-      '<div class="pc-name">'+(lock || peek ? '???' : esc(p.n))+'</div>'+
+      '<div class="pc-name'+(lock || peek ? '' : pcNameCls(p.n))+'">'+(lock || peek ? '???' : pcNameHtml(p.n))+'</div>'+
       '<div class="pc-meta">'+(lock || peek ? '&nbsp;' : '<span class="pc-flag" title="'+esc(p.nat)+'">'+p.flag+'</span> '+esc(p.pos))+'</div>'+
     '</div>';
 }
+/* 「전성기 ○○」·「축구의 신 ○○」은 앞말을 작게, 긴 이름은 글자를 줄여 카드에 다 보이게 */
+var PC_PRE_RE = /^(전성기|축구의 신) /;
+function pcNameHtml(n){ var m = PC_PRE_RE.exec(n); return m ? '<small class="pc-pre">'+esc(m[1])+'</small>'+esc(n.slice(m[0].length)) : esc(n); }
+function pcNameCls(n){ var k = n.replace(PC_PRE_RE, '').length + (PC_PRE_RE.test(n) ? 2 : 0); return k >= 9 ? ' n3' : k >= 7 ? ' n2' : ''; }
 /* 예전 이름으로도 그릴 수 있게 */
 function heroSVG(lv){ return '<div class="hsvg">'+playerCard(Math.max(0, Math.min(LV_MAX, lv)), 'sm')+'</div>'; }
 function bigHero(lv){ return '<div style="display:flex;justify-content:center;margin:8px 0">'+playerCard(Math.max(0, Math.min(LV_MAX, lv)), 'lg')+'</div>'; }
@@ -2099,7 +2188,7 @@ function modalLevelUp(prev, now, cb){
       '<div class="lv-num"><span>Lv.'+prev+'</span><i>▶</i><b>Lv.'+now+'</b></div>'+
       (newTier ? '<div class="lv-tier">🎖️ 새 등급 <b>'+esc(t.n)+'</b></div>' : '')+
       '<div class="lv-card">'+playerCard(now, 'lg')+'</div>'+
-      '<div class="lv-who">'+(now >= LV_MAX ? '🏆 드디어 <b>손흥민</b>!! 월드클래스!' : '이제 <b>'+esc(p.n)+'</b>처럼!')+'</div>'+
+      '<div class="lv-who">'+(now >= LV_MAX ? '👑 드디어 <b>축구의 신</b>!! 하준이가 최고야!' : now === LV_MID ? '🏆 드디어 <b>손흥민</b>!! 월드클래스! 이제 축구의 신에 도전!' : now === LV_MID+1 ? '⚡ <b>축구의 신</b> 단계 시작! 이제 <b>'+esc(p.n)+'</b>처럼!' : '이제 <b>'+esc(p.n)+'</b>처럼!')+'</div>'+
       '<div class="lv-meta"><span><i class="lv-flag">'+p.flag+'</i> '+esc(p.nat)+'</span><span>'+p.posIco+' '+esc(p.pos)+'</span><span>등번호 <b>'+p.no+'</b></span></div>'+
       (now - prev > 1 ? '<div class="lv-sub">한 번에 '+(now-prev)+'레벨이나 올랐어요!</div>' : '')+
       '<div class="lv-sub">'+(g.max ? '모든 선수를 모았어요!' : '다음 선수까지 ⭐ <b>'+g.left+'개</b>')+'</div>'+
@@ -2324,7 +2413,7 @@ function ppPick(multi, cb){
 }
 /* 파일 이름으로 레벨 찾기: "01_양민혁.jpg" · "50 손흥민.png" · "메시.jpg" */
 function ppLvOfName(name){
-  var base = String(name || '').replace(/\.[A-Za-z0-9]+$/, ''), m = /^\s*(\d{1,2})(?=\D|$)/.exec(base);
+  var base = String(name || '').replace(/\.[A-Za-z0-9]+$/, ''), m = /^\s*(\d{1,3})(?=\D|$)/.exec(base);
   if(m && +m[1] >= 0 && +m[1] <= LV_MAX) return +m[1];
   for(var i = LV_MAX; i >= 0; i--) if(base.indexOf(PLAYERS[i][0]) >= 0) return i;
   return -1;
@@ -4148,7 +4237,7 @@ function kick3d(cv, mode, onResult){
   function setShot(v0, c, sim, plan, speed){
     var kind = sim.kind;
     if(kind === 'goal' && sim.cross && sim.cross.y > 1.65 && Math.abs(sim.cross.x) > 2.5) kind = 'top';
-    st.shot = {v0:v0, c:c, sim:sim, plan:plan, kind:kind, speed:speed};
+    st.shot = {v0:v0, c:c, sim:sim, plan:plan, kind:kind, speed:speed, tm:FKM ? fkSpeedMul() : 1};   /* tm: 슛 속도 배율 — 공 길은 같고 그만큼 빨리 날아간다 */
     st.res = {goal: kind === 'goal' || kind === 'top', kind: kind, guess: plan.guess, dist: Math.round(vlen([st.ball0[0], 0, st.ball0[2]]))};
     var dec = sim.hitT !== null ? sim.hitT : (sim.cross ? sim.cross.t : sim.T);
     st.resT = Math.min(sim.T, dec + 0.3);
@@ -4160,7 +4249,7 @@ function kick3d(cv, mode, onResult){
     if(FKM){
       var over = st.nWall && sim.wallPass && Math.abs(sim.wallPass.lat) < st.whalf + 0.5;
       pl.react = 0.30 + (over ? 0.12 : 0);
-      var R = 0.8 + Math.max(0, T - pl.react)*FK_KEEP_SPEED*fkKeep()*st.kmul, dx = cr.x - st.kx0, dy = Math.max(0, cr.y - 1.1)*1.3, d = Math.sqrt(dx*dx + dy*dy) || 0.01;
+      var R = 0.8 + Math.max(0, T/fkSpeedMul() - pl.react)*FK_KEEP_SPEED*fkKeep()*st.kmul, dx = cr.x - st.kx0, dy = Math.max(0, cr.y - 1.1)*1.3, d = Math.sqrt(dx*dx + dy*dy) || 0.01;
       pl.guess = true; pl.save = onT && d < R && st.ku < 0.93;
       var q = pl.save ? 1 : Math.min(1, R/d)*0.85;
       pl.hx = st.kx0 + (cr.x - st.kx0)*q; pl.hy = 1.1 + (cr.y - 1.1)*q;
@@ -4431,7 +4520,7 @@ function kick3d(cv, mode, onResult){
     if(!alive) return;
     raf = requestAnimationFrame(frame);
     var dt = Math.min(0.05, (now - (last || now))/1000); last = now;
-    st.hint += dt; st.t += dt;
+    st.hint += dt; st.t += dt*(st.phase === 'fly' && st.shot ? (st.shot.tm || 1) : 1);
     if(st.cheer > 0) st.cheer = Math.max(0, st.cheer - dt*0.3);
     if(st.shake > 0) st.shake = Math.max(0, st.shake - dt*2.6);
     if(st.netAmp > 0) st.netAmp *= Math.pow(0.03, dt);
@@ -4512,8 +4601,9 @@ function kick3d(cv, mode, onResult){
 /* 레벨에 따라 킥이 얼마나 좋아졌는지 막대로 */
 function fkLvBars(){
   function bar(name, v, txt){ return '<span>'+name+'</span><i><u style="width:'+Math.round(v <= 0 ? 0 : Math.max(4, Math.min(100, v*100)))+'%"></u></i><span>'+txt+'</span>'; }
-  var k = Math.max(0, Math.min(1, heroLv()/LV_MAX));
+  var k = Math.max(0, Math.min(1, heroLv()/LV_MID));
   return '<div class="fk-bars">'+
+    bar('⚡ 슛 속도', (fkSpeedMul()-1)/FK_SPD100, '+'+Math.round((fkSpeedMul()-1)*100)+'%')+
     bar('🎯 정확도', 0.12 + 0.88*k, Math.round((1 - fkErr()/FK_ERR0)*100)+'%')+
     bar('🌀 감아차기', fkCurlOn() ? fkCurlPct()/100 : 0, fkCurlOn() ? fkCurlPct()+'%' : '🔒 Lv.'+FK_CURL_LV+'부터')+
     bar('🧤 골키퍼 느려짐', 0.12 + 0.88*k, Math.round((1 - fkKeep()/FK_KEEP0)*100)+'%')+
@@ -11394,7 +11484,7 @@ function screenSettings(){
         '<b>단계 테스트</b><br>'+
         '• 놀이 5개를 모두 끝내야 테스트가 열립니다. 20문제 · 1문제 5점 · <b>90점 이상 통과</b>입니다.<br>'+
         '• 90점 이상 통과하면 <b>별 '+STAR_TEST+'개</b>를 받습니다. ('+LEVELS.length+'단계 전부 = 별 '+(LEVELS.length*STAR_TEST)+')<br>'+
-        '• <b>⬆️ 레벨</b>은 Lv.0(하준 카드)에서 시작해, 새로 시작한 뒤 모은 별(레벨 별)로 오릅니다. Lv.1은 별 '+lvNeed(1)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, 최고 <b>Lv.'+LV_MAX+'(손흥민)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
+        '• <b>⬆️ 레벨</b>은 Lv.0(하준 카드)에서 시작해, 새로 시작한 뒤 모은 별(레벨 별)로 오릅니다. Lv.1은 별 '+lvNeed(1)+'개, Lv.10은 '+lvNeed(10)+'개, Lv.30은 '+lvNeed(30)+'개, Lv.'+LV_MID+'(손흥민)은 '+lvNeed(LV_MID)+'개, 그다음 <b>축구의 신 단계</b>(Lv.51~)는 레벨마다 별 '+LV_GOD_FIRST+'~'+LV_GOD_LAST+'개로 훨씬 어렵고, 최고 <b>Lv.'+LV_MAX+'(축구의 신 하준)은 '+lvNeed(LV_MAX)+'개</b>. 레벨마다 선수 카드가 바뀝니다 (📖 선수 도감).<br>'+
         '&nbsp;&nbsp;속도를 바꾸시려면 Index.html의 <b>LV_FIRST · LV_LAST</b>를 고치세요. 별을 써도 레벨은 내려가지 않습니다.<br>'+
         '• 다음 레벨은 테스트와 상관없이 놀이만 끝내면 열립니다. (막히지 않게)<br>'+
         '• 얻은 보상은 하준이 <b>🎒 가방</b>에 아이템으로 들어갑니다. 실제로 해주신 뒤 아이템을 눌러 <b>사용함</b>으로 바꿔주세요.<br><br>'+
