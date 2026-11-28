@@ -526,6 +526,7 @@
   .vc-no{display:flex;align-items:center;justify-content:center;font-family:'Jua',sans-serif;font-size:16px;color:var(--ink-soft)}
   .vc-cell{display:flex;flex-direction:column;justify-content:center;min-height:50px;padding:7px 10px;border:2px solid #2B2A33;border-radius:10px;background:#fff;font-size:18px;line-height:1.3;overflow-wrap:anywhere}
   .vc-cell.en{font-family:'Andika','Gowun Dodum',sans-serif}
+  .vc-in.vc-fix{background:#FFF4C2;border-color:#E8A400}
   .vc-in{display:block;width:100%;min-width:0;box-sizing:border-box;min-height:50px;padding:7px 10px;border:2px solid #2B2A33;border-radius:10px;background:#fff;font:inherit;font-size:18px;color:var(--ink)}
   .vc-in.vc-ans{border:2px dashed #2457C5;background:#F1F6FF}
   .vc-in:focus{outline:3px solid #2457C5;outline-offset:1px}
@@ -1103,7 +1104,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.28 16:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.28 16:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -6519,7 +6520,7 @@ function scanImages(kind, onResult){
               if(x.guessed) d.guessed = true;
               if(Array.isArray(x.items)) d.items = d.items.concat(x.items);
               else if(Array.isArray(x.pages)) d.pages = d.pages.concat(x.pages);
-              else if(x.en || x.word || x.s) d.items.push(x);
+              else if(x.en || x.ko || x.word || x.s) d.items.push(x);
             });
           }
           if(kind === 'pbook'){   /* 원서 읽기: 사진 한 장 = 한 쪽. 쪽 글과 쪽 그림의 개수를 맞춘다 */
@@ -10091,8 +10092,8 @@ function screenVocEdit(v){
       '<div class="vc-row vc-hd"><div></div><div>English</div><div>한글 뜻</div><div></div></div>'+
       rows.map(function(r, i){
         return '<div class="vc-row vc-ed"><div class="vc-no">'+(i+1)+'</div>'+
-          '<input id="ve'+i+'" class="vc-in" lang="en" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="영어" value="'+esc(r.en)+'" aria-label="'+(i+1)+'번 영어">'+
-          '<input id="vk'+i+'" class="vc-in" lang="ko" autocomplete="off" placeholder="한글 뜻" value="'+esc(r.ko)+'" aria-label="'+(i+1)+'번 한글 뜻">'+
+          '<input id="ve'+i+'" class="vc-in'+(r.fe ? ' vc-fix' : '')+'" lang="en" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="영어" value="'+esc(r.en)+'" aria-label="'+(i+1)+'번 영어">'+
+          '<input id="vk'+i+'" class="vc-in'+(r.fk ? ' vc-fix' : '')+'" lang="ko" autocomplete="off" placeholder="한글 뜻" value="'+esc(r.ko)+'" aria-label="'+(i+1)+'번 한글 뜻">'+
           '<button class="btn vc-x" data-del="'+i+'" aria-label="'+(i+1)+'번 줄 지우기">✕</button></div>';
       }).join('')+
       '<button class="btn wide" id="addrow" style="margin:6px 0 14px">➕ 한 줄 추가</button>'+
@@ -10111,12 +10112,14 @@ function screenVocEdit(v){
     document.getElementById('scan').onclick = function(){
       collect();
       scanImages('vocab', function(d){
-        var got = (d.items || []).map(function(x){ return {en:String(x.en || '').trim(), ko:String(x.ko || '').trim()}; }).filter(function(x){ return x.en; });
+        var got = (d.items || []).map(function(x){ var fx = String(x.fix || ''); return {en:String(x.en || '').trim(), ko:String(x.ko || '').trim(), fe:/en/.test(fx), fk:/ko/.test(fx)}; }).filter(function(x){ return x.en || x.ko; });
         if(!got.length){ noSound(); alert('사진에서 영어 단어·숙어를 찾지 못했어요. 더 또렷한 사진으로 해보세요.'); return; }
         addRows(got);
         if(!String(title || '').trim() && d.title) title = String(d.title).trim();
         okSound(); draw();
-        setTimeout(function(){ alert('✅ '+got.length+'줄을 읽었어요.\n영어와 뜻이 맞는지 확인하고 고친 뒤 「저장하기」를 눌러 주세요.'); }, 60);
+        var base = rows.length - got.length, fixed = [];
+        got.forEach(function(x, i){ if(x.fe || x.fk) fixed.push((base+i+1)+'번 '+(x.fe && x.fk ? '영어·뜻' : x.fe ? '영어' : '뜻')); });
+        setTimeout(function(){ alert('✅ '+got.length+'줄을 읽었어요.'+(fixed.length ? '\n\n✏️ 사진에 없거나 틀려서 AI가 채우거나 고친 곳 '+fixed.length+'군데 (노란 칸):\n'+fixed.slice(0, 12).join(', ')+(fixed.length > 12 ? ' …' : '') : '')+'\n\n영어와 뜻이 맞는지 확인하고 「저장하기」를 눌러 주세요.'); }, 60);
       });
     };
     document.getElementById('save').onclick = function(){
@@ -10423,8 +10426,13 @@ var SBL_NUM = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪'
 function sbls(){ return PROG.sblanks || []; }
 function sblById(id){ return sbls().filter(function(v){ return v.id === id; })[0]; }
 function sblStars(){ return sbls().reduce(function(a, v){ return a + (v.done ? (+v.stars || 0) : 0); }, 0); }
-function sblNorm(s){ return String(s || '').replace(/_{2,}|\(\s*\)|\[\s*\]|…{1,}|\.{4,}/g, SBL_BLANK); }   /* 여러 빈칸 표기를 ___ 로 */
-function sblCount(s){ return sblNorm(s).split(SBL_BLANK).length - 1; }
+/* 빈칸 길이: 문장 속 밑줄(_) 개수 = 사진 속 빈칸 길이. 밑줄 1개당 SBL_GAP_EM 글자폭, 최소·최대 아래 값 (3개 이하는 예전처럼 기본 폭) */
+var SBL_GAP_EM = 0.62, SBL_GAP_MIN = 2.4, SBL_GAP_MAX = 18;
+var SBL_RE = /_{2,}/;
+function sblNorm(s){ return String(s || '').replace(/\(\s*\)|\[\s*\]|…{1,}|\.{4,}/g, SBL_BLANK).replace(/(^|[^_])__(?!_)/g, '$1'+SBL_BLANK); }   /* 괄호·점 빈칸은 ___ 로, 밑줄 길이는 그대로 */
+function sblSplit(s){ s = sblNorm(s); return {parts: s.split(/_{2,}/), ws: (s.match(/_{2,}/g) || []).map(function(x){ return x.length; })}; }
+function sblCount(s){ return sblSplit(s).ws.length; }
+function sblGapStyle(n){ if(!(n > 3)) return ''; var em = Math.max(SBL_GAP_MIN, Math.min(SBL_GAP_MAX, n * SBL_GAP_EM)); return ' style="min-width:'+em.toFixed(1)+'em"'; }
 function sblAns(it){   /* 빈칸마다 정답 (예전 묶음은 a 하나) */
   if(Array.isArray(it.as)) return it.as.map(function(x){ return String(x == null ? '' : x).trim(); });
   return it.a ? [String(it.a).trim()] : [];
@@ -10433,14 +10441,14 @@ function sblNo(j){ return SBL_NUM[j] || '('+(j+1)+')'; }
 /* 빈칸 자리를 칸으로 그린다. o.fill[j] 글자, o.cls[j] 색, o.num 이면 ①② 번호, o.cur 는 지금 연습하는 빈칸 */
 function sblHtml(s, o){
   o = o || {};
-  var parts = sblNorm(s).split(SBL_BLANK), multi = parts.length > 2;
+  var sp = sblSplit(s), parts = sp.parts, multi = parts.length > 2;
   return parts.map(function(p, j){
     if(j === parts.length-1) return esc(p);
     var f = o.fill && o.fill[j], c = (o.cls && o.cls[j]) || 'q';
-    return esc(p)+'<span class="sb-gap '+c+(o.cur === j ? ' cur' : '')+(o.cur != null && o.cur !== j ? ' dim' : '')+'">'+(f ? esc(f) : (o.num && multi ? '<i>'+sblNo(j)+'</i>' : '&nbsp;'))+'</span>';
+    return esc(p)+'<span class="sb-gap '+c+(o.cur === j ? ' cur' : '')+(o.cur != null && o.cur !== j ? ' dim' : '')+'"'+sblGapStyle(sp.ws[j])+'>'+(f ? esc(f) : (o.num && multi ? '<i>'+sblNo(j)+'</i>' : '&nbsp;'))+'</span>';
   }).join('');
 }
-function sblFull(it){ var p = sblNorm(it.s).split(SBL_BLANK), as = sblAns(it); return p.map(function(x, j){ return x+(j < p.length-1 ? (as[j] || '') : ''); }).join(''); }
+function sblFull(it){ var p = sblSplit(it.s).parts, as = sblAns(it); return p.map(function(x, j){ return x+(j < p.length-1 ? (as[j] || '') : ''); }).join(''); }
 /* 붙여 넣은 글 → 문제들. 「The [cat] is in the [box].」 또는 「The ___ is in the ___. = cat, box」 */
 function sblParse(text){
   var out = [];
@@ -10450,7 +10458,7 @@ function sblParse(text){
     if(/\[[^\]\s][^\]]*\]/.test(s)){ s = s.replace(/\[([^\]]+)\]/g, function(_, a){ as.push(a.trim()); return SBL_BLANK; }); }
     else if((m = s.match(/^(.*?)\s*(?:=|→|\(답\s*[:：]?\s*)\s*([^()=→]+?)\)?\s*$/)) && /_{2,}|\(\s*\)/.test(m[1])){ s = m[1].trim(); as = m[2].split(/\s*[,/]\s*/).filter(Boolean); }
     s = sblNorm(s);
-    if(s.indexOf(SBL_BLANK) < 0) return;
+    if(!sblCount(s)) return;
     out.push({s:s, as:as});
   });
   return out;
