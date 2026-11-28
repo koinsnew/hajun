@@ -538,6 +538,7 @@
   .vc-q .vc-row{margin-bottom:4px}
   .vc-blank{border-style:dashed;border-color:#2457C5;background:#F1F6FF;color:#2457C5;font-size:15px}
   .vc-pen{margin-left:0}
+  .vc-q .vc-t,.sb-slab{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   .vc-pen.vc-trace{margin-left:0}
   .vc-cv{display:block;width:100%;border:2px solid #2B2A33;border-radius:12px;background:#FFFDF7;touch-action:none}
   .vc-tools{display:flex;gap:6px;justify-content:flex-end;margin-top:4px}
@@ -1104,7 +1105,7 @@ window.addEventListener('unhandledrejection', function(e){ ERRS.push('promise: '
    ★ 앱스스크립트 API 주소 (배포 > 웹 앱의 /exec 주소) ★
    화면(이 파일)은 GitHub가, 데이터·로그인(진도)·발음은 아래 주소의 앱스스크립트가 담당합니다.
    ══════════════════════════════════════════════════════ */
-var APP_VERSION = '2026.11.28 16:40';   /* 이 화면 파일의 버전 — 진단에서 확인 */
+var APP_VERSION = '2026.11.28 17:10';   /* 이 화면 파일의 버전 — 진단에서 확인 */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbxgOsQMYfd42DaocuVEGVkxWi9ozWbJkJrj-ZkjMVaeNDey9NqSKjU0nZ5LMuBNw5V_/exec';
 
 var OFFLINE = false;   /* 서버(앱스스크립트 API)와 연결이 안 된 상태 */
@@ -5235,6 +5236,21 @@ function screenQuizEdit(q){
    ========================================================= */
 var PEN_PALM_MS = 1200;     /* 펜을 쓰는 동안(마지막 펜 닿음 뒤 이 시간) 손바닥·손가락 닿음은 무시(ms) */
 var PEN_LAST = 0;          /* 마지막으로 펜이 닿은 때 */
+var PEN_REACH_PX = 44;     /* 글씨 칸 바깥 이 거리(px) 안에서 펜을 대도 그 칸에 써진다 (칸 바로 위 줄을 눌러 글씨가 안 써지던 문제) */
+var PEN_PADS = [];         /* 화면에 있는 펜 칸들 {cv, start} */
+document.addEventListener('pointerdown', function(e){
+  if(e.pointerType !== 'pen' || (e.target && e.target.tagName === 'CANVAS')) return;
+  if(e.target && e.target.closest && e.target.closest('button,a,input,textarea,select,label,[contenteditable]')) return;
+  PEN_PADS = PEN_PADS.filter(function(p){ return document.body.contains(p.cv); });
+  var best = null, bd = 1e9;
+  PEN_PADS.forEach(function(p){
+    var r = p.cv.getBoundingClientRect(); if(!r.width || !r.height) return;
+    var dx = e.clientX < r.left ? r.left - e.clientX : e.clientX > r.right ? e.clientX - r.right : 0;
+    var dy = e.clientY < r.top ? r.top - e.clientY : e.clientY > r.bottom ? e.clientY - r.bottom : 0;
+    var d = Math.max(dx, dy); if(d <= PEN_REACH_PX && d < bd){ bd = d; best = p; }
+  });
+  if(best){ e.preventDefault(); best.start(e); }
+}, {capture:true, passive:false});
 var PEN_EN_H = 150;         /* 영어 펜 칸 높이(px) */
 var PEN_KO_H = 128;         /* 한글 펜 칸 높이(px) */
 var QZ_IN_KEY = 'hajun_qz_input';   /* 펜/자판 고른 것 기억 (이 기기에서만) */
@@ -5269,7 +5285,7 @@ function penCanvas(cv, W, H, lang, ghost){
   function pos(e){ var r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*W/r.width, y:(e.clientY-r.top)*H/r.height}; }
   var curType = '', curAt = 0;
   function endStroke(drop){ if(drop && cur){ var k = strokes.indexOf(cur); if(k >= 0) strokes.splice(k, 1); } cur = null; curId = null; if(drop) redraw(); }
-  cv.addEventListener('pointerdown', function(e){
+  function start(e){
     var now = Date.now();
     if(e.pointerType === 'pen'){ PEN_LAST = now; if(cur && curType !== 'pen') endStroke(true); }   /* 손바닥이 먼저 잡은 획은 버리고 펜이 쓴다 */
     else if(e.pointerType === 'touch'){
@@ -5282,7 +5298,9 @@ function penCanvas(cv, W, H, lang, ghost){
     curId = e.pointerId; curType = e.pointerType; curAt = now;
     cur = {w: e.pointerType === 'pen' ? 2.4 + Math.max(0.15, e.pressure || 0.5)*3.6 : 4.2, p:[pos(e)]};
     strokes.push(cur); ink(cur);
-  });
+  }
+  cv.addEventListener('pointerdown', start);
+  PEN_PADS.push({cv:cv, start:start});
   cv.addEventListener('pointermove', function(e){
     if(e.pointerType === 'pen') PEN_LAST = Date.now();
     if(!cur || e.pointerId !== curId) return;
@@ -9975,7 +9993,7 @@ function progRefresh(){
    · 모두 맞으면 통과 → 별 뽑기(처음 한 번). 한글 뜻은 표현이 다를 수 있어 아빠가 채점을 고칠 수 있다
    ========================================================= */
 var VOC_PRAC_N = 5;     /* 틀린 문제를 눌렀을 때 따라 쓰는 횟수 */
-var VOC_PEN_H_EN = 180, VOC_PEN_H_KO = 170;   /* 시험에서 펜으로 답을 쓰는 칸 높이(px): 영어 · 한글 뜻 */
+var VOC_PEN_H_EN = 250, VOC_PEN_H_KO = 230;   /* 시험에서 펜으로 답을 쓰는 칸 높이(px): 영어 · 한글 뜻 */
 var VOC_TRACE_H = 280;      /* 따라 쓰기 칸의 최소 높이(px) */
 var VOC_TRACE_H_BOTH = 220; /* 영어와 뜻을 둘 다 쓸 때 한 칸의 최소 높이(px) */
 var VOC_TRACE_FS = 76, VOC_TRACE_FS_MIN = 36;   /* 따라 쓰기 점선 글씨 크기(px): 기본 · 긴 답일 때 최소 */
