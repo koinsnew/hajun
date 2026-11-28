@@ -6504,20 +6504,23 @@ function scanImages(kind, onResult){
           var d = j.data;
           /* AI가 가끔 쪽마다 {title, items/pages}를 따로 만들어 배열로 보내면 서버가 {items:[{…},{…}]}로 넘긴다 → 하나로 합친다 */
           if(d.items && d.items.length && d.items.some(function(x){ return x && (Array.isArray(x.items) || Array.isArray(x.pages)); })){
-            var w = d.items; d = {title: d.title || '', by: d.by || '', pages: (d.pages || []).slice(), items: []};
+            var w = d.items; d = {title: d.title || '', by: d.by || '', pages: (d.pages || []).slice(), items: [], bank: (d.bank || []).slice(), guessed: !!d.guessed};
             w.forEach(function(x){
               if(!x) return;
               if(!d.title && x.title) d.title = x.title;
               if(!d.by && x.by) d.by = x.by;
+              if(Array.isArray(x.bank)) x.bank.forEach(function(b){ if(d.bank.indexOf(b) < 0) d.bank.push(b); });   /* 보기 단어 (문장 빈칸) */
+              if(x.guessed) d.guessed = true;
               if(Array.isArray(x.items)) d.items = d.items.concat(x.items);
               else if(Array.isArray(x.pages)) d.pages = d.pages.concat(x.pages);
-              else if(x.en || x.word) d.items.push(x);
+              else if(x.en || x.word || x.s) d.items.push(x);
             });
           }
           if(kind === 'pbook'){   /* 원서 읽기: 사진 한 장 = 한 쪽. 쪽 글과 쪽 그림의 개수를 맞춘다 */
             d.pages = (d.pages || []).slice(0, out.length); while(d.pages.length < out.length) d.pages.push('');
             acc.imgs = (acc.imgs || []).concat(out);
           }
+          if(d.items && d.items.some(function(x){ return x && x.guessed; })) acc.guessed = true;
           if(!acc.title && d.title) acc.title = d.title;
           if(!acc.by && d.by) acc.by = d.by;
           if(d.items && d.items.length) acc.items = acc.items.concat(d.items);
